@@ -250,6 +250,14 @@ void WriteSizedString(IStream* pStream, GCString& String)
 	if( len > 0 ) pStream->Write((LPCSTR)String, len, NULL);
 }
 
+//"1", "0", "Да", "Нет", "Yes", "No" - the forms GComp reads and writes
+bool IsBoolString(const char* str)
+{
+	return strcmp(str, "1") == 0 || strcmp(str, "0") == 0 ||
+		_stricoll(str, "Да") == 0 || _stricoll(str, "Нет") == 0 ||
+		_stricoll(str, "Yes") == 0 || _stricoll(str, "No") == 0;
+}
+
 bool StrToBool(const char* str)
 {
 	if( strcmp(str, "1") == 0 ) return true;

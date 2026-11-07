@@ -11,6 +11,9 @@ class CObjectProperty;
 class CPropertySet;
 
 
+//Check values set from description files (see SetFileValue)
+extern bool StrictPropertyValues;
+
 class CStoredProperty
 {
 public:

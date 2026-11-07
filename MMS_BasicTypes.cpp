@@ -6,6 +6,28 @@
 #include "MMS.h"
 
 
+/* Values read from description files are checked: a typo must stop the
+   compilation, not turn into 0 or "No". The caller reports the position.
+   Values parsed from the Main Metadata Stream itself are taken as is. */
+bool StrictPropertyValues = false;
+
+static void BadValue(const char* Kind, const char* Value)
+{
+	if( !StrictPropertyValues ) return;
+	Msg(0, "ERR: '%s' - не %s", Value, Kind);
+	throw NULL;
+}
+
+static bool IsIntString(const char* s, int base)
+{
+	char* end;
+	while( *s == ' ' || *s == '\t' ) s++;
+	if( *s == '\0' ) return false;
+	strtol(s, &end, base);
+	while( *end == ' ' || *end == '\t' ) end++;
+	return *end == '\0';
+}
+
 bool CStoredObject::SetValue(int MMS_Index, GCString& Value)
 {
 	CPropertySet* pPropSet = GetPropSet();
@@ -202,6 +224,7 @@ void CPropertySet::SetValue(void* Object, int i, GCString& Value, bool Unquote)
 	case CObjectProperty::t_int:
 		{
 		int* int_prop_val = (int*) ((char*)Object + prop.Offset);
+		if( !IsIntString(Value, 10) ) BadValue("целое число", Value);
 		*int_prop_val = atoi(Value);
 		}
 		break;
@@ -209,12 +232,14 @@ void CPropertySet::SetValue(void* Object, int i, GCString& Value, bool Unquote)
 		{
 		unsigned int* uint_prop_val = (unsigned int*) ((char*)Object + prop.Offset);
 		char *stopstring;
+		if( !IsIntString(Value, 0) ) BadValue("целое число", Value);
 		*uint_prop_val = strtol(Value, &stopstring, 0); //Undersatnd 0xNNNN format
 		}
 		break;
 	case CObjectProperty::t_bool:
 		{
 		bool* bool_prop_val = (bool*) ((char*)Object + prop.Offset);
+		if( !IsBoolString(Value) ) BadValue("логическое значение", Value);
 		*bool_prop_val = StrToBool(Value);
 		}
 		break;
@@ -382,12 +407,8 @@ void CStoredBool::SetValue(GCString& NewValue)
 		Value = atoi(NewValue) != 0;
 	else
 	{
-		if( NewValue.CollateNoCase("Да") == 0 )
-			Value = true;
-		else if( NewValue.CollateNoCase("Yes") == 0 )
-			Value = true;
-		else
-			Value = false;
+		if( !IsBoolString(NewValue) ) BadValue("логическое значение", NewValue);
+		Value = StrToBool(NewValue) || NewValue.CollateNoCase("Yes") == 0;
 	}
 }
 
@@ -544,6 +565,7 @@ void CStoredSet::SetValue(GCString& NewValue)
 			}
 			Set++;
 		}
+		if( Set->representation == NULL ) BadValue("допустимое значение", NewValue);
 	}
 }
 

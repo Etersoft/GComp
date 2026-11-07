@@ -125,6 +125,7 @@ void WriteSizedString(IStream* pStream, GCString& String);
 
 //Преобразует строку в bool (1, 0) (Да, Нет)
 bool StrToBool(const char* str);
+bool IsBoolString(const char* str);
 
 //Функции транслитерации
 GCString Translit(GCString& str);

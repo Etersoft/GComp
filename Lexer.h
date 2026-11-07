@@ -39,6 +39,7 @@ public:
 	bool GetToken(GCString& Token, const char* delimiters = ": \t\r\n", bool ProceedOnNextLine = true);
 	void GetRest(GCString& String);
 	int CurrentLine() { return nLine; }
+	const GCString& GetFileName() const { return FileName; }
 
 	bool GetMMSToken(GCString& Token, TTokenType& TokenType);
 	void PushMMSToken(GCString& Token, TTokenType TokenType);
