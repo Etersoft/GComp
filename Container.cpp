@@ -63,6 +63,7 @@ static const struct { LPCSTR Name; LPCSTR Type; } DirInfo[] = {
 	{"ModuleText_Number", "ModuleContainer"},
 	{"Transact_Number", "ModuleContainer"},
 	{"UserHelp_Number", "ModuleContainer"},
+	{"CalcAlg_Number", "ModuleContainer"},
 	{NULL, NULL}
 };
 
