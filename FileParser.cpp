@@ -44,6 +44,16 @@ static void SetFileValue(CMMSObject* Object, CLexer& Lexer, int Line,
 			(LPCSTR)Lexer.GetFileName(), Line, (LPCSTR)Name, (LPCSTR)Value);
 		throw NULL;
 	}
+	if( !known && Name == "Описание" && Object->ID_Type == CMMSObject::IDT_BothIDs )
+	{
+		if( Object->HelpState != CMMSObject::help_none || !Object->SetHelp(Value) )
+		{
+			Msg(0, "ERR: %s, строка %i: недопустимое описание объекта '%s': '%s'",
+				(LPCSTR)Lexer.GetFileName(), Line, (LPCSTR)Object->sID, (LPCSTR)Value);
+			throw NULL;
+		}
+		known = true;
+	}
 	if( !known )
 	{
 		Msg(0, "ERR: %s, строка %i: неизвестное свойство '%s' объекта '%s'",

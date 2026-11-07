@@ -959,6 +959,24 @@ int CStorage::Compare(GCString& FileName, unsigned long bytes_to_compare)
 	return cmp;
 }
 
+bool CStorage::ReadStreamText(const GCString& StreamName, GCString& Text)
+{
+	Text = "";
+	if( !OpenStream(StreamName) ) return false;
+	GetCleanStream();
+	Rewind();
+	unsigned long size = ::GetStreamSize(pStream).LowPart;
+	if( size > 0 )
+	{
+		DWORD BytesRead = 0;
+		char* buf = Text.GetBufferSetLength(size);
+		pStream->Read(buf, size, &BytesRead);
+		Text.ReleaseBuffer(BytesRead);
+	}
+	CloseStream();
+	return true;
+}
+
 int CStorage::CompareWithString(GCString& str2)
 {
 	//save stream position

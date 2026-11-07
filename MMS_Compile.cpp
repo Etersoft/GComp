@@ -96,15 +96,25 @@ void CMMSObject::ImportDescriptions(CStorage& TypedTextStor, const GCString& FNa
 			else
 				FName.Format("%s%s", (LPCSTR)NewPrefix, (LPCSTR)nt_rec_file->Ext);
 
-			if( FileExist(FName) )
+			bool HaveFile = FileExist(FName);
+			if( HaveFile && HelpState != help_none )
+			{
+				Msg(0, "ERR: описание объекта '%s' задано и в файле '%s', и строкой 'Описание'",
+					(LPCSTR)sID, (LPCSTR)FName);
+				throw NULL;
+			}
+			if( HaveFile || HelpState != help_none )
 			{
 				if( TypedTextStor.Create(StorName) )
 				{
-					Msg(2, "CPY: '%s'", (LPCSTR)FName);
+					GCString StreamName = nt_rec_file->PrepareStorageName(ID);
+					if( HaveFile )
 					{
-						GCString StreamName = nt_rec_file->PrepareStorageName(ID);
+						Msg(2, "CPY: '%s'", (LPCSTR)FName);
 						TypedTextStor.StreamFromFile(StreamName, FName);
 					}
+					else
+						TypedTextStor.StreamFromString(StreamName, Help);
 					CContainer CC;
 					CC.CreateInTypedText(TypedTextStor);
 					TypedTextStor.Close();

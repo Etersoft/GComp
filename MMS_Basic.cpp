@@ -23,10 +23,12 @@ CMMSObject::CMMSObject()
 	//Used = false;
 	Order = 0;
 	ToDestroyChildren = true;
+	HelpState = help_none;
 }
 
 CMMSObject::CMMSObject(CMMSObject& src)
 {
+	HelpState = help_none;
 	Children.Copy(src.Children);
 	src.ToDestroyChildren = false;
 }
@@ -35,6 +37,30 @@ CMMSObject::~CMMSObject()
 {
 	if( ToDestroyChildren )
 		DestroyObjects();
+}
+
+void CMMSObject::BeautyHelp(CBeautyString& String, int level)
+{
+	if( HelpState != help_inline )
+		return;
+	GCString Quoted = Help;
+	Quoted.Replace("\"", "\"\"");
+	Quoted = "\"" + Quoted + "\"";
+	String.add_parameter(level, "Описание", Quoted, "", true);
+	HelpState = help_written;
+}
+
+bool CMMSObject::SetHelp(GCString& Value)
+{
+	GCString Str = Value;
+	Str.TrimRight();
+	int len = Str.GetLength();
+	if( len < 2 || Str[0] != '"' || Str[len-1] != '"' )
+		return false;
+	Help = Str.Mid(1, len-2);
+	Help.Replace("\"\"", "\"");
+	HelpState = help_inline;
+	return true;
 }
 
 void CMMSObject::DestroyObjects()
@@ -303,6 +329,7 @@ void CMMSAttributes::BeautyString(CBeautyString& String, int level)
 
 	if( GetPropSet() != NULL )
 		CStoredObject::BeautyString(str, level+1);
+	BeautyHelp(str, level+1);
 
 	int n = GetNChildren();
 	for( int i = 0; i < n; i++ )
@@ -374,6 +401,7 @@ void CMMSTypedObject::BeautyString(CBeautyString& String, int level)
 	String.add_brace(level, '{');
 
 	CMMSObject::BeautyString(String, level+1);
+	BeautyHelp(String, level+1);
 	
 	String.add_brace(level, '}');
 }
@@ -395,6 +423,7 @@ void CMMSObjectAttribute::BeautyString(CBeautyString& String, int level, bool No
 		for( int i = 2; i < pPropSet->nProps; i++ ) //пропускаем ID и sID
 			pPropSet->BeautyString(String, level+1, this, i);
 	}
+	BeautyHelp(String, level+1);
 	
 	String.add_brace(level, '}');
 }

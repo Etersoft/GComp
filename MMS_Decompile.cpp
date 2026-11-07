@@ -55,6 +55,51 @@ void CMMSObject::ExtractMetadata(GCString& DestDir, CStorage& TypedTextStorage)
 	ExtractMetadata(DestDir, NT_MetadataPart, TypedTextStorage);
 }
 
+/* A description without line breaks and control characters that fits the
+   lexer's line goes into the description file as "Описание: ..."; the
+   others, and those of objects that no description file shows, are
+   written to files by ExtractDescriptions. */
+static bool IsInlineHelp(const GCString& Text)
+{
+	if( Text.GetLength() > 1000 )
+		return false;
+	for( int i = 0; i < Text.GetLength(); i++ )
+		if( (unsigned char)Text[i] < ' ' )
+			return false;
+	return true;
+}
+
+void CMMSObject::LoadInlineHelp(CStorage& TypedTextStor)
+{
+	if( MMS_Type == MMS_Property ) return;
+
+	CPropertySet* pPropSet = GetPropSet();
+	if( ID_Type == IDT_BothIDs && HelpState == help_none &&
+		(pPropSet == NULL || pPropSet->FindByName("Описание") < 0) )
+	{
+		CNameTableRecord* nt_rec = NameTable.Find(NT_UserHelpStor);
+		CNameTableRecord* nt_rec_file = NameTable.Find(NT_UserHelp);
+		GCString StorName = nt_rec->PrepareStorageName(ID);
+		if( TypedTextStor.StorageExist(StorName) && TypedTextStor.Open(StorName) )
+		{
+			GCString StreamName = nt_rec_file->PrepareStorageName(ID);
+			GCString Text;
+			if( TypedTextStor.ReadStreamText(StreamName, Text) && IsInlineHelp(Text) )
+			{
+				Help = Text;
+				HelpState = help_inline;
+			}
+			TypedTextStor.Close();
+		}
+	}
+
+	if( MMS_Type != MMS_Plan )
+	{
+		for( int i = 0; i < GetNChildren(); i++ )
+			GetChild(i)->LoadInlineHelp(TypedTextStor);
+	}
+}
+
 void CMMSObject::ExtractDescriptions(const GCString& FNamePrefix, CStorage& TypedTextStor, bool StdName)
 {
 	if( MMS_Type == MMS_Property ) return; //Вытаскиваем описания только для объектов
@@ -86,11 +131,12 @@ void CMMSObject::ExtractDescriptions(const GCString& FNamePrefix, CStorage& Type
 		InplaceTranslit(Suffix);
 		NewPrefix += Suffix;
 
-		if( ID_Type == IDT_BothIDs && 
+		if( ID_Type == IDT_BothIDs && HelpState != help_written &&
 			!TypedTextStor.ObjectExtracted(this) && 
 			TypedTextStor.StorageExist(StorName) )
 		{
 			GCString FName;
+			HelpState = help_file;
 
 			if( StdName || Suffix.IsEmpty() )
 				FName.Format("%s%s.%s", (LPCSTR)FNamePrefix, (LPCSTR)nt_rec_file->FileName, (LPCSTR)nt_rec_file->Ext);
@@ -626,6 +672,8 @@ void CMMS::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedTextStorag
 
 	SendInfoMessage(InfoMsg_Total, CountObjects());
 	TotalObjectsProcessed = 0;
+
+	LoadInlineHelp(TypedTextStorage);
 
 	int nProps = GetNChildren();
 	for( int i = 0; i < nProps; i++ )
