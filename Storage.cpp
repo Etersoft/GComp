@@ -1032,6 +1032,17 @@ void CStorage::ParseStream(CMMSObject* Object, const GCString& StreamName, bool 
 		Msg(0, "ERR: Не могу извлечь '%s' во временный файл: %s", (LPCSTR)FullStreamPath, strerror(errno));
 		throw NULL;
 	}
+	{
+		long size = ftell(File);
+		LastParsedText = "";
+		if( size > 0 )
+		{
+			rewind(File);
+			char* p = LastParsedText.GetBufferSetLength(size);
+			size = (long)fread(p, 1, size, File);
+			LastParsedText.ReleaseBuffer(size);
+		}
+	}
 	fclose(File);
 
 	GCString FName(fname);

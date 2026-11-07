@@ -38,6 +38,13 @@ bool CStoredObject::SetValue(int MMS_Index, GCString& Value)
 
 bool CStoredObject::SetValue(GCString& Name, GCString& Value)
 {
+	if( Name == "ЧислоПолей" )
+	{
+		if( !IsIntString(Value, 10) ) BadValue("целое число", Value);
+		FieldCount = atoi(Value);
+		return true;
+	}
+
 	CPropertySet* pPropSet = GetPropSet();
 	if( pPropSet == NULL ) return false;
 	int i = pPropSet->FindByName(Name);
@@ -71,13 +78,23 @@ void CStoredObject::BeautyString(CBeautyString& String, int level)
 		PropSet.BeautyString(String, level, this, i);
 }
 
+void CStoredObject::BeautyFieldCount(CBeautyString& String, int level)
+{
+	CPropertySet* pPropSet = GetPropSet();
+	if( pPropSet != NULL && FieldCount >= 0 && FieldCount <= pPropSet->MaxMMS_Index )
+		String.add_parameter(level, "ЧислоПолей", FieldCount, -1, true);
+}
+
 void CStoredObject::ToString(CMMSString& String)
 {
 	CPropertySet* pPropSet = GetPropSet();
 	if( pPropSet == NULL ) return;
 
+	int MaxIndex = pPropSet->MaxMMS_Index;
+	if( FieldCount >= 0 && FieldCount - 1 < MaxIndex )
+		MaxIndex = FieldCount - 1;
 	bool AddComma = false;
-	for( int MMS_Index = 0; MMS_Index <= pPropSet->MaxMMS_Index; MMS_Index++ )
+	for( int MMS_Index = 0; MMS_Index <= MaxIndex; MMS_Index++ )
 	{
 		int i = pPropSet->FindByMMSIndex(MMS_Index);
 		if( i >= 0 )

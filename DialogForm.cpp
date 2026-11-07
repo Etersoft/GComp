@@ -201,6 +201,7 @@ void CFormControlBase::BeautyString(CBeautyString& String, int level)
 		for( int i = 2; i < pPropSet->nProps; i++ ) //пропускаем Class и Identifier
 			pPropSet->BeautyString(String, level+1, this, i);
 	}
+	BeautyFieldCount(String, level+1);
 	
 	String.add_brace(level, '}');
 }
@@ -657,6 +658,7 @@ void CDialogFrameContent::BeautyString(CBeautyString& String, int level)
 	String.add_parameter(level, BeautyName(), "", "", true);
 	String.add_brace(level, '{');
 	CMMSObject::BeautyString(String, level+1);
+	BeautyFieldCount(String, level+1);
 	String.add_brace(level, '}');
 }
 
@@ -670,19 +672,20 @@ CMMSObject* CDialogFrame::CreateChild(const char* Name, int MMS_Index)
 	return &Content;
 }
 
+//written whenever the form has it: a compilation adds it only if described
 void CFrameBraces::BeautyString(CBeautyString& String, int level)
 {
-	if( TaskParameters.NoDefaults )
-	{
-		String.add_parameter(level, BeautyName(), "", "", true);
-		String.add_brace(level, '{');
-		String.add_brace(level, '}');
-	}
+	String.add_parameter(level, BeautyName(), "", "", true);
+	String.add_brace(level, '{');
+	String.add_brace(level, '}');
 }
 
 void CFrameBraces::ToString(CMMSString& String)
 {
-	String += "\r\n{\r\n{\r\n{}},\r\n{}}";
+	if( Compact )
+		String += "\r\n{{{}},\r\n{}}";
+	else
+		String += "\r\n{\r\n{\r\n{}},\r\n{}}";
 }
 
 /////////////////////////////////////////////////////////////////
@@ -691,6 +694,9 @@ void CFrameBraces::ToString(CMMSString& String)
 CDialogForm::CDialogForm(CMMSObject* aParent)
 {
 	//Cnt_Ver = "10001";
+	HadCntVer = true;
+	CompactBraces = false;
+	TrailingSpaces = true;
 	Browser.Fixed.Parent = aParent;
 	Fixed.Parent = aParent;
 	Controls.Parent = aParent;
@@ -710,7 +716,10 @@ CMMSObject* CDialogForm::CreateChild(const char* Name, int MMS_Index)
 	if( strcmp(Name, "Controls") == 0 )
 		return &Controls;
 	if( strcmp(Name, "Cnt_Ver") == 0 )
+	{
+		HadCntVer = true;
 		return &Cnt_Ver;
+	}
 
 	return NULL;
 }
@@ -741,16 +750,72 @@ void CDialogForm::ToString(CMMSString& String)
 	if( FindChild(Controls.sID) == NULL )
 		AddChild(&Controls);
 
-	if( FindChild(Cnt_Ver.sID) == NULL )
+	if( HadCntVer && FindChild(Cnt_Ver.sID) == NULL )
 	{
 		GCString CntVerValue("10001");
 		Cnt_Ver.SetValue(-1, CntVerValue);
 		AddChild(&Cnt_Ver);
 	}
 
+	Braces.Compact = CompactBraces;
 	CMMSAttributes::ToString(String);
 
-	String += "  ";//В 1С накосячили, а мы повторяем
+	if( TrailingSpaces )
+		String += "  ";//В 1С накосячили, а мы повторяем
+}
+
+//Formatting variants seen in 1C forms; the defaults are those GComp always wrote
+void CDialogForm::DetectFormatting(const GCString& Raw)
+{
+	CompactBraces = Raw.Find("\r\n{{{}},\r\n{}}") >= 0;
+	TrailingSpaces = Raw.Right(2) == "  ";
+}
+
+bool CDialogForm::SetValue(GCString& Name, GCString& Value)
+{
+	if( Name == "Cnt_Ver" )
+	{
+		if( !IsBoolString(Value) ) return false;
+		HadCntVer = StrToBool(Value);
+		return true;
+	}
+	if( Name == "СкобкиКомпактно" )
+	{
+		if( !IsBoolString(Value) ) return false;
+		CompactBraces = StrToBool(Value);
+		return true;
+	}
+	if( Name == "ПробелыВКонце" )
+	{
+		if( !IsBoolString(Value) ) return false;
+		TrailingSpaces = StrToBool(Value);
+		return true;
+	}
+	return CStoredObject::SetValue(Name, Value);
+}
+
+//Most forms have Cnt_Ver 10001, which a compilation adds; mark the others
+void CDialogForm::BeautyString(CBeautyString& String, int level)
+{
+	CBeautyString str;
+	CMMSAttributes::BeautyString(str, level);
+	CBeautyString mark;
+	if( !HadCntVer )
+		mark.add_parameter(level + 1, "Cnt_Ver", "Нет", "", true);
+	if( CompactBraces )
+		mark.add_parameter(level + 1, "СкобкиКомпактно", "Да", "", true);
+	if( !TrailingSpaces )
+		mark.add_parameter(level + 1, "ПробелыВКонце", "Нет", "", true);
+	if( !mark.IsEmpty() )
+	{
+		int close = str.ReverseFind('}');
+		int line = str.Left(close).ReverseFind('\n') + 1;
+		CString head = str.Left(line), tail = str.Mid(line);
+		str = head;
+		str += mark;
+		str += tail;
+	}
+	String += str;
 }
 
 void CDialogForm::WriteToFile(CStorage& Storage, GCString FileName)

@@ -230,6 +230,7 @@ void CMMSObject::ExtractWorkBook(GCString& DestDir, CStorage& Storage, CMMSObjec
 				try
 				{
 					Storage.ParseStream(&DialogForm, StorName, true);
+					DialogForm.DetectFormatting(Storage.LastParsedText);
 					DialogForm.WriteToFile(Storage, nt_rec_dlg->PrepareFileName(DestDir));
 				}
 				catch(...) //чего-то там не распарсилось - тогда вытащим поток как есть

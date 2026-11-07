@@ -99,6 +99,8 @@ public:
 	IStorage* GetStorage();
 
 	void ParseStream(CMMSObject* Object, const GCString& StreamName, bool ParseWitnNoIDs);
+	//raw text of the stream last given to ParseStream (formatting details)
+	GCString LastParsedText;
 
 	void AddToExtractedList(GCString& FullFName, void* object);
 	bool ObjectExtracted(void* object);

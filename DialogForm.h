@@ -356,6 +356,9 @@ public:
 class CFrameBraces : public CMMSAttributes
 {
 public:
+	bool Compact; //written by 1C as {{{}},\r\n{}} rather than {\r\n{\r\n{}},\r\n{}}
+
+	CFrameBraces() : Compact(false) {}
 	virtual const char* BeautyName() {return "Скобки";}
 	virtual void BeautyString(CBeautyString& String, int level);
 	virtual void ToString(CMMSString& String);
@@ -380,6 +383,11 @@ public:
 	CFormControls Controls;
 
 	CDialogCntVer Cnt_Ver; //вроде как везде 10001
+	//false if the stored form had no Cnt_Ver; written as "Cnt_Ver: Нет"
+	bool HadCntVer;
+	//formatting of the stream: compact braces, two spaces at the end
+	bool CompactBraces;
+	bool TrailingSpaces;
 
 public:
 	CDialogForm(CMMSObject* aParent);
@@ -390,10 +398,13 @@ public:
 	virtual CMMSObject* CreateChild(const char* Name, int MMS_Index = -1);
 	virtual CMMSObject* CreateChild(const char* Name, const char* Value);
 	virtual void ParseMetadata(CLexer& Lexer);
+	virtual bool SetValue(GCString& Name, GCString& Value);
+	virtual void BeautyString(CBeautyString& String, int level);
 
 	virtual void ToString(CMMSString& String);
 
 	void WriteToFile(CStorage& Storage, GCString FileName);
+	void DetectFormatting(const GCString& Raw);
 };
 
 #endif

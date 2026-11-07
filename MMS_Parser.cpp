@@ -73,6 +73,7 @@ void CMMSObject::ParseMetadata(CLexer& Lexer)
 				break;
 
 			case TOK_CloseBrace:
+				FieldCount = ParamsParsed;
 				if( AtStart )
 					state = end; //считали завершающую '}' в файле
 				else
@@ -193,6 +194,7 @@ void CMMSNamedList::ParseMetadata(CLexer& Lexer)
 
 void CDialogForm::ParseMetadata(CLexer& Lexer)
 {
+	HadCntVer = false; //set again if the stream has Cnt_Ver (see CreateChild)
 	int ParamsParsed = 0;
 	GCString Token;
 	TTokenType TokType;

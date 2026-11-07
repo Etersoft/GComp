@@ -27,7 +27,15 @@ public:
 class CStoredObject
 {
 public:
+	/* Number of fields in the record read from the Main Metadata Stream, or
+	   -1. Older records have fewer fields than the property tables; ToString
+	   writes no more than that so that compiling reproduces the record. */
+	int FieldCount;
+
+	CStoredObject() : FieldCount(-1) {}
 	virtual ~CStoredObject() {}
+	//"ЧислоПолей: N" in a description when the record is shorter than the table
+	void BeautyFieldCount(CBeautyString& String, int level);
 
 	virtual CPropertySet* GetPropSet() {return NULL;};
 	virtual bool SetValue(GCString& Name, GCString& Value);
