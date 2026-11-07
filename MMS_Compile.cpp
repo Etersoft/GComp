@@ -538,7 +538,7 @@ void CMMS::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCString& Dir)
 
 	//Container.Contents в каталоге UserDef
 	Storage.Open(GCString("UserDef"));
-	GCString CC = "{\"Container.Contents\",{\"WorkPlaceType\",\"Page.1\",\"\",\"\"},{\"RigthType\",\"Page.2\",\"\",\"\"}}";
+	GCString CC = "{\"Container.Contents\",{\"WorkPlaceType\",\"Page.1\",\"\",\"\"},{\"RigthType\",\"Page.2\",\"\",\"\"}}\n";
 	Storage.StreamFromString("Container.Contents", CC);
 	Storage.Close();
 
