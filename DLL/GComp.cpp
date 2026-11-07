@@ -48,7 +48,7 @@ LPCSTR GComp_GetVersion()
 
 	FileVersion.Replace(" ", "");
 	FileVersion.Replace(',', '.');
-	sprintf(Version, "%s.beta", (LPCSTR)FileVersion);
+	sprintf(Version, "%s", (LPCSTR)FileVersion);
 	return Version;
 }
 
