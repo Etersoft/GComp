@@ -7,13 +7,22 @@
 #include "CommonFunctions.h"
 #include "DLL/GComp.h"
 
+/* __iscsym() is a Microsoft CRT extension; Wine's msvcrt/ucrtbase limit it
+   to ASCII (https://bugs.etersoft.ru/show_bug.cgi?id=19905), which turned
+   Cyrillic names into "____" and made different objects share a file name.
+   Use the portable definition. */
+static bool IsFileNameChar(int c)
+{
+	return isalnum(c) || c == '_';
+}
+
 bool IsValidFileName(GCString& String)
 {
 	int len = String.GetLength();
 	for( int i = 0; i < len; i++ )
 	{
 		int c = (unsigned char)String[i];
-		if( !__iscsym(c) ) return false;
+		if( !IsFileNameChar(c) ) return false;
 	}
 
 	return true;
@@ -179,7 +188,7 @@ int MangleFileName(GCString& str)
 	while( *ptr != '\0' )
 	{
 		int c = (unsigned char)(*ptr); //unsigned - это для Русских буквочек
-		if( !__iscsym(c) ) { *ptr = '_'; repl_count++; };
+		if( !IsFileNameChar(c) ) { *ptr = '_'; repl_count++; };
 		ptr++;
 	}
 	return repl_count;
