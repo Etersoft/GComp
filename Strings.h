@@ -129,7 +129,9 @@ void WriteSizedString(IStream* pStream, GCString& String);
 bool StrToBool(const char* str);
 bool IsBoolString(const char* str);
 //Description files are read with spaces trimmed: a value with a space at
-//either end (or one that is itself in quotes) is written in quotes
+//either end, a line break or one that is itself in quotes is written in
+//quotes as GComp quotes strings ("" for ", \\ for \, \n for a line break);
+//UnquoteEdgeSpaces takes such quotes off again
 GCString QuoteEdgeSpaces(const GCString& v);
 void UnquoteEdgeSpaces(GCString& v);
 

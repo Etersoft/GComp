@@ -249,7 +249,10 @@ void CPropertySet::SetValue(void* Object, int i, GCString& Value, bool Unquote)
 		if( !StrictPropertyValues )
 			*str_prop_val = Value; //from the Main Metadata Stream: keep spaces
 		else if( len >= 2 && Value[0] == '"' && Value[len-1] == '"' )
-			*str_prop_val = Value.Mid(1, len-2); //see QuoteEdgeSpaces
+		{
+			*str_prop_val = Value; //see QuoteEdgeSpaces
+			UnquoteEdgeSpaces(*str_prop_val);
+		}
 		else
 		{
 			Value.TrimRight();

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "Yaml.h"
 #include "CommonFunctions.h"
 
@@ -429,41 +430,63 @@ static void DoubleQuotedLines(const GCString& s, CYamlValue& r)
 	}
 }
 
+/* GComp takes such text as it is when it is not in quotes: description
+   files are read with spaces trimmed, a line holds no line break and
+   "..." is GComp's quoting (see QuoteEdgeSpaces) */
+static bool RawSafe(const GCString& t)
+{
+	int len = t.GetLength();
+	if( len == 0 ) return true;
+	unsigned char a = t[0], b = t[len-1];
+	if( isspace(a) || isspace(b) || a == 0xA0 || b == 0xA0 ) return false;
+	if( t.Find('\n') >= 0 || t.Find('\r') >= 0 ) return false;
+	return !(len >= 2 && t[0] == '"' && t[len-1] == '"');
+}
+
+/* The YAML scalar of a value: its text, in whatever style suits it. A
+   value in GComp's quotes is its text; a property that 1C keeps in quotes
+   gets them back when it is read (and one that 1C keeps without quotes
+   loses them), so RawValue writes the text without quotes when GComp
+   reads it so. A value that is neither is written with !u as it is. */
 static void Value(const GCString& v, CYamlValue& r)
 {
 	r.Literal = false;
 	r.Lines.clear();
 	if( v.IsEmpty() ) { r.Text.Empty(); return; }
 	GCString s;
-	if( GQDecode(v, s) )
+	if( !GQDecode(v, s) )
 	{
-		if( LiteralOk(s) )
+		if( !RawSafe(v) )
 		{
-			int len = s.GetLength();
-			r.Literal = true;
-			if( len >= 2 && s[len-1] == '\n' && s[len-2] == '\n' ) r.Text = "|+";
-			else if( s[len-1] == '\n' ) r.Text = "|";
-			else r.Text = "|-";
-			SplitLines(s, r.Lines);
-			if( s[len-1] == '\n' ) r.Lines.pop_back();
+			r.Text = "!u " + DoubleQuoted(v);
 			return;
 		}
-		if( s.Find('\n') >= 0 )
-			DoubleQuotedLines(s, r);
-		else
-			r.Text = DoubleQuoted(s);
-		return;
+		s = v;
 	}
-	int len = v.GetLength();
-	bool quotes = len >= 2 && v[0] == '"' && v[len-1] == '"'; //but not GComp's quoting
-	if( PlainOk(v) ) r.Text = v;
-	else if( SingleOk(v) && !quotes ) r.Text = Single(v);
-	else r.Text = "!u " + DoubleQuoted(v); //the value as is, with characters YAML must escape
+	if( s.IsEmpty() ) { r.Text.Empty(); return; }
+	if( LiteralOk(s) )
+	{
+		int len = s.GetLength();
+		r.Literal = true;
+		if( len >= 2 && s[len-1] == '\n' && s[len-2] == '\n' ) r.Text = "|+";
+		else if( s[len-1] == '\n' ) r.Text = "|";
+		else r.Text = "|-";
+		SplitLines(s, r.Lines);
+		if( s[len-1] == '\n' ) r.Lines.pop_back();
+	}
+	else if( s.Find('\n') >= 0 )
+		DoubleQuotedLines(s, r);
+	else if( PlainOk(s) )
+		r.Text = s;
+	else if( SingleOk(s) )
+		r.Text = Single(s);
+	else
+		r.Text = DoubleQuoted(s);
 }
 
 static GCString Key(const GCString& k)
 {
-	if( k == Reserved ) return Single(k);
+	if( k == Reserved ) return "!u " + DoubleQuoted(k); //_ in any other style is reserved
 	if( PlainOk(k) ) return k;
 	if( SingleOk(k) ) return Single(k);
 	return "!u " + DoubleQuoted(k);
@@ -689,7 +712,7 @@ private:
 	void BlockScalar(int Indent, CYamlNode* n);
 	CYamlNode* FlowNode();
 	void FlowSkip();
-	void Properties(bool& Raw);
+	void Properties(bool& Raw, bool& Null);
 	void AppendCodePoint(unsigned int c, GCString& Out);
 };
 
@@ -949,9 +972,12 @@ CYamlNode* CYamlParser::ValueAfterColon(int Indent)
 	return Scalar(Indent, false);
 }
 
-void CYamlParser::Properties(bool& Raw)
+//!u, and !!null that other programs write as !!null "null"; other !! tags
+//do not change the text
+void CYamlParser::Properties(bool& Raw, bool& Null)
 {
 	Raw = false;
+	Null = false;
 	while( true )
 	{
 		if( s[pos] == '!' )
@@ -960,6 +986,7 @@ void CYamlParser::Properties(bool& Raw)
 			while( s[pos] != ' ' && s[pos] != '\n' ) pos++;
 			GCString Tag(s + start, pos - start);
 			if( Tag == "!u" ) Raw = true;
+			else if( Tag == "!!null" ) Null = true;
 			else if( Tag.Left(2) != "!!" ) Error("неизвестный тег", start);
 			SkipSpaces();
 		}
@@ -972,8 +999,8 @@ void CYamlParser::Properties(bool& Raw)
 
 CYamlNode* CYamlParser::KeyScalar()
 {
-	bool Raw;
-	Properties(Raw);
+	bool Raw, Null;
+	Properties(Raw, Null);
 	CYamlNode* k = new CYamlNode(CYamlNode::scalar, LineOf(pos));
 	k->Raw = Raw;
 	if( s[pos] == '"' || s[pos] == '\'' )
@@ -991,8 +1018,8 @@ CYamlNode* CYamlParser::KeyScalar()
 
 CYamlNode* CYamlParser::Scalar(int Indent, bool Flow)
 {
-	bool Raw;
-	Properties(Raw);
+	bool Raw, Null;
+	Properties(Raw, Null);
 	if( !Flow && (s[pos] == '[' || s[pos] == '{') )
 	{
 		if( Raw ) Error("тег !u у коллекции");
@@ -1019,6 +1046,11 @@ CYamlNode* CYamlParser::Scalar(int Indent, bool Flow)
 		}
 	}
 	catch(...) { delete n; throw; }
+	if( Null && !Raw )
+	{
+		n->Value.Empty();
+		n->Style = 0;
+	}
 	return n;
 }
 
@@ -1314,7 +1346,7 @@ public:
 		throw NULL;
 	}
 	GCString RawValue(const CYamlNode* n);
-	bool IsReserved(const CYamlNode* k) { return k->Type == CYamlNode::scalar && k->Style == 0 && !k->Raw && k->Value == Reserved; }
+	bool IsReserved(const CYamlNode* k) { return k->Type == CYamlNode::scalar && !k->Raw && k->Value == Reserved; }
 	void NodesOf(const CYamlNode* n, CBraceNodes& Out);
 	CBraceNode* Entry(const CYamlNode* k, const CYamlNode* v);
 	CBraceNode* Item(const CYamlNode* n);
@@ -1329,18 +1361,10 @@ GCString CYamlToBrace::RawValue(const CYamlNode* n)
 {
 	if( n->Type != CYamlNode::scalar ) Error(n, "ожидалось значение, а не список или блок");
 	if( n->Raw ) return n->Value;
-	//a line break fits only into a quoted value, whatever the style
-	if( n->Style == '"' || n->Style == '|' || n->Style == '>' || n->Value.Find('\n') >= 0 )
-		return GQEncode(n->Value);
-	//GComp trims an unquoted value and takes "..." for its quoting: such
-	//text of another program is quoted (GComp itself writes it with !u)
-	int len = n->Value.GetLength();
-	if( len > 0 && (strchr(" \t", n->Value[0]) || strchr(" \t", n->Value[len-1])) )
-		return GQEncode(n->Value);
-	if( len >= 2 && n->Value[0] == '"' && n->Value[len-1] == '"' )
-		return GQEncode(n->Value);
 	if( n->IsNull() ) return "";
-	return n->Value;
+	//the style does not matter (see Value)
+	if( RawSafe(n->Value) ) return n->Value;
+	return GQEncode(n->Value);
 }
 
 void CYamlToBrace::NodesOf(const CYamlNode* n, CBraceNodes& Out)

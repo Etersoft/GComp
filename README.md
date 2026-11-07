@@ -104,7 +104,7 @@ the Configurator under Wine; the full syntax check passes.
 
 ## Source tree format
 
-The tree format is kept in `gcomp.ini` (`format: 5`). Decompiling always
+The tree format is kept in `gcomp.ini` (`format: 6`). Decompiling always
 writes the current format; compiling stops on an older tree with a hint:
 such a tree is converted through the MD, compiled with the GComp that
 decompiled it and decompiled with this one.
@@ -138,7 +138,7 @@ blocks; `.yaml` files are converted on reading and writing:
 
 ```yaml
 Валюты:
-  Комментарий: "Валюта"
+  Комментарий: Валюта
   Длина кода: 3
   Атрибуты:
     Курс:
@@ -158,15 +158,18 @@ blocks; `.yaml` files are converted on reading and writing:
   with it and goes on with the block's lines (`- BUTTON: Закрыть` and
   `Заголовок: ...` below); `_:` holds lines that cannot be keys of the
   item.
-- Values: a double quoted or block (`|`) scalar is a string that GComp
-  writes in quotes, a plain or single quoted one is a value as is
-  (`Да`, `3`, `Справочник.Валюты`). Values that YAML would read as other
-  things (numbers like `0050`, `yes`, `-`, leading `&`) are single quoted;
-  `!u "..."` is a value with characters YAML cannot hold unescaped.
-- A file written by another YAML program is read too: a string that lost
-  its quotes is quoted again when it has to be (line breaks, spaces at the
-  ends, a property that 1C keeps in quotes). Anchors, aliases, tags other
-  than `!u` and complex keys are not supported.
+- A value is its text, whatever the YAML style: `Заголовок: Печать`,
+  `Заголовок: "Печать"` and `Заголовок: 'Печать'` are the same. Whether
+  1C keeps the text in quotes is known from the type of the property, so
+  the quoting is not written. Values that YAML would read as other things
+  (numbers like `0050`, `yes`, `-`, a leading `#` or `&`) are written in
+  quotes, texts of several lines as block (`|`) or double quoted scalars.
+  `!u "..."` is the rare value that the description text holds as it is
+  (in quotes that are not GComp's quoting, or with spaces at the ends of a
+  property kept without quotes).
+- A file written by another YAML program is read the same way, whatever
+  styles it chose; `!!null` is an empty value, other `!!` tags are
+  ignored. Anchors, aliases and complex keys are not supported.
 - Errors report the line of the `.yaml` file.
 
 ### Forms
@@ -198,10 +201,10 @@ ones stay in `.txt` files.
 On the 430 configurations above the trees hold 70 thousand files (98
 thousand before format 4) and forms take 2.6 million lines instead of 6.0
 (3.3 million in braces, YAML is 23% shorter). Every
-stream of an MD compiled from a format 5 tree is the same as from GComp
+stream of an MD compiled from a format 6 tree is the same as from GComp
 before these formats; the storages of `TypedText` may come in another
-order inside the compound file. Trees rewritten by PyYAML, which drops
-the quoting styles, compile to the same streams.
+order inside the compound file. Trees rewritten by PyYAML, in its own
+styles or with every scalar double quoted, compile to the same streams.
 
 See `PORTING.md` for dependencies and the plan for a native Linux build.
 The Delphi GUIs (`vgcomp/`, `gcomp_vis/`) are not built.

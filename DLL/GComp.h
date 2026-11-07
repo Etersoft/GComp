@@ -50,9 +50,9 @@ enum TGComp_Eol {
 	eol_Unix = 1
 };
 //The format of the source tree written by this version (see FormatVersion)
-#define GCOMP_FORMAT_VERSION 5
+#define GCOMP_FORMAT_VERSION 6
 //The oldest format this version compiles
-#define GCOMP_FORMAT_OLDEST 5
+#define GCOMP_FORMAT_OLDEST 6
 
 enum TLogType {
 	LogType_stdout = 0,

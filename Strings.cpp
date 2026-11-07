@@ -255,22 +255,40 @@ static bool NeedsQuotes(const GCString& v)
 	int len = v.GetLength();
 	if( len == 0 ) return false;
 	if( isspace((unsigned char)v[0]) || isspace((unsigned char)v[len-1]) ) return true;
+	if( v.Find('\n') >= 0 || v.Find('\r') >= 0 ) return true;
 	return len >= 2 && v[0] == '"' && v[len-1] == '"';
 }
 
 GCString QuoteEdgeSpaces(const GCString& v)
 {
 	if( !NeedsQuotes(v) ) return v;
-	GCString q;
-	q.Format("\"%s\"", (LPCSTR)v);
-	return q;
+	GCString q = v;
+	q.quote_linefeeds();
+	q.Replace("\"", "\"\"");
+	return "\"" + q + "\"";
 }
 
 void UnquoteEdgeSpaces(GCString& v)
 {
 	int len = v.GetLength();
-	if( len >= 2 && v[0] == '"' && v[len-1] == '"' )
-		v = v.Mid(1, len-2);
+	if( len < 2 || v[0] != '"' || v[len-1] != '"' ) return;
+	GCString s;
+	for( int i = 1; i < len - 1; i++ )
+	{
+		char c = v[i];
+		if( c == '"' && i + 1 < len - 1 && v[i+1] == '"' )
+			i++;
+		else if( c == '\\' && i + 1 < len - 1 && v[i+1] == '\\' )
+			i++;
+		else if( c == '\\' && i + 1 < len - 1 && v[i+1] == 'n' )
+		{
+			s += "\r\n";
+			i++;
+			continue;
+		}
+		s += c;
+	}
+	v = s;
 }
 
 //"1", "0", "Да", "Нет", "Yes", "No" - the forms GComp reads and writes

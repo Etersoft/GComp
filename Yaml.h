@@ -20,9 +20,10 @@ public:
    brace descriptions ("Name: value", blocks in { }); these functions convert
    between the two at file input and output, see README "Source tree format".
 
-   Values: a plain or 'single' quoted YAML scalar is the value as is, a
-   "double" quoted or block (|, >) scalar is a value that GComp writes in
-   quotes (doubled quotes, \n and \\ escapes). A block whose header has a
+   Values: a scalar is the text of the value whatever its style; whether
+   it is in quotes in the brace text (doubled quotes, \n and \\ escapes)
+   is decided by the type of the property when it is read. !u "..." is a
+   value of the brace text as it is. A block whose header has a
    value is  Name: {_: value, ...}  in a mapping and  - Name: value  with the
    block's lines as further keys (or under _:) in a sequence. */
 
