@@ -348,6 +348,13 @@ BOOL GComp_Compile(CGCompParameters* Parameters)
 	if( MainMetadataStream ) delete MainMetadataStream;
 	MainMetadataStream = new CMMS;
 
+	/* Build into a temporary file next to the target and replace the target
+	   only after success, so that an error in the sources does not destroy
+	   an existing MD. */
+	GCString TargetFileName = TaskParameters.CompoundFileName;
+	GCString TempFileName = TargetFileName + ".gcomp-tmp";
+	DeleteFileA(TempFileName);
+
 #ifndef _DEBUG
 	try
 #endif
@@ -365,7 +372,7 @@ BOOL GComp_Compile(CGCompParameters* Parameters)
 
 		if( MMS_Filter.IsEmpty() )
 		{
-			if( !Storage.CreateCompound(GCString(TaskParameters.CompoundFileName)) )
+			if( !Storage.CreateCompound(TempFileName) )
 				return FALSE;
 
 			MainMetadataStream->AssembleMetadata(csDirectoryName);
@@ -375,7 +382,12 @@ BOOL GComp_Compile(CGCompParameters* Parameters)
 		{
 			//При выборочной компиляции не создаём compound
 			CNameTableRecord* nt_rec = NameTable.Find(NT_MainMetadataStream);
-			Storage.OpenCompound(GCString(TaskParameters.CompoundFileName));
+			if( !::CopyFileA(TargetFileName, TempFileName, FALSE) )
+			{
+				Msg(0, "ERR: Can not copy '%s' to '%s'", (LPCSTR)TargetFileName, (LPCSTR)TempFileName);
+				throw NULL;
+			}
+			Storage.OpenCompound(TempFileName);
 			Storage.Open(GCString("Metadata"));
 			Storage.ParseStream(MainMetadataStream, nt_rec->StorageName, false);
 			Storage.Close();
@@ -394,6 +406,7 @@ BOOL GComp_Compile(CGCompParameters* Parameters)
 #ifndef _DEBUG
 	catch(...)
 	{
+		DeleteFileA(TempFileName);
 		if( MainMetadataStream != NULL ) delete MainMetadataStream;
 		MainMetadataStream = NULL;
 		pPassedParameters = NULL;
@@ -404,6 +417,14 @@ BOOL GComp_Compile(CGCompParameters* Parameters)
 	pPassedParameters = NULL;
 	delete MainMetadataStream;
 	MainMetadataStream = NULL;
+
+	//The storage is closed here: put the result in place of the target
+	if( !MoveFileExA(TempFileName, TargetFileName, MOVEFILE_REPLACE_EXISTING) )
+	{
+		Msg(0, "ERR: Can not replace '%s' with '%s' (error %lu)",
+			(LPCSTR)TargetFileName, (LPCSTR)TempFileName, (unsigned long)GetLastError());
+		return FALSE;
+	}
 	return TRUE;
 }
 
