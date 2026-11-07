@@ -39,6 +39,33 @@ static CFileInfo UIInfo[] = {
 };
 
 
+/* Storages in the order 1C 7.7 lists them in Container.Contents. */
+static const struct { LPCSTR Name; LPCSTR Type; } DirInfo[] = {
+	{"Metadata", "MetaDataContainer"},
+	{"Subconto", "SubcontoContainer"},
+	{"SubList", "SublistContainer"},
+	{"SubFolder", "SubcontoGroupFolder"},
+	{"Document", "DocumentContainer"},
+	{"Journal", "JournalContainer"},
+	{"Report", "ReportContainer"},
+	{"TypedText", "TypedTextContainer"},
+	{"UserDef", "UserDefContainer"},
+	{"Picture", "PictureContainer"},
+	{"CalcJournal", "CalcJournalContainer"},
+	{"CalcVar", "CalcVarContainer"},
+	{"AccountChart", "AccountChartContainer"},
+	{"AccountChartList", "AccountChartListContainer"},
+	{"OperationList", "OperationListContainer"},
+	{"Operation", "OperationContainer"},
+	{"GlobalData", "GlobalDataContainer"},
+	{"ProvList", "ProvListContainer"},
+	{"WorkBook", "WorkBookContainer"},
+	{"ModuleText_Number", "ModuleContainer"},
+	{"Transact_Number", "ModuleContainer"},
+	{"UserHelp_Number", "ModuleContainer"},
+	{NULL, NULL}
+};
+
 static CMapStringToPtr DirNameMap;
 static CMapStringToPtr FileNameMap;
 static CMapStringToPtr UINameMap;
@@ -51,31 +78,10 @@ CContainer::CContainer()
 
 	if( MapsInitialized ) return;
 
-	DirNameMap.SetAt("Metadata",         (void*)"MetaDataContainer");
-	DirNameMap.SetAt("Subconto",         (void*)"SubcontoContainer");
-	DirNameMap.SetAt("SubList",          (void*)"SublistContainer");
-	DirNameMap.SetAt("SubFolder",        (void*)"SubcontoGroupFolder");
-	DirNameMap.SetAt("Document",         (void*)"DocumentContainer");
-	DirNameMap.SetAt("Journal",          (void*)"JournalContainer");
-	DirNameMap.SetAt("Report",           (void*)"ReportContainer");
-	DirNameMap.SetAt("TypedText",        (void*)"TypedTextContainer");
-	DirNameMap.SetAt("UserDef",          (void*)"UserDefContainer");
-	DirNameMap.SetAt("Picture",          (void*)"PictureContainer");
-	DirNameMap.SetAt("CalcJournal",      (void*)"CalcJournalContainer");
-	DirNameMap.SetAt("CalcVar",          (void*)"CalcVarContainer");
-	DirNameMap.SetAt("AccountChart",     (void*)"AccountChartContainer");
-	DirNameMap.SetAt("AccountChartList", (void*)"AccountChartListContainer");
-	DirNameMap.SetAt("OperationList",    (void*)"OperationListContainer");
-	DirNameMap.SetAt("Operation",        (void*)"OperationContainer");
-	DirNameMap.SetAt("GlobalData",       (void*)"GlobalDataContainer");
-	DirNameMap.SetAt("ProvList",         (void*)"ProvListContainer");
-	DirNameMap.SetAt("WorkBook",         (void*)"WorkBookContainer");
-
-	DirNameMap.SetAt("ModuleText_Number", (void*)"ModuleContainer");
-	DirNameMap.SetAt("Transact_Number",    (void*)"ModuleContainer");
-	DirNameMap.SetAt("UserHelp_Number",    (void*)"ModuleContainer");
-
 	int i;
+	for( i = 0; DirInfo[i].Name != NULL; i++ )
+		DirNameMap.SetAt(DirInfo[i].Name, (void*)DirInfo[i].Type);
+
 	for( i = 0; FileInfo[i].FileName != NULL; i++ )
 	{
 		FileNameMap.SetAt(FileInfo[i].FileName, (CObject*) &(FileInfo[i].Info));
@@ -164,8 +170,40 @@ void CContainer::AddFile(const wchar_t* wFileName, CContainerType ContainerType)
 }
 
 
+/* Position of an element in Container.Contents: 1C writes the known
+   storages and streams in a fixed order (that of DirInfo, FileInfo and
+   UIInfo); elements with the same rank, such as numbered ones, keep the
+   order of the storage enumeration. */
+static int ContentsRank(LPCSTR Name, bool IsDir, CContainerType Type)
+{
+	char* CleanName = RemoveLastDigits((LPSTR)Name);
+	int rank = 1000;
+	int i;
+	if( IsDir )
+	{
+		for( i = 0; DirInfo[i].Name != NULL; i++ )
+			if( strcmp(CleanName, DirInfo[i].Name) == 0 ) { rank = i; break; }
+	}
+	else if( Type == CT_UserInterfaces )
+	{
+		for( i = 0; UIInfo[i].FileName != NULL; i++ )
+			if( strcmp(Name, UIInfo[i].FileName) == 0 ) { rank = 100 + i; break; }
+	}
+	else
+	{
+		for( i = 0; FileInfo[i].FileName != NULL; i++ )
+			if( strcmp(CleanName, FileInfo[i].FileName) == 0 ) { rank = 100 + i; break; }
+	}
+	delete[] CleanName;
+	return rank;
+}
+
 GCString& CContainer::Create(CStorage& Storage, bool Recursive, CContainerType Type)
 {
+	CStringArray Items;
+	CArray<int, int> Ranks;
+	int ItemStart;
+	char* ElemName;
 	IEnumSTATSTG *ppenum;
 	STATSTG stat;
 	unsigned long uCount;
@@ -176,10 +214,14 @@ GCString& CContainer::Create(CStorage& Storage, bool Recursive, CContainerType T
 	Storage.GetStorage()->EnumElements(0, NULL, 0, &ppenum);
 	while ( S_OK == ppenum->Next(1, &stat, &uCount) )
 	{
+		ItemStart = Content.GetLength();
+		ElemName = new char[wcslen(stat.pwcsName)+1];
+		sprintf(ElemName, "%S", stat.pwcsName);
 		if( (stat.type & STGTY_STORAGE ) != 0 )
 		{
 			StorageName.Format("%S", stat.pwcsName);
 			AddDir(stat.pwcsName);
+			Ranks.Add(ContentsRank(ElemName, true, Type));
 			if( Recursive )
 			{
 				if( Storage.Open(StorageName) )
@@ -193,9 +235,31 @@ GCString& CContainer::Create(CStorage& Storage, bool Recursive, CContainerType T
 		else
 		{
 			AddFile(stat.pwcsName, Type);
+			Ranks.Add(ContentsRank(ElemName, false, Type));
 		}
+		delete[] ElemName;
+		CoTaskMemFree(stat.pwcsName);
+		Items.Add(Content.Mid(ItemStart));
+		Content = Content.Left(ItemStart);
 	}
 	ppenum->Release();
+
+	//stable insertion sort by rank
+	int i, j;
+	for( i = 1; i < Items.GetSize(); i++ )
+	{
+		CString item = Items[i];
+		int rank = Ranks[i];
+		for( j = i; j > 0 && Ranks[j-1] > rank; j-- )
+		{
+			Items[j] = Items[j-1];
+			Ranks[j] = Ranks[j-1];
+		}
+		Items[j] = item;
+		Ranks[j] = rank;
+	}
+	for( i = 0; i < Items.GetSize(); i++ )
+		Content += Items[i];
 
 	Content += "}\n";
 
