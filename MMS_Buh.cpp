@@ -758,7 +758,7 @@ void CMMSAccount::Decompile(GCString& Dir, CStorage& Storage, CObjectOrdering& O
 
 	FName.Replace("%Code%", Code);
 
-	Order.Add(ID, FName, FName);
+	Order.Add(ID, (LPCSTR)FName, (LPCSTR)FName);
 
 	CBeautyString String;
 
@@ -772,7 +772,7 @@ void CMMSAccountPlan::Decompile(GCString& Dir, CStorage& Storage, CStorage& Type
 	CNameTableRecord* nt_rec = NameTable.Find(MMS_Type);
 	GCString PlanDir = nt_rec->PrepareDirName(GCString(), this);
 
-	Order.Add(ID, PlanDir, PlanDir);
+	Order.Add(ID, (LPCSTR)PlanDir, (LPCSTR)PlanDir);
 
 	PlanDir = nt_rec->PrepareDirName(Dir, this);
 	CreateDirectory(PlanDir);

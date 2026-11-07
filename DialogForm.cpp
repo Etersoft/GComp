@@ -269,7 +269,7 @@ bool CHotKey::SetValue(GCString& Name, GCString& Value)
 			}
 			if( i > 0 )
 			{
-				Msg(0, "ERR: Unknown key '%s'", key);
+				Msg(0, "ERR: Unknown key '%s'", (LPCSTR)key);
 				throw NULL;
 				//return false;
 			}

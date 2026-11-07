@@ -11,7 +11,7 @@ CLexer::CLexer(const GCString& FileName)
 	File = fopen(FileName, "rt");
 	} catch(...)
 	{
-		Msg(0, "ERR: Невозможно открыть файл '%s' : %s", FileName, strerror(errno));
+		Msg(0, "ERR: Невозможно открыть файл '%s' : %s", (LPCSTR)FileName, strerror(errno));
 	}
 	this->FileName = FileName;
 	LineBuff = new char[BUFF_SIZE];
@@ -209,8 +209,8 @@ GCString CLexer::error_string;
 GCString& CLexer::FilePosInfo()
 {
 	if( nColumn == 0 )
-		error_string.Format("%s: line %i", FileName, nLine);
+		error_string.Format("%s: line %i", (LPCSTR)FileName, nLine);
 	else
-		error_string.Format("%s: line %i, column %i", FileName, nLine, nColumn);
+		error_string.Format("%s: line %i, column %i", (LPCSTR)FileName, nLine, nColumn);
 	return error_string;
 }

@@ -55,7 +55,7 @@ void CMMSObject::ParseMetadata(CLexer& Lexer)
 				state = objects;
 				break;
 			default:
-				Msg(0, "ERR: Неверный формат: ожидался символ '{', а получили %s^ %s", Token, Lexer.FilePosInfo());
+				Msg(0, "ERR: Неверный формат: ожидался символ '{', а получили %s^ %s", (LPCSTR)Token, (LPCSTR)Lexer.FilePosInfo());
 				throw NULL;
 			}
 			break;
@@ -90,7 +90,7 @@ void CMMSObject::ParseMetadata(CLexer& Lexer)
 			Child = CreateChild(ObjName, ParamsParsed);
 			if( Child == NULL )
 			{
-				Msg(0, "ERR: Не знаю как создать объект с индексом %i. Позиция: %s; Объект: %s", ParamsParsed, Lexer.FilePosInfo(), sID);
+				Msg(0, "ERR: Не знаю как создать объект с индексом %i. Позиция: %s; Объект: %s", ParamsParsed, (LPCSTR)Lexer.FilePosInfo(), (LPCSTR)sID);
 				throw NULL;
 			}
 			AddChild(Child);
@@ -102,7 +102,7 @@ void CMMSObject::ParseMetadata(CLexer& Lexer)
 			break;
 
 		case end:
-			Msg(0, "ERR: Неверный формат: ожидалось завершение потока, а получили %s: %s", Token, Lexer.FilePosInfo());
+			Msg(0, "ERR: Неверный формат: ожидалось завершение потока, а получили %s: %s", (LPCSTR)Token, (LPCSTR)Lexer.FilePosInfo());
 			throw NULL;
 			break;
 		}
@@ -111,7 +111,7 @@ void CMMSObject::ParseMetadata(CLexer& Lexer)
 	if( state != end )
 	{
 		//если доехали сюда, значит не было завершающей скобки '}'
-		Msg(0, "ERR: Неверный формат: нет завершающей скобки '}': %s; %s", Lexer.FilePosInfo(), sID);
+		Msg(0, "ERR: Неверный формат: нет завершающей скобки '}': %s; %s", (LPCSTR)Lexer.FilePosInfo(), (LPCSTR)sID);
 		throw NULL;
 	}
 }
@@ -185,7 +185,7 @@ void CMMSNamedList::ParseMetadata(CLexer& Lexer)
 			SetValue(ParamsParsed++, Token);
 			break;
 		default:
-			Msg(0, "ERR: Неверный формат: %s", Lexer.FilePosInfo());
+			Msg(0, "ERR: Неверный формат: %s", (LPCSTR)Lexer.FilePosInfo());
 			throw NULL;
 		}
 	}
@@ -241,7 +241,7 @@ void CDialogForm::ParseMetadata(CLexer& Lexer)
 				Child = CreateChild(ObjName, ParamsParsed);
 				if( Child == NULL )
 				{
-					Msg(0, "ERR: Не знаю как создать объект с индексом %i. Позиция: %s; Объект: %s", ParamsParsed, Lexer.FilePosInfo(), sID);
+					Msg(0, "ERR: Не знаю как создать объект с индексом %i. Позиция: %s; Объект: %s", ParamsParsed, (LPCSTR)Lexer.FilePosInfo(), (LPCSTR)sID);
 					throw NULL;
 				}
 				AddChild(Child);
@@ -277,13 +277,13 @@ void CDialogForm::ParseMetadata(CLexer& Lexer)
 			break;
 
 		case end:
-			Msg(0, "WARN: Мусор в конце потока: '%s'", Token);
+			Msg(0, "WARN: Мусор в конце потока: '%s'", (LPCSTR)Token);
 			break;
 		}
 	}
 	return;
 
 ParseError:
-	Msg(0, "ERR: Неверный формат: %s. Объект: %s, Токен = '%s'", Lexer.FilePosInfo(), sID, Token);
+	Msg(0, "ERR: Неверный формат: %s. Объект: %s, Токен = '%s'", (LPCSTR)Lexer.FilePosInfo(), (LPCSTR)sID, (LPCSTR)Token);
 	throw NULL;
 }

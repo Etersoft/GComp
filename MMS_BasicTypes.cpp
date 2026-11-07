@@ -250,9 +250,9 @@ void CPropertySet::BeautyString(CBeautyString& String, int level, const void* Ob
 		GCString* prop_val = (GCString*) ((char*)Object + prop.Offset );
 		GCString* def_val  = (GCString*) ((char*)DefaultValues + prop.Offset );
 		GCString quoted_val, quoted_defval;
-		quoted_val.Format("\"%s\"", *prop_val);
+		quoted_val.Format("\"%s\"", (LPCSTR)*prop_val);
 		quoted_val.quote_linefeeds();
-		quoted_defval.Format("\"%s\"", *def_val);
+		quoted_defval.Format("\"%s\"", (LPCSTR)*def_val);
 		String.add_parameter(level, prop.Name, quoted_val, quoted_defval, TaskParameters.NoDefaults);
 		}
 		break;
@@ -481,7 +481,7 @@ void CStoredBitSet::SetValue(GCString& NewValue)
 				int bit = BitByName(Name);
 				if( bit < 0 )
 				{
-					Msg(0, "ERR: Неизвестный флаг '%s'", Name);
+					Msg(0, "ERR: Неизвестный флаг '%s'", (LPCSTR)Name);
 					throw NULL;
 				}
 				Value |= 1 << bit;

@@ -20,7 +20,7 @@ DWORD CUserRightsProp::TypeFromString(GCString& strType)
 		ptr++;
 	}
 
-	Msg(0, "ERR: Неизвестный тип прав. ID = %s", strType);
+	Msg(0, "ERR: Неизвестный тип прав. ID = %s", (LPCSTR)strType);
 	throw NULL;
 
 	return 0;
@@ -59,7 +59,7 @@ DWORD CUserRightsBlock::TypeFromString(GCString& strType)
 		ptr++;
 	}
 
-	Msg(0, "ERR: Неизвестный объект прав. ID = %s", strType);
+	Msg(0, "ERR: Неизвестный объект прав. ID = %s", (LPCSTR)strType);
 	throw NULL;
 
 	return 0;
@@ -86,7 +86,7 @@ void CUserRightsBlock::ReadFromFile(CLexer& Lexer, GCString& strType, GCString& 
 				state = read;
 			else
 			{
-				Msg(0, "ERR: unexpected token '%s'", token);
+				Msg(0, "ERR: unexpected token '%s'", (LPCSTR)token);
 				throw NULL;
 			}
 			break;
@@ -122,7 +122,7 @@ void CUserRights::ReadFromFile(GCString& FileName)
 	CLexer Lexer(Translit(FileName));
 	if( !Lexer.IsValid() )
 	{
-		Msg(0, "ERR: Невозможно открыть файл %s: %s", FileName, strerror(errno));
+		Msg(0, "ERR: Невозможно открыть файл %s: %s", (LPCSTR)FileName, strerror(errno));
 		throw NULL;
 	}
 
@@ -184,7 +184,7 @@ void CompileUserRights(CStorage& Storage, GCString& Dir)
 		while( Ordering.ReadString() )
 		{
 			GCString FileName;
-			FileName.Format("%s\\%s.%s", SrcDir, Ordering.GetValue(0), nt_rec->Ext);
+			FileName.Format("%s\\%s.%s", (LPCSTR)SrcDir, Ordering.GetValue(0), (LPCSTR)nt_rec->Ext);
 
 			CUserRights Rights;
 			Rights.ReadFromFile(FileName);

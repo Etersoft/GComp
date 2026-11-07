@@ -372,7 +372,7 @@ int CMMS::ObjectNameToID(GCString& Name)
 		return cache_entry->ID;
 	else
 	{
-		Msg(0, "WARN: Не найден объект с идентификатором %s", Name);
+		Msg(0, "WARN: Не найден объект с идентификатором %s", (LPCSTR)Name);
 		return 0;
 		//throw NULL;
 	}

@@ -268,7 +268,7 @@ void CMMSDocument::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedTe
 	{
 		CStorage TransactStorage(TypedTextStorage);
 		
-		Msg(2, "Документ %s", sID);
+		Msg(2, "Документ %s", (LPCSTR)sID);
 		// Создадим папку документа
 		GCString DocDir = GetObjectDir(Dir);	
 		CreateDirectory(DocDir);
@@ -343,7 +343,7 @@ void CMMSDocument::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCStri
 	MMS_Filter.Down();
 	if( MMS_Filter.Test(this, nt_rec_stor) )
 	{
-		Msg(1, "INF: Документ.%s", sID);
+		Msg(1, "INF: Документ.%s", (LPCSTR)sID);
 		CStorage TransactStorage(TypedTextStorage);
 
 		GCString DocDir = GetObjectDir(SrcDir);
@@ -579,7 +579,7 @@ void CMMSJournal::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCStrin
 	MMS_Filter.Down();
 	if( MMS_Filter.Test(this, nt_rec) )
 	{
-		Msg(1, "INF: ЖурналДокументов.%s", sID);
+		Msg(1, "INF: ЖурналДокументов.%s", (LPCSTR)sID);
 		GCString JournalDir = GetObjectDir(SrcDir);
 		ImportDescriptions(TypedTextStorage, JournalDir+"\\", true);
 		ImportListForms(Forms, Storage, JournalDir, nt_rec->StorageName);

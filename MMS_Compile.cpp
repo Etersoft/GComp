@@ -18,7 +18,7 @@
 ///////////////////////////////////////////////////////////////////////
 void CMMSObject::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCString& SrcDir)
 {
-	Msg(1, "INF: %s", sID);
+	Msg(1, "INF: %s", (LPCSTR)sID);
 	CNameTableRecord* nt_rec = NameTable.Find(MMS_Type);
 	if( nt_rec == NULL ) return;
 	if( !nt_rec->Dir.IsEmpty() )
@@ -37,7 +37,7 @@ void CMMSAttributes_SF::Compile(CStorage& Storage, CStorage& TypedTextStorage, G
 	if( nt_rec->Dir.IsEmpty() ) return;
 
 	GCString Dir = nt_rec->PrepareDirName(SrcDir);
-	Msg(1, "INF: %s --> %s", Dir, nt_rec->Type1C);
+	Msg(1, "INF: %s --> %s", (LPCSTR)Dir, (LPCSTR)nt_rec->Type1C);
 
 	ImportOrdering(Dir);
 	
@@ -74,13 +74,13 @@ void CMMSObject::ImportDescriptions(CStorage& TypedTextStor, const GCString& FNa
 			(nt_rec_obj == NULL || nt_rec_obj->Type1C == "sID") )
 		{
 			if( ID_Type == IDT_OnlyTextual )
-				Suffix.Format("%s.", sID);
+				Suffix.Format("%s.", (LPCSTR)sID);
 			else if( ID_Type == IDT_OnlyNumeric )
-				Suffix.Format("%s.%i.", nt_rec_file->FileName, ID);
+				Suffix.Format("%s.%i.", (LPCSTR)nt_rec_file->FileName, ID);
 			else if( sID.IsEmpty() || !IsValidFileName(sID) )
-				Suffix.Format("%s.%i.", nt_rec_file->FileName, ID);
+				Suffix.Format("%s.%i.", (LPCSTR)nt_rec_file->FileName, ID);
 			else
-				Suffix.Format("%s.", sID);
+				Suffix.Format("%s.", (LPCSTR)sID);
 		}
 
 		InplaceTranslit(Suffix);
@@ -92,15 +92,15 @@ void CMMSObject::ImportDescriptions(CStorage& TypedTextStor, const GCString& FNa
 			GCString FName;
 
 			if( StdName || Suffix.IsEmpty() )
-				FName.Format("%s%s.%s", FNamePrefix, nt_rec_file->FileName, nt_rec_file->Ext);
+				FName.Format("%s%s.%s", (LPCSTR)FNamePrefix, (LPCSTR)nt_rec_file->FileName, (LPCSTR)nt_rec_file->Ext);
 			else
-				FName.Format("%s%s", NewPrefix, nt_rec_file->Ext);
+				FName.Format("%s%s", (LPCSTR)NewPrefix, (LPCSTR)nt_rec_file->Ext);
 
 			if( FileExist(FName) )
 			{
 				if( TypedTextStor.Create(StorName) )
 				{
-					Msg(2, "CPY: '%s'", FName);
+					Msg(2, "CPY: '%s'", (LPCSTR)FName);
 					{
 						GCString StreamName = nt_rec_file->PrepareStorageName(ID);
 						TypedTextStor.StreamFromFile(StreamName, FName);
@@ -135,7 +135,7 @@ bool CMMSObject::ImportMoxelPages(CStorage& Storage, const GCString& SrcDir, GCS
 	while( Order.ReadString() )
 	{
 		//Соберём имена
-		FName.Format("%s\\%s", SrcDir, Order.GetValue(2));
+		FName.Format("%s\\%s", (LPCSTR)SrcDir, Order.GetValue(2));
 		Page.Format("Page.%s", Order.GetValue(0));
 
 		if( TaskParameters.NoEmptyMxl ) //Поскипаем пустые шаблоны
@@ -146,7 +146,7 @@ bool CMMSObject::ImportMoxelPages(CStorage& Storage, const GCString& SrcDir, GCS
 
 		Storage.StreamFromFile(Page, FName);
 
-		CC.Format(",{\"Moxcel.Worksheet\",\"%s\",\"%s\",\"\"}", Page, Order.GetValue(3));
+		CC.Format(",{\"Moxcel.Worksheet\",\"%s\",\"%s\",\"\"}", (LPCSTR)Page, Order.GetValue(3));
 		ContCont += CC;
 
 		HavePages = true;
@@ -344,9 +344,9 @@ bool CMMSObject::ImportListForms(CFormDescrList& Forms, CStorage& Storage,
 		if( MMS_Filter.Test(Form, nt_rec) || MMS_Filter.Test(GCString("ФормыСписков")) )
 		{
 			GCString FormDir;
-			FormDir.Format("%s\\%s.%s", SrcDir, Translit(Form->sID), nt_rec->Ext);
+			FormDir.Format("%s\\%s.%s", (LPCSTR)SrcDir, (LPCSTR)Translit(Form->sID), (LPCSTR)nt_rec->Ext);
 			
-			StorName.Format("%s%i", Prefix, Form->ID);
+			StorName.Format("%s%i", (LPCSTR)Prefix, Form->ID);
 			Storage.Create(StorName);
 			NotEmpty = ImportWorkBook(Storage, FormDir);
 			Storage.Close();
@@ -394,7 +394,7 @@ void CMMSTaskItem::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCStri
 	{
 		if( TypedTextStorage.Create(StorName) )
 		{
-			Msg(2, "CPY: '%s'", FName);
+			Msg(2, "CPY: '%s'", (LPCSTR)FName);
 			{
 				GCString StreamName = nt_rec_file->PrepareStorageName(Content.ID);
 				TypedTextStorage.StreamFromFile(StreamName, FName);
@@ -518,7 +518,7 @@ void CMMS::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCString& Dir)
 	for( int i = 0; i < GetNChildren(); i++ )
 	{
 		CMMSObject *obj = GetChild(i);
-		Msg(2, "%s:", obj->sID);
+		Msg(2, "%s:", (LPCSTR)obj->sID);
 		obj->Compile(Storage, TypedTextStorage, Dir);
 	}
 
@@ -566,9 +566,9 @@ void CMMSReport::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCString
 		GCString RptDir = GetObjectDir(SrcDir);
 		GCString StorName;
 
-		Msg(1, "INF: Отчёт.%s", sID);
+		Msg(1, "INF: Отчёт.%s", (LPCSTR)sID);
 
-		StorName.Format("%s%i", SubStroragePrefix, ID);
+		StorName.Format("%s%i", (LPCSTR)SubStroragePrefix, ID);
 		Storage.Create(StorName);
 		bool NotEmpty = ImportWorkBook(Storage, RptDir);
 		Storage.Close();

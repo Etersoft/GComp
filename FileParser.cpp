@@ -42,7 +42,7 @@ void CMMSObject::ParseFile(CLexer& Lexer)
 				Child = CreateChild(PrevToken, PrevValue);
 				if( Child == NULL )
 				{
-					Msg(0, "ERR: Can't create child %s of %s", PrevToken, sID);
+					Msg(0, "ERR: Can't create child %s of %s", (LPCSTR)PrevToken, (LPCSTR)sID);
 					throw NULL;
 				}
 
@@ -52,7 +52,7 @@ void CMMSObject::ParseFile(CLexer& Lexer)
 					Child->ParseFile(Lexer);
 				}
 				catch(...) {
-					Msg(0, "INFO: parsing %s", sID);
+					Msg(0, "INFO: parsing %s", (LPCSTR)sID);
 					throw NULL;
 				}
 

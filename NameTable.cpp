@@ -319,9 +319,9 @@ GCString CNameTableRecord::PrepareDirName(const GCString& BaseDir, CMMSObject* o
 	if( BaseDir.GetLength() > 0 ) Slash = "\\";
 
 	if( (Ext.GetLength() > 0) && (FileName.GetLength() == 0) )
-		FullDirName.Format("%s%s%s.%s", BaseDir, Slash, Dir, Ext);
+		FullDirName.Format("%s%s%s.%s", (LPCSTR)BaseDir, (LPCSTR)Slash, (LPCSTR)Dir, (LPCSTR)Ext);
 	else
-		FullDirName.Format("%s%s%s", BaseDir, Slash, Dir);
+		FullDirName.Format("%s%s%s", (LPCSTR)BaseDir, (LPCSTR)Slash, (LPCSTR)Dir);
 
 	if( object != NULL )
 	{
@@ -338,7 +338,7 @@ GCString CNameTableRecord::PrepareStorageName(int suffix)
 	if( HasSuffix )
 	{
 		GCString StorName;
-		StorName.Format("%s%i", StorageName, suffix);
+		StorName.Format("%s%i", (LPCSTR)StorageName, suffix);
 		return StorName;
 	}
 	else

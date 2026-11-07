@@ -154,7 +154,7 @@ void CMMSCalcJournal::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCS
 	MMS_Filter.Down();
 	if( MMS_Filter.Test(this, nt_rec) )
 	{
-		Msg(1, "INF: ЖурналРасчётов.%s", sID);
+		Msg(1, "INF: ЖурналРасчётов.%s", (LPCSTR)sID);
 		GCString JournalDir = GetObjectDir(SrcDir);
 
 		ImportDescriptions(TypedTextStorage, JournalDir+"\\", true);
@@ -235,7 +235,7 @@ void CMMSCaclAlgorithm::Decompile(GCString& Dir, CStorage& Storage, CStorage& Ty
 	MMS_Filter.Down();
 	if( MMS_Filter.Test(this, nt_rec_stor) )
 	{
-		Msg(2, "Алгоритм расчёта %s", sID);
+		Msg(2, "Алгоритм расчёта %s", (LPCSTR)sID);
 		GCString AlgDir = GetObjectDir(Dir);
 		CreateDirectory(AlgDir);
 
@@ -299,7 +299,7 @@ void CMMSCaclAlgorithm::Compile(CStorage& Storage, CStorage& TypedTextStorage, G
 	FileName = nt_rec_file->PrepareFileName(AlgDir);
 	if( FileExist(FileName) )
 	{
-		Msg(1, "INF: АлгоритмРасчёта.%s", sID);
+		Msg(1, "INF: АлгоритмРасчёта.%s", (LPCSTR)sID);
 
 		TypedTextStorage.Create(nt_rec_stor->PrepareStorageName(ID));
 		TypedTextStorage.StreamFromFile(nt_rec_file->StorageName, FileName);

@@ -48,7 +48,7 @@ LPCSTR GComp_GetVersion()
 
 	FileVersion.Replace(" ", "");
 	FileVersion.Replace(',', '.');
-	sprintf(Version, "%s.beta", FileVersion);
+	sprintf(Version, "%s.beta", (LPCSTR)FileVersion);
 	return Version;
 }
 
@@ -92,7 +92,7 @@ BOOL YesNoToBool(GCString& token, GCString& value)
 	if( value.CollateNoCase("n")     == 0 ) return false;
 	if( value.CollateNoCase("нет")   == 0 ) return false;
 
-	Msg(0, "ERR: Неизвестное значение '%s' параметра %s в gcomp.ini", value, token);
+	Msg(0, "ERR: Неизвестное значение '%s' параметра %s в gcomp.ini", (LPCSTR)value, (LPCSTR)token);
 	throw NULL;
 }
 
@@ -106,7 +106,7 @@ TGComp_Languages ReadLanguage(GCString& token, GCString& value)
 		return lang_Translit;
 	else
 	{
-		Msg(0, "ERR: Неизвестный язык '%s' в gcomp.ini", value);
+		Msg(0, "ERR: Неизвестный язык '%s' в gcomp.ini", (LPCSTR)value);
 		throw NULL;
 	}
 }
@@ -162,7 +162,7 @@ void GComp_ReadSettings(CGCompParameters* Parameters)
 
 		else
 		{
-			Msg(0, "ERR: Неизвестный параметр '%s' в gcomp.ini", token);
+			Msg(0, "ERR: Неизвестный параметр '%s' в gcomp.ini", (LPCSTR)token);
 			throw NULL;
 		}
 	}
@@ -552,7 +552,7 @@ BOOL GComp_MakeNamePath(LPCTSTR srcDir, BOOL translite, LPTSTR objName, int buff
 	InitializeNameTable();
 
 	BOOL res = NameToPath(Name, Path);
-	Msg(0, "Name: %s, Path: %s", Name, Path);
+	Msg(0, "Name: %s, Path: %s", (LPCSTR)Name, (LPCSTR)Path);
 	return res;
 }
 

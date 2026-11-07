@@ -53,7 +53,7 @@ bool CStorage::ExtractPictureGallery(GCString& FileName)
 		FILE* HdrFile = fopen(HdrName, "wb");
 		CopyToFile(HdrFile, HdrSize);
 		fclose(HdrFile);
-		Msg(1, "UPD: '%s' -> '%s'", StreamName, HdrName);
+		Msg(1, "UPD: '%s' -> '%s'", (LPCSTR)StreamName, (LPCSTR)HdrName);
 	}
 	AddToExtractedList(HdrName, NULL);
 
@@ -69,7 +69,7 @@ bool CStorage::ExtractPictureGallery(GCString& FileName)
 		FILE* BMPFile = fopen(FileName, "wb");
 		CopyToFile(BMPFile, BMP_size);
 		fclose(BMPFile);
-		Msg(1, "UPD: '%s' -> '%s'", StreamName, FileName);
+		Msg(1, "UPD: '%s' -> '%s'", (LPCSTR)StreamName, (LPCSTR)FileName);
 	}
 	AddToExtractedList(FileName, NULL);
 
@@ -82,7 +82,7 @@ bool CStorage::ExtractPictureGallery(GCString& FileName)
 		FILE* TailFile = fopen(TailName, "wb");
 		CopyToFile(TailFile, TailSize);
 		fclose(TailFile);
-		Msg(1, "UPD: '%s' -> '%s'", StreamName, TailName);
+		Msg(1, "UPD: '%s' -> '%s'", (LPCSTR)StreamName, (LPCSTR)TailName);
 	}
 	AddToExtractedList(TailName, NULL);
 
@@ -112,22 +112,22 @@ bool CStorage::ImportPictureGallery(GCString& StreamName, GCString& FileName)
 	if( !CreateStream(StreamName) ) return false;
 	if( !FromFile(HdrName) )
 	{
-		Msg(0, "ERR: Невозможно открыть файл %s: %s", HdrName, strerror(errno));
+		Msg(0, "ERR: Невозможно открыть файл %s: %s", (LPCSTR)HdrName, strerror(errno));
 		throw NULL;
 	}
 	if( 0 == AppendFile(pStream, BmpName) )
 	{
-		Msg(0, "ERR: Невозможно открыть файл %s: %s", BmpName, strerror(errno));
+		Msg(0, "ERR: Невозможно открыть файл %s: %s", (LPCSTR)BmpName, strerror(errno));
 		throw NULL;
 	}
 	if( 0 == AppendFile(pStream, TailName) )
 	{
-		Msg(0, "ERR: Невозможно открыть файл %s: %s", TailName, strerror(errno));
+		Msg(0, "ERR: Невозможно открыть файл %s: %s", (LPCSTR)TailName, strerror(errno));
 		throw NULL;
 	}
 
-	Msg(2, "CPY: '%s'  >> '%s'", BmpName, StreamName);
-	Msg(2, "CPY: '%s' >> '%s'", TailName, StreamName);
+	Msg(2, "CPY: '%s'  >> '%s'", (LPCSTR)BmpName, (LPCSTR)StreamName);
+	Msg(2, "CPY: '%s' >> '%s'", (LPCSTR)TailName, (LPCSTR)StreamName);
 
 	GalleryImported = true;
 	return true;

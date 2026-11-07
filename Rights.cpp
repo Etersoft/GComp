@@ -336,7 +336,7 @@ void DecompileUserRights(GCString& Dir, CStorage& Storage)
 				MangleFileName(RtDescr->sID);
 				GCString FileName = nt_rec->PrepareFileName(Dir, RtDescr);
 
-				Msg(2, "Набор прав '%s'", RightsName);
+				Msg(2, "Набор прав '%s'", (LPCSTR)RightsName);
 				RtStorage.OpenStream(StreamName);
 				try
 				{
@@ -344,11 +344,11 @@ void DecompileUserRights(GCString& Dir, CStorage& Storage)
 				}
 				catch(...)
 				{
-					Msg(0, "ERR: Ошибка при чтении набора прав %s", RightsName);
+					Msg(0, "ERR: Ошибка при чтении набора прав %s", (LPCSTR)RightsName);
 				}
 
 				Rights.WriteToFile(RtStorage, FileName);
-				Ordering.Add(RtDescr->sID, RightsName, StreamName);
+				Ordering.Add(RtDescr->sID, (LPCSTR)RightsName, (LPCSTR)StreamName);
 
 				if (TaskParameters.MakeUserRightsInOneFile)
 					Rights.CSVString(CSVString, RightsName);

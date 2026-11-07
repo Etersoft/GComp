@@ -262,7 +262,7 @@ void CTask::Action()
 void CTask::Decompile()
 {
 	CTime Time = CTime::GetCurrentTime();
-	if( TaskParameters.Verbose > 1) Msg(0, "\nExtraction started: %s", Time.Format("%Y.%m.%d %H:%M:%S"));
+	if( TaskParameters.Verbose > 1) Msg(0, "\nExtraction started: %s", (LPCSTR)Time.Format("%Y.%m.%d %H:%M:%S"));
 
 	GComp_ReadSettings(&TaskParameters);
 	if( !GComp_Decompile(&TaskParameters) )
@@ -276,14 +276,14 @@ void CTask::Decompile()
 		CTimeSpan ExtractionTime = CTime::GetCurrentTime() - Time;
 		Msg(0, "'%s' extracted into '%s' in %s", 
 			TaskParameters.CompoundFileName, TaskParameters.DirectoryName, 
-			ExtractionTime.Format("%H:%M:%S"));
+			(LPCSTR)ExtractionTime.Format("%H:%M:%S"));
 	}
 }
 
 void CTask::Compile()
 {
 	CTime Time = CTime::GetCurrentTime();
-	if( TaskParameters.Verbose > 1) Msg(0, "\nCompilation started: %s", Time.Format("%Y.%m.%d %H:%M:%S"));
+	if( TaskParameters.Verbose > 1) Msg(0, "\nCompilation started: %s", (LPCSTR)Time.Format("%Y.%m.%d %H:%M:%S"));
 
 	GComp_ReadSettings(&TaskParameters);
 	if( !GComp_Compile(&TaskParameters) )
@@ -292,5 +292,5 @@ void CTask::Compile()
 	CTimeSpan CompilationTime = CTime::GetCurrentTime() - Time;
 	Msg(0, "Dir '%s' compiled into '%s' in %s", 
 		TaskParameters.DirectoryName, TaskParameters.CompoundFileName, 
-		CompilationTime.Format("%H:%M:%S"));
+		(LPCSTR)CompilationTime.Format("%H:%M:%S"));
 }

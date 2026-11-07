@@ -74,13 +74,13 @@ void CMMSObject::ExtractDescriptions(const GCString& FNamePrefix, CStorage& Type
 			(nt_rec_obj == NULL || nt_rec_obj->Type1C == "sID") )
 		{
 			if( ID_Type == IDT_OnlyTextual )
-				Suffix.Format("%s.", sID);
+				Suffix.Format("%s.", (LPCSTR)sID);
 			else if( ID_Type == IDT_OnlyNumeric )
-				Suffix.Format("%s.%i.", nt_rec_file->FileName, ID);
+				Suffix.Format("%s.%i.", (LPCSTR)nt_rec_file->FileName, ID);
 			else if( sID.IsEmpty() || !IsValidFileName(sID) )
-				Suffix.Format("%s.%i.", nt_rec_file->FileName, ID);
+				Suffix.Format("%s.%i.", (LPCSTR)nt_rec_file->FileName, ID);
 			else
-				Suffix.Format("%s.", sID);
+				Suffix.Format("%s.", (LPCSTR)sID);
 		}
 
 		InplaceTranslit(Suffix);
@@ -93,9 +93,9 @@ void CMMSObject::ExtractDescriptions(const GCString& FNamePrefix, CStorage& Type
 			GCString FName;
 
 			if( StdName || Suffix.IsEmpty() )
-				FName.Format("%s%s.%s", FNamePrefix, nt_rec_file->FileName, nt_rec_file->Ext);
+				FName.Format("%s%s.%s", (LPCSTR)FNamePrefix, (LPCSTR)nt_rec_file->FileName, (LPCSTR)nt_rec_file->Ext);
 			else
-				FName.Format("%s%s", NewPrefix, nt_rec_file->Ext);
+				FName.Format("%s%s", (LPCSTR)NewPrefix, (LPCSTR)nt_rec_file->Ext);
 
 			TypedTextStor.Open(StorName);
 			{
@@ -136,7 +136,7 @@ void CMMSObject::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedText
 		else
 			ObjDir = Dir;
 
-		Msg(2, "%s", sID);
+		Msg(2, "%s", (LPCSTR)sID);
 
 		//Метаданные
 		ExtractMetadata(Dir, MMS_Type, TypedTextStorage);
@@ -174,10 +174,10 @@ void CMMSObject::ExtractMoxelPages(GCString& DestDir, CStorage& WBStorage)
 		else
 		{
 			if( MangleFileName(tab_name) > 0 )
-				Msg(2, "MXL %s replaced by %s", rec->ObjectName, tab_name);
+				Msg(2, "MXL %s replaced by %s", (LPCSTR)rec->ObjectName, (LPCSTR)tab_name);
 		}
 
-		mxlFName.Format("%s.%s", tab_name, nt_rec_mxl->Ext);
+		mxlFName.Format("%s.%s", (LPCSTR)tab_name, (LPCSTR)nt_rec_mxl->Ext);
 
 		if( TaskParameters.NoEmptyMxl ) //Поскипаем пустые шаблоны
 		{
@@ -192,7 +192,7 @@ void CMMSObject::ExtractMoxelPages(GCString& DestDir, CStorage& WBStorage)
 			WBStorage.CopyToFile(StreamName, FileName);
 		}
 		
-		Order.Add(page_suffix, mxlFName, Translit(mxlFName), rec->ObjectName);
+		Order.Add(page_suffix, (LPCSTR)mxlFName, (LPCSTR)Translit(mxlFName), (LPCSTR)rec->ObjectName);
 	}
 
 	if( Order.Order.GetLength() > 0 ) Order.WriteFile(WBStorage, DestDir);
@@ -219,7 +219,7 @@ void CMMSObject::ExtractWorkBook(GCString& DestDir, CStorage& Storage, CMMSObjec
 		GCString StorName = nt_rec_dlg->PrepareStorageName();
 		if( Storage.StreamExist(StorName) )
 		{
-			Msg(2, "Form of: %i, %s", ID, sID);
+			Msg(2, "Form of: %i, %s", ID, (LPCSTR)sID);
 			if( TaskParameters.NotParseForms )
 			{
 				ExtractStreamByType(Storage, NT_DialogForm, DestDir);
@@ -234,7 +234,7 @@ void CMMSObject::ExtractWorkBook(GCString& DestDir, CStorage& Storage, CMMSObjec
 				}
 				catch(...) //чего-то там не распарсилось - тогда вытащим поток как есть
 				{
-					Msg(0, "WARN: error parsing form of %i: %s. Extracting stream as is.", ID, sID);
+					Msg(0, "WARN: error parsing form of %i: %s. Extracting stream as is.", ID, (LPCSTR)sID);
 					ExtractStreamByType(Storage, NT_DialogForm, DestDir);
 				}
 			}
@@ -283,9 +283,9 @@ void CMMSObject::ExtractListForms(CFormDescrList& Forms, GCString& Dir, CStorage
 		if( MMS_Filter.Test(Form, nt_rec) || MMS_Filter.Test(GCString("ФормыСписков")) )
 		{
 			GCString FormDir;
-			FormDir.Format("%s\\%s.%s", Dir, Translit(Form->sID), nt_rec->Ext);
+			FormDir.Format("%s\\%s.%s", (LPCSTR)Dir, (LPCSTR)Translit(Form->sID), (LPCSTR)nt_rec->Ext);
 			
-			StorName.Format("%s%i", Prefix, Form->ID);
+			StorName.Format("%s%i", (LPCSTR)Prefix, Form->ID);
 			if( Storage.Open(StorName) )
 			{
 				ExtractWorkBook(FormDir, Storage, this);
@@ -351,7 +351,7 @@ void CMMSAttributes_SF::Decompile(GCString& Dir, CStorage& Storage, CStorage& Ty
 		else
 			ObjDir = Dir;
 
-		Msg(2, "%s", sID);
+		Msg(2, "%s", (LPCSTR)sID);
 
 		if( TaskParameters.MetadataBySubfolders )
 		{
@@ -505,7 +505,7 @@ void CMMS::BuildObjNameCache(TCompareFunction sort_method, const GCString& Dir, 
 		GCString NamesStr, str;
 		for( int i = 0; i < ObjNameCache.GetSize(); i++ )
 		{
-			str.Format("%10i\t%s\r\n", ObjNameCache[i].ID, ObjNameCache[i].Name);
+			str.Format("%10i\t%s\r\n", ObjNameCache[i].ID, (LPCSTR)ObjNameCache[i].Name);
 			NamesStr += str;
 		}
 		CNameTableRecord* nt_rec = NameTable.Find(NT_ObjNameTable);
@@ -532,7 +532,7 @@ void CMMS::CheckObjNameCache()
 	{
 		if( ObjNameCache[i-1].ID == ObjNameCache[i].ID )
 		{
-			Msg(0, "ERR: Неуникальный числовой идентификатор - %i: %s", ObjNameCache[i].ID, ObjNameCache[i].Name);
+			Msg(0, "ERR: Неуникальный числовой идентификатор - %i: %s", ObjNameCache[i].ID, (LPCSTR)ObjNameCache[i].Name);
 			error = true;
 		}
 	}
@@ -541,7 +541,7 @@ void CMMS::CheckObjNameCache()
 	{
 		if( ObjNameCache[i-1].Name == ObjNameCache[i].Name )
 		{
-			Msg(0, "ERR: Неуникальный текстовый идентификатор - %i: %s", ObjNameCache[i].ID, ObjNameCache[i].Name);
+			Msg(0, "ERR: Неуникальный текстовый идентификатор - %i: %s", ObjNameCache[i].ID, (LPCSTR)ObjNameCache[i].Name);
 			error = true;
 		}
 	}
@@ -549,7 +549,7 @@ void CMMS::CheckObjNameCache()
 	{
 		if( ObjNameCache[i].ID == 0 )
 		{
-			Msg(0, "ERR: Нулевой числовой идентификатор для %s", ObjNameCache[i].Name);
+			Msg(0, "ERR: Нулевой числовой идентификатор для %s", (LPCSTR)ObjNameCache[i].Name);
 			error = true;
 		}
 	}
@@ -656,12 +656,12 @@ void CMMSReport::Decompile(GCString& Dir, CStorage& Storage, GCString& Prefix, C
 	{
 		GCString StorName;
 
-		Msg(2, "Отчет (обработка) %s", sID);
+		Msg(2, "Отчет (обработка) %s", (LPCSTR)sID);
 
 		GCString RptDir = GetObjectDir(Dir);
 		CreateDirectory(RptDir);
 		
-		StorName.Format("%s%i", Prefix, ID);
+		StorName.Format("%s%i", (LPCSTR)Prefix, ID);
 		if( Storage.Open(StorName) )
 		{
 			ExtractWorkBook(RptDir, Storage, NULL);

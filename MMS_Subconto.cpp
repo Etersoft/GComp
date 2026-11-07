@@ -159,7 +159,7 @@ void CMMSSbCnt::Decompile(GCString& BaseDir, CStorage& Storage, CStorage& TypedT
 
 		CreateDirectory(ScDir);
 
-		Msg(2, "Справочник %s", sID);
+		Msg(2, "Справочник %s", (LPCSTR)sID);
 
 		//Метаданные
 		ExtractMetadata(ScDir, TypedTextStorage);
@@ -240,7 +240,7 @@ void CMMSSbCnt::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCString&
 	MMS_Filter.Down();
 	if( MMS_Filter.Test(this, nt_rec_sc) )
 	{
-		Msg(1, "INF: Справочник.%s", sID);
+		Msg(1, "INF: Справочник.%s", (LPCSTR)sID);
 		Storage.Create(nt_rec_sc->PrepareStorageName(ID));
 
 		//Форма элемента
@@ -286,7 +286,7 @@ void CMMSSbCnts::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCString
 	CStorage SubListStorage(Storage);
 	GCString ScsDir;
 	
-	ScsDir.Format("%s\\%s", Dir, nt_rec->Dir);
+	ScsDir.Format("%s\\%s", (LPCSTR)Dir, (LPCSTR)nt_rec->Dir);
 
 	MMS_Filter.Down();
 	if( MMS_Filter.Test(this, nt_rec) )

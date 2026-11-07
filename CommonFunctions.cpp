@@ -240,6 +240,6 @@ void Msg(int MinimalVerbosityLevel, char *msg, ...)
 void PrintTime()
 {
 	CTime Time = CTime::GetCurrentTime();
-	Msg(0, "Time: %s", Time.Format("%H:%M:%S"));
+	Msg(0, "Time: %s", (LPCSTR)Time.Format("%H:%M:%S"));
 }
 

@@ -27,7 +27,7 @@ GCString CUICommand::AsString(bool IsChild)
 
 	if( IsChild )
 	{
-		res.Format("\t%s: %s\r\n", Command, CmdParameter);
+		res.Format("\t%s: %s\r\n", (LPCSTR)Command, (LPCSTR)CmdParameter);
 	}
 	else
 	{
@@ -95,13 +95,13 @@ DWORD CUICommands::Read(CStorage& Storage, GCString& UIName)
 		{
 			if( !ReadSizedString(cmd.Command, pStream) )
 			{
-				Msg(0, "WARN: В интерфейсе %s заявлено %i команд, а содержится только %i", UIName, NCommands, i);
+				Msg(0, "WARN: В интерфейсе %s заявлено %i команд, а содержится только %i", (LPCSTR)UIName, NCommands, i);
 				NCommands = i;
 				break;
 			}
 			if( !ReadSizedString(cmd.CmdParameter, pStream) )
 			{
-				Msg(0, "WARN: В интерфейсе %s заявлено %i команд, а содержится только %i", UIName, NCommands, i);
+				Msg(0, "WARN: В интерфейсе %s заявлено %i команд, а содержится только %i", (LPCSTR)UIName, NCommands, i);
 				NCommands = i;
 				break;
 			}
@@ -173,7 +173,7 @@ GCString& CUICommands::CommandID2Name(DWORD CommandID, GCString& Caption)
 			return Commands[i].FullCommand;
 	}
 
-	Msg(0, "WARN: Меню '%s' ссылается на несуществующий объект", Caption);
+	Msg(0, "WARN: Меню '%s' ссылается на несуществующий объект", (LPCSTR)Caption);
 	char str[32];
 	ltoa(CommandID, str, 16);
 	MissingCommandID = str;
@@ -325,7 +325,7 @@ GCString CUIPanel::AsString()
 		case 0xE81E: sPlacement = "Снизу"; break;
 		default: 
 			sPlacement = "Ошибка чтения расположения панели!!!";
-			Msg(0, "ERR: Ошибка чтения расположения панели %s", Caption);
+			Msg(0, "ERR: Ошибка чтения расположения панели %s", (LPCSTR)Caption);
 	}
 	
 	if( IsVisible == 0 )
@@ -339,7 +339,7 @@ GCString CUIPanel::AsString()
 		sOnNewLine = "Да";
 
 	res.Format("Панель: %s\r\n{\r\n\tРасположение: %s\r\n\tВидимость: %s\r\n\tСНовойСтроки: %s\r\n\tКнопок: %i\r\n}\r\n", 
-		Caption, sPlacement, sVisible, sOnNewLine, (int)NButtons);
+		(LPCSTR)Caption, (LPCSTR)sPlacement, (LPCSTR)sVisible, (LPCSTR)sOnNewLine, (int)NButtons);
 
 	return res;
 }
@@ -420,11 +420,11 @@ GCString CUIButton::AsString(bool WithCaption, CUICommands* Commands)
 	GCString res;
 	if( WithCaption )
 	{
-		res.Format("\t%s\r\n\t\t%s\r\n", Commands->CommandID2Name(ID, Caption), Caption);
+		res.Format("\t%s\r\n\t\t%s\r\n", (LPCSTR)Commands->CommandID2Name(ID, Caption), (LPCSTR)Caption);
 	}
 	else
 	{
-		res.Format("\t%s\r\n", Commands->CommandID2Name(ID, Caption));
+		res.Format("\t%s\r\n", (LPCSTR)Commands->CommandID2Name(ID, Caption));
 	}
 
 	return res;
@@ -523,7 +523,7 @@ void CUserInterface::Read(GCString& Dir, CStorage& Storage, CContainerRecord* Co
 {
 	StorageName = Container->StreamName;
 	Name = Container->ObjectName;
-	Msg(2, "Интерфейс %s", Name);
+	Msg(2, "Интерфейс %s", (LPCSTR)Name);
 
 	Storage.Open(StorageName);
 	
@@ -586,7 +586,7 @@ void CUserInterface::Extract(GCString& Dir, CStorage& Storage, CObjectOrdering& 
 		}
 
 		Children.Extract(UIDir, Storage);
-		Ordering.Add(MangledName, Name, StorageName);
+		Ordering.Add(MangledName, (LPCSTR)Name, (LPCSTR)StorageName);
 	}
 	MMS_Filter.Up();
 }

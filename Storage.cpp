@@ -17,7 +17,7 @@ void SetIOPre(LPCTSTR MsgPrefix, LPCTSTR FileName)
 	preActMsg =  "PRE_";
 	preActMsg += MsgPrefix;
 	
-	Msg(1, "%s: %s", preActMsg, FileName);
+	Msg(1, "%s: %s", (LPCSTR)preActMsg, FileName);
 	
 	DWORD  dwAttrs  = GetFileAttributes(FileName);
 	if ((dwAttrs & FILE_ATTRIBUTE_READONLY)) 
@@ -575,13 +575,13 @@ bool CStorage::CopyToFile(GCString& FileName, bool OnlyRestOfSream)
 	File = fopen(FileName, "wb");
 	if( !CopyToFile(File, bytes_to_copy) )
 	{
-		Msg(0, "Error writing to file '%s' - %s", FileName, strerror(errno));
+		Msg(0, "Error writing to file '%s' - %s", (LPCSTR)FileName, strerror(errno));
 		throw NULL;
 	}
 
 	fclose(File);
 
-	Msg(1, "%s: %s", MsgPrefix, FileName);
+	Msg(1, "%s: %s", MsgPrefix, (LPCSTR)FileName);
 	return true;
 }
 
@@ -602,8 +602,8 @@ bool CStorage::CopyToFile(GCString& StreamName, GCString& FileName)
 			Msg(0, "WARNING: Checksum %ib != real size %ib. Stream '%s\\%s'. File '%s'", 
 				(int)StreamInfo.Size, 
 				(int)(StreamInfo.FullSize - StreamInfo.SizeBytes - StreamInfo.SizeOffset),
-				FullPath(), StreamName,
-				FileName
+				(LPCSTR)FullPath(), (LPCSTR)StreamName,
+				(LPCSTR)FileName
 				);
 	}
 
@@ -623,7 +623,7 @@ bool CStorage::Extract(GCString& DestDir, bool WithContainerContents)
 	while ( S_OK == ppenum->Next(1, &stat, &uCount) )
 	{
 		StreamName.Format("%S", stat.pwcsName);
-		FileName.Format("%s\\%s", DestDir, StreamName);
+		FileName.Format("%s\\%s", (LPCSTR)DestDir, (LPCSTR)StreamName);
 
 		if( (stat.type & STGTY_STORAGE) != 0 )
 		{
@@ -790,7 +790,7 @@ bool CStorage::StorageFromDir(const GCString& StorageName, const GCString& SrcDi
 
 	if( !Create(StorageName) )
 	{
-		Msg(0, "ERR: Can't create storage %s", StorageName);
+		Msg(0, "ERR: Can't create storage %s", (LPCSTR)StorageName);
 		return false;
 	}
 
@@ -802,7 +802,7 @@ bool CStorage::StorageFromDir(const GCString& StorageName, const GCString& SrcDi
 		{
 			if( IsIgnoredFile(find_data.name) ) continue;
 			
-			FileName.Format("%s\\%s", SrcDir, find_data.name);
+			FileName.Format("%s\\%s", (LPCSTR)SrcDir, find_data.name);
 
 			if( (find_data.attrib & _A_SUBDIR) != 0 )
 			{
@@ -929,7 +929,7 @@ int CStorage::Compare(GCString& FileName, unsigned long bytes_to_compare)
 	FILE* File = fopen(FileName, "rb");
 	if (File == NULL ) 
 	{ 
-		Msg(0, "ERR: Невозможно открыть файл '%s' - %s", FileName, strerror(errno));
+		Msg(0, "ERR: Невозможно открыть файл '%s' - %s", (LPCSTR)FileName, strerror(errno));
 		throw NULL;
 	}
 
@@ -990,7 +990,7 @@ int CStorage::FullCompare(GCString& FileName)
 	if ( FileSize != StreamInfo.Size )
 	{
 		//Размеры не совпали
-		Msg(2, "File size is: %d - %s", FileSize, FileName);
+		Msg(2, "File size is: %d - %s", FileSize, (LPCSTR)FileName);
 		Msg(2, "Strm size is: %d", StreamInfo.Size);
 		cmp = (FileSize < StreamInfo.Size ? -1 : 1);
 	}
@@ -1022,7 +1022,7 @@ void CStorage::ParseStream(CMMSObject* Object, const GCString& StreamName, bool 
 
 	if( !CopyToFile(File, 0) )
 	{
-		Msg(0, "ERR: Не могу извлечь '%s' во временный файл: %s", FullStreamPath, strerror(errno));
+		Msg(0, "ERR: Не могу извлечь '%s' во временный файл: %s", (LPCSTR)FullStreamPath, strerror(errno));
 		throw NULL;
 	}
 	fclose(File);
@@ -1035,7 +1035,7 @@ void CStorage::ParseStream(CMMSObject* Object, const GCString& StreamName, bool 
 	}
 	catch(...)
 	{
-		Msg(0, "\tпредыдущая ошибка возникла в потоке %s", FullStreamPath);
+		Msg(0, "\tпредыдущая ошибка возникла в потоке %s", (LPCSTR)FullStreamPath);
 		throw NULL;
 	}
 	delete Lexer;
@@ -1076,7 +1076,7 @@ void CStorage::RemoveDirectory(GCString& Path)
 		{
 			if( IsIgnoredFolder(find_data.name) ) continue;
 
-			FileName.Format("%s\\%s", Path, find_data.name);
+			FileName.Format("%s\\%s", (LPCSTR)Path, find_data.name);
 			SetIOPre("DEL", FileName);
 			if( (find_data.attrib & _A_SUBDIR) != 0 ) // подкаталог
 			{
@@ -1116,7 +1116,7 @@ int CStorage::PruneDirectory(GCString& Path, bool NoEmptyFolders)
 		{
 			if( IsIgnoredFile(find_data.name) ) continue;
 
-			FileName.Format("%s\\%s", Path, find_data.name);
+			FileName.Format("%s\\%s", (LPCSTR)Path, find_data.name);
 
 			if( (find_data.attrib & _A_SUBDIR) != 0 ) // подкаталог
 			{
@@ -1203,7 +1203,7 @@ bool StringDifferFromFile(GCString& String, GCString& FileName)
 	FILE* File = fopen(FileName, "rb");
 	if (File == NULL ) 
 	{ 
-		Msg(0, "ERR: Can\t open file '%s' - %s", FileName, strerror(errno));
+		Msg(0, "ERR: Can\t open file '%s' - %s", (LPCSTR)FileName, strerror(errno));
 		throw NULL;
     }
 
@@ -1252,7 +1252,7 @@ bool CStorage::CopyStringToFile(GCString& String, GCString& FileName)
 	fwrite((LPCSTR)String, 1, String.GetLength(), File);
 	fclose(File);
 	
-	Msg(1, "%s: %s", MsgPrefix, FileName);
+	Msg(1, "%s: %s", MsgPrefix, (LPCSTR)FileName);
 
 	return true;
 }

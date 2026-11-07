@@ -50,7 +50,7 @@ void CMMSAttributes::AssembleMetadata(GCString& Dir)
 			if( (find_data.attrib & _A_SUBDIR) == 0 ) continue;
 			if( IsIgnoredFile(find_data.name) ) continue;
 
-			SubDir.Format("%s\\%s", DirName, find_data.name);
+			SubDir.Format("%s\\%s", (LPCSTR)DirName, find_data.name);
 			if( !FilesExist(SubDir+"\\*.mdp") ) continue; //пустые каталоги нам не нужны
 
 			CMMSObject* Child = CreateChild(NULL);
@@ -76,7 +76,7 @@ void CMMSAccountPlan::AssembleMetadata(GCString& PlanDir)
 		GCString AccFName;
 		while( Order.ReadString() )
 		{
-			AccFName.Format("%s\\%s", PlanDir, Order.GetValue(2));
+			AccFName.Format("%s\\%s", (LPCSTR)PlanDir, Order.GetValue(2));
 
 			CMMSObject* Account = Accounts.CreateChild(NULL);
 			Account->ParseFile(AccFName);
@@ -98,7 +98,7 @@ void CMMSAccountPlanList::AssembleMetadata(GCString& BuhDir)
 		GCString PlanDir;
 		while( Order.ReadString() )
 		{
-			PlanDir.Format("%s\\%s", PlansDir, Order.GetValue(2));
+			PlanDir.Format("%s\\%s", (LPCSTR)PlansDir, Order.GetValue(2));
 			
 			CMMSObject* Plan = CreateChild(NULL);
 			Plan->AssembleMetadata(PlanDir);

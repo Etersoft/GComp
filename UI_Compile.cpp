@@ -25,7 +25,7 @@ bool CUICommands::ReadFromFile(GCString& FileName)
 	CLexer Lexer(FileName);
 	if( !Lexer.IsValid() )
 	{
-		Msg(0, "ERR: Can not open file '%s': %s", FileName, strerror(errno));
+		Msg(0, "ERR: Can not open file '%s': %s", (LPCSTR)FileName, strerror(errno));
 		throw NULL;
 	}
 
@@ -33,7 +33,7 @@ bool CUICommands::ReadFromFile(GCString& FileName)
 	int state = 1; //1 - заголовок; 2 - команды; 3 - команда; 4 комада подчинённого интерфейса; 5 - завершающая '}' команд
 	GCString token, value;
 
-	Msg(2, "Чтение файла '%s'", FileName);
+	Msg(2, "Чтение файла '%s'", (LPCSTR)FileName);
 
 	NCommands = 0;
 	Commands.SetSize(128);
@@ -140,10 +140,10 @@ bool CUICommands::ReadFromFile(GCString& FileName)
 		case 4: //читаем команду подчинённого интерфейса
 			break;
 		case 5: //уже прочитали всё что можно
-			Msg(0, "WARN: Неожиданная строка: %s", Lexer.FilePosInfo());
+			Msg(0, "WARN: Неожиданная строка: %s", (LPCSTR)Lexer.FilePosInfo());
 			break;
 		default:
-			Msg(0, "WARN: Неожиданная строка: %s", Lexer.FilePosInfo());
+			Msg(0, "WARN: Неожиданная строка: %s", (LPCSTR)Lexer.FilePosInfo());
 			break;
 		}
 	}
@@ -204,7 +204,7 @@ bool CUICommands::Write(CStorage& Storage, GCString& SrcDir)
 		}
 	}
 
-	Msg(2, "CPY: %s", nt_rec->PrepareFileName(SrcDir));
+	Msg(2, "CPY: %s", (LPCSTR)nt_rec->PrepareFileName(SrcDir));
 
 	return true;
 }
@@ -253,7 +253,7 @@ bool CUIMenu::ReadFromFile(CLexer& Lexer, CUIMenu* Parent, int level)
 			Item->ID = Commands->CommandName2ID(token);
 			if( Item->ID == 0 )
 			{
-				Msg(0, "WARN: Меню '%s' ссылается на несуществующий объект", Item->Caption);
+				Msg(0, "WARN: Меню '%s' ссылается на несуществующий объект", (LPCSTR)Item->Caption);
 				Item->ID = 0x0000CFFE;
 			}
 			Lexer.GetRest(token);
@@ -287,7 +287,7 @@ bool CUIMenu::ReadFromFile(GCString& FileName)
 {
 	CLexer Lexer(FileName);
 
-	Msg(2, "Чтение файла '%s'", FileName);
+	Msg(2, "Чтение файла '%s'", (LPCSTR)FileName);
 
 	ReadFromFile(Lexer, NULL, 0);
 	return true;
@@ -299,7 +299,7 @@ bool CUIMenu::Write(CStorage& Storage, GCString& SrcDir)
 	{
 		CNameTableRecord* nt_rec = NameTable.Find(NT_UIMenu);
 		Storage.CreateStream(nt_rec->PrepareStorageName());
-		Msg(2, "CPY: %s", nt_rec->PrepareFileName(SrcDir));
+		Msg(2, "CPY: %s", (LPCSTR)nt_rec->PrepareFileName(SrcDir));
 	}
 	IStream* pStream = Storage.pStream;
 
@@ -340,7 +340,7 @@ void CUIPanels::SetButtonCommand(CUIButton& Button, GCString& id, GCString& File
 	Button.ID = Commands->CommandName2ID(id);
 	if( Button.ID == 0 && id != MenuDividorString )
 	{
-		Msg(0, "WARN: Кнопка на панели '%s' ссылается на несуществующий объект", FileName);
+		Msg(0, "WARN: Кнопка на панели '%s' ссылается на несуществующий объект", (LPCSTR)FileName);
 		Button.ID = 0xCFFE;
 	}
 }
@@ -354,7 +354,7 @@ bool CUIPanels::ReadFromFile(GCString& FileName)
 	char *divs_normal = ": \t", *divs_button = "", *dividors = divs_normal;
 	int state = 0; //0 - ждём объекта; 1 - чтение панели; 2 - чтение общего списка кнопок; 3 - чтение тексовых кнопок; 4 - чтение кнопок с картинками
 
-	Msg(2, "Чтение файла '%s'", FileName);
+	Msg(2, "Чтение файла '%s'", (LPCSTR)FileName);
 
 	while( Lexer.GetToken(token, dividors) )
 	{
@@ -473,8 +473,8 @@ bool CUIPanels::Write(CStorage& Storage, GCString& Dir)
 	CNameTableRecord* nt_rec_b = NameTable.Find(NT_UIPanelsBMP);
 	Storage.AppendFile(pStream, nt_rec_b->PrepareFileName(Dir));
 
-	Msg(2, "CPY: %s", nt_rec->PrepareFileName(Dir));
-	Msg(2, "CPY: %s", nt_rec_b->PrepareFileName(Dir));
+	Msg(2, "CPY: %s", (LPCSTR)nt_rec->PrepareFileName(Dir));
+	Msg(2, "CPY: %s", (LPCSTR)nt_rec_b->PrepareFileName(Dir));
 
 	return true;
 }
@@ -489,7 +489,7 @@ void CUserInterfaces::ReadFromDir(GCString& SrcDir, CUserInterface* Parent)
 	while( Ordering.ReadString() )
 	{
 		GCString DirName;
-		DirName.Format("%s\\%s", SrcDir, Ordering.GetValue(0));
+		DirName.Format("%s\\%s", (LPCSTR)SrcDir, Ordering.GetValue(0));
 		CUserInterface* Interface = new CUserInterface;
 		if( Interface->ReadFromDir(DirName, Parent) )
 		{
