@@ -80,7 +80,7 @@ const char* CUserRightsProp::TypeAsString()
 	
 	Msg(0, "WARN: не найден тип прав. ID = %i", Type);
 
-	char str[32];
+	static char str[32];
 	ltoa(Type, str, 16);
 	return str;
 }
@@ -161,7 +161,7 @@ const char* CUserRightsBlock::TypeAsString()
 
 	Msg(0, "WARN: Неизвестный объект прав. ID = %i", Type);
 
-	char str[32];
+	static char str[32];
 	ltoa(Type, str, 16);
 	return str;
 }

@@ -197,7 +197,7 @@ void CDialogForm::ParseMetadata(CLexer& Lexer)
 	GCString Token;
 	TTokenType TokType;
 	enum {wait_obj_begin, wait_name, count_braces, end} state = wait_obj_begin;
-	GCString ObjName = NULL;
+	GCString ObjName;
 	CMMSObject* Child;
 	int brace_counter;
 

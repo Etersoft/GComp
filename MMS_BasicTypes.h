@@ -14,6 +14,7 @@ class CPropertySet;
 class CStoredProperty
 {
 public:
+	virtual ~CStoredProperty() {}
 	virtual void SetValue(GCString& Value) = 0;
 	virtual GCString BeautyString() = 0;
 	virtual GCString MMSString() = 0;

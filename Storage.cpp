@@ -50,7 +50,7 @@ LPCSTR GetStgErrorString(HRESULT err)
 		case -2147287008:
 			return "Share violation";
 	}
-	sprintf(_StgErrorString, "Unknown error - %l", (long)err);
+	sprintf(_StgErrorString, "Unknown error - %ld", (long)err);
 	return _StgErrorString;
 }
 
@@ -1209,7 +1209,7 @@ bool StringDifferFromFile(GCString& String, GCString& FileName)
 
 	long FileSize;
 	long BytesRead;
-	void* buff = NULL;
+	char* buff = NULL;
 	
 	fseek(File, 0, SEEK_END);
 	FileSize = ftell(File);
@@ -1217,7 +1217,7 @@ bool StringDifferFromFile(GCString& String, GCString& FileName)
 
 	if ( String.GetLength() != FileSize ) goto FilesDiffer;
 
-	buff = (void*) new char[FileSize];
+	buff = new char[FileSize];
 	BytesRead = fread(buff, 1, FileSize, File);
 	if( memcmp(buff, (LPCSTR)String, FileSize) != 0 ) goto FilesDiffer;
 
