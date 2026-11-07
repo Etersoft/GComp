@@ -55,18 +55,28 @@ void CMMSObject::ExtractMetadata(GCString& DestDir, CStorage& TypedTextStorage)
 	ExtractMetadata(DestDir, NT_MetadataPart, TypedTextStorage);
 }
 
-/* A description without line breaks and control characters that fits the
-   lexer's line goes into the description file as "Описание: ..."; the
-   others, and those of objects that no description file shows, are
-   written to files by ExtractDescriptions. */
+/* A description of up to 2000 bytes in the description file, whose lines
+   end with CRLF and that has no control characters but tabs goes into the
+   description file as "Описание: ..." (see CMMSObject::BeautyHelp); the
+   others, and those of objects that no description file shows, are written
+   to files by ExtractDescriptions. */
 static bool IsInlineHelp(const GCString& Text)
 {
-	if( Text.GetLength() > 1000 )
-		return false;
-	for( int i = 0; i < Text.GetLength(); i++ )
-		if( (unsigned char)Text[i] < ' ' )
-			return false;
-	return true;
+	int len = Text.GetLength();
+	int escaped = len;
+	for( int i = 0; i < len; i++ )
+	{
+		unsigned char c = Text[i];
+		if( c == '\r' )
+		{
+			if( i + 1 >= len || Text[i+1] != '\n' ) return false;
+			i++;
+			continue;
+		}
+		if( c < ' ' && c != '\t' ) return false;
+		if( c == '"' || c == '\\' ) escaped++;
+	}
+	return escaped <= 2000;
 }
 
 void CMMSObject::LoadInlineHelp(CStorage& TypedTextStor)

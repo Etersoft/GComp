@@ -43,7 +43,10 @@ void CMMSObject::BeautyHelp(CBeautyString& String, int level)
 {
 	if( HelpState != help_inline )
 		return;
+	//as quote_linefeeds, with doubled quotes
 	GCString Quoted = Help;
+	Quoted.Replace("\\", "\\\\");
+	Quoted.Replace("\r\n", "\\n");
 	Quoted.Replace("\"", "\"\"");
 	Quoted = "\"" + Quoted + "\"";
 	String.add_parameter(level, "Описание", Quoted, "", true);
@@ -56,9 +59,34 @@ bool CMMSObject::SetHelp(GCString& Value)
 	Str.TrimRight();
 	int len = Str.GetLength();
 	if( len < 2 || Str[0] != '"' || Str[len-1] != '"' )
-		return false;
-	Help = Str.Mid(1, len-2);
-	Help.Replace("\"\"", "\"");
+	{
+		//e.g. a plain YAML scalar written by another program
+		Help = Str;
+		HelpState = help_inline;
+		return true;
+	}
+	Help.Empty();
+	for( int i = 1; i < len - 1; i++ )
+	{
+		char c = Str[i];
+		if( c == '"' )
+		{
+			if( i + 1 >= len - 1 || Str[i+1] != '"' ) return false;
+			i++;
+		}
+		else if( c == '\\' )
+		{
+			char d = i + 1 < len - 1 ? Str[i+1] : '\0';
+			i++;
+			if( d == 'n' )
+			{
+				Help += "\r\n";
+				continue;
+			}
+			if( d != '\\' ) return false;
+		}
+		Help += c;
+	}
 	HelpState = help_inline;
 	return true;
 }
