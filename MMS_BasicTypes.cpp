@@ -234,8 +234,16 @@ void CPropertySet::SetValue(void* Object, int i, GCString& Value, bool Unquote)
 	case CObjectProperty::t_string:
 		{
 		GCString* str_prop_val = (GCString*) ((char*)Object + prop.Offset );
-		Value.TrimRight();
-		*str_prop_val = Value;
+		int len = Value.GetLength();
+		if( !StrictPropertyValues )
+			*str_prop_val = Value; //from the Main Metadata Stream: keep spaces
+		else if( len >= 2 && Value[0] == '"' && Value[len-1] == '"' )
+			*str_prop_val = Value.Mid(1, len-2); //see QuoteEdgeSpaces
+		else
+		{
+			Value.TrimRight();
+			*str_prop_val = Value;
+		}
 		}
 		break;
 	case CObjectProperty::t_int:
@@ -303,7 +311,8 @@ void CPropertySet::BeautyString(CBeautyString& String, int level, const void* Ob
 		GCString* prop_val = (GCString*) ((char*)Object + prop.Offset );
 		GCString* def_val  = (GCString*) ((char*)DefaultValues + prop.Offset );
 		prop_val->quote_linefeeds();
-		String.add_parameter(level, prop.Name, *prop_val, *def_val, TaskParameters.NoDefaults);
+		//e.g. a synonym "... (2004 год) " would lose its space otherwise
+		String.add_parameter(level, prop.Name, QuoteEdgeSpaces(*prop_val), *def_val, TaskParameters.NoDefaults);
 		}
 		break;
 	case CObjectProperty::t_int:

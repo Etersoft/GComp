@@ -88,6 +88,7 @@ bool CUICommands::ReadFromFile(GCString& FileName)
 					//Для подчинёного интерфейса команды читаются в состоянии 2 (перехода в state = 3 не происходит)
 					Command->Command = token;
 					Command->CmdParameter = value;
+					UnquoteEdgeSpaces(Command->CmdParameter);
 					Command->FormFullCommand();
 				}
 				else
@@ -108,9 +109,15 @@ bool CUICommands::ReadFromFile(GCString& FileName)
 			else
 			{
 				if( token.CollateNoCase("Парам1") == 0 ) 
+				{
 					Lexer.GetRest(Command->Param1);
+					UnquoteEdgeSpaces(Command->Param1);
+				}
 				else if( token.CollateNoCase("Hint") == 0 )
+				{
 					Lexer.GetRest(Command->Hint);
+					UnquoteEdgeSpaces(Command->Hint);
+				}
 				else if( token.CollateNoCase("HotKey") == 0 )
 				{
 					Lexer.GetToken(token, ": \t", false);
@@ -133,6 +140,7 @@ bool CUICommands::ReadFromFile(GCString& FileName)
 				else if( token.CollateNoCase("Параметр") == 0 )
 				{
 					Lexer.GetRest(Command->CmdParameter);
+					UnquoteEdgeSpaces(Command->CmdParameter);
 					Command->FormFullCommand();
 				}
 			}
@@ -247,6 +255,7 @@ bool CUIMenu::ReadFromFile(CLexer& Lexer, CUIMenu* Parent, int level)
 			Item = AddItem();
 			Item->Type = MenuItem;
 			Lexer.GetRest(Item->Caption);
+			UnquoteEdgeSpaces(Item->Caption);
 			Item->Level = Level + 1;
 			//Command ID on next line
 			Lexer.GetLine(token);
@@ -269,6 +278,7 @@ bool CUIMenu::ReadFromFile(CLexer& Lexer, CUIMenu* Parent, int level)
 			Item->Type = MenuGroup;
 			Item->ID = 0xFFFFFFFF;
 			Lexer.GetRest(Item->Caption);
+			UnquoteEdgeSpaces(Item->Caption);
 			Item->ReadFromFile(Lexer, Item, level + 1);
 		}
 		else if( token.CollateNoCase("Разделитель") == 0 )

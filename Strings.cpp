@@ -250,6 +250,29 @@ void WriteSizedString(IStream* pStream, GCString& String)
 	if( len > 0 ) pStream->Write((LPCSTR)String, len, NULL);
 }
 
+static bool NeedsQuotes(const GCString& v)
+{
+	int len = v.GetLength();
+	if( len == 0 ) return false;
+	if( isspace((unsigned char)v[0]) || isspace((unsigned char)v[len-1]) ) return true;
+	return len >= 2 && v[0] == '"' && v[len-1] == '"';
+}
+
+GCString QuoteEdgeSpaces(const GCString& v)
+{
+	if( !NeedsQuotes(v) ) return v;
+	GCString q;
+	q.Format("\"%s\"", (LPCSTR)v);
+	return q;
+}
+
+void UnquoteEdgeSpaces(GCString& v)
+{
+	int len = v.GetLength();
+	if( len >= 2 && v[0] == '"' && v[len-1] == '"' )
+		v = v.Mid(1, len-2);
+}
+
 //"1", "0", "Да", "Нет", "Yes", "No" - the forms GComp reads and writes
 bool IsBoolString(const char* str)
 {

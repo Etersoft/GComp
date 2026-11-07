@@ -126,6 +126,10 @@ void WriteSizedString(IStream* pStream, GCString& String);
 //Преобразует строку в bool (1, 0) (Да, Нет)
 bool StrToBool(const char* str);
 bool IsBoolString(const char* str);
+//Description files are read with spaces trimmed: a value with a space at
+//either end (or one that is itself in quotes) is written in quotes
+GCString QuoteEdgeSpaces(const GCString& v);
+void UnquoteEdgeSpaces(GCString& v);
 
 //Функции транслитерации
 GCString Translit(GCString& str);
