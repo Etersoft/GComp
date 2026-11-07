@@ -72,18 +72,18 @@ CFormFont* CFormFont::DefVal = new CFormFont;
 CObjectProperty CFormFont::Props[] = {
 	{"Шрифт",   13, CObjectProperty::t_string, VAR_OFFSET(DefVal, FontName)},
 	{"Размер",  0,  CObjectProperty::t_prop, VAR_OFFSET(DefVal, FontSize)},
-	{"Param2",  1,  CObjectProperty::t_int,  VAR_OFFSET(DefVal, Param2)},
-	{"Param3",  2,  CObjectProperty::t_int,  VAR_OFFSET(DefVal, Param3)},
-	{"Param4",  3,  CObjectProperty::t_int,  VAR_OFFSET(DefVal, Param4)},
+	{"ШиринаСимвола", 1,  CObjectProperty::t_int,  VAR_OFFSET(DefVal, Param2)},
+	{"УголСтроки", 2,  CObjectProperty::t_int,  VAR_OFFSET(DefVal, Param3)},
+	{"УголСимвола", 3,  CObjectProperty::t_int,  VAR_OFFSET(DefVal, Param4)},
 	{"Жирный",  4,  CObjectProperty::t_prop, VAR_OFFSET(DefVal, FontBold)},
 	{"Наклон",  5,  CObjectProperty::t_prop, VAR_OFFSET(DefVal, FontItalic)},
 	{"Подчёркивание", 6, CObjectProperty::t_prop, VAR_OFFSET(DefVal, FontUnderline)},
-	{"Param8",  7,  CObjectProperty::t_int, VAR_OFFSET(DefVal, Param8)},
-	{"Param9",  8,  CObjectProperty::t_int, VAR_OFFSET(DefVal, Param9)},
-	{"Param10", 9,  CObjectProperty::t_int, VAR_OFFSET(DefVal, Param10)},
-	{"Param11", 10, CObjectProperty::t_int, VAR_OFFSET(DefVal, Param11)},
-	{"Param12", 11, CObjectProperty::t_int, VAR_OFFSET(DefVal, Param12)},
-	{"Param13", 12, CObjectProperty::t_int, VAR_OFFSET(DefVal, Param13)},
+	{"Зачёркивание", 7,  CObjectProperty::t_int, VAR_OFFSET(DefVal, Param8)},
+	{"НаборСимволов", 8,  CObjectProperty::t_int, VAR_OFFSET(DefVal, Param9)},
+	{"ТочностьВывода", 9,  CObjectProperty::t_int, VAR_OFFSET(DefVal, Param10)},
+	{"ТочностьОтсечения", 10, CObjectProperty::t_int, VAR_OFFSET(DefVal, Param11)},
+	{"Качество", 11, CObjectProperty::t_int, VAR_OFFSET(DefVal, Param12)},
+	{"ШагИСемейство", 12, CObjectProperty::t_int, VAR_OFFSET(DefVal, Param13)},
 	{NULL, 0, CObjectProperty::t_int, 0}
 };
 CPropertySet CFormFont::PropSet(Props, DefVal);
@@ -92,40 +92,184 @@ CPropertySet CFormFont::PropSet(Props, DefVal);
 //===============================================================================
 //======  CFormControlBase  =====================================================
 //===============================================================================
-char* CFormControlBase::FlagList[] = {
-	"Flag0",				//0
-	"Flag1",				//1
-	"Flag2",				//2
-	"КартинкаПоЦентру",		//3
-	"Flag4",				//4
-	"ПрижатьТекстВлево",	//5 (CHECKBOX - ПрижатьТекстВлево; 1CEDIT - для ввода пароля)
-	"РастянутьКартинку",	//6
-	"Flag7",				//7
-	"Flag8",				//8
-	"Flag9",				//9
-	"Flag10",				//10
-	"Flag11",				//11
-	"КнопкаПоУмолчанию",	//12
-	"Flag13",				//13
-	"Flag14",				//14
-	"Flag15",				//15
-	"Flag16",				//16
-	"ПервыйВГруппе",		//17
-	"Flag18",				//18
-	"Flag19",				//19
-	"Flag20",				//20
-	"Flag21",				//21
-	"Flag22",				//22
-	"Flag23",				//23
-	"Flag24",				//24
-	"Flag25",				//25
-	"Flag26",				//26
-	"Flag27",				//27
-	"Flag28",				//28
-	"Flag29",				//29
-	"Flag30",				//30
-	"Flag31"				//31
+/* Window styles of form elements, the WinAPI names; a group of bits that
+   holds one of several values (the button type, the alignment) has the
+   mask of the group. Bits without a name are written FlagN. */
+static const CWindowStyle::TName WS_Names[] = {
+	{0x00010000, 0x00010000, "WS_TABSTOP"},
+	{0x00020000, 0x00020000, "WS_GROUP"},
+	{0x00040000, 0x00040000, "WS_THICKFRAME"},
+	{0x00080000, 0x00080000, "WS_SYSMENU"},
+	{0x00100000, 0x00100000, "WS_HSCROLL"},
+	{0x00200000, 0x00200000, "WS_VSCROLL"},
+	{0x00400000, 0x00400000, "WS_DLGFRAME"},
+	{0x00800000, 0x00800000, "WS_BORDER"},
+	{0x01000000, 0x01000000, "WS_MAXIMIZE"},
+	{0x02000000, 0x02000000, "WS_CLIPCHILDREN"},
+	{0x04000000, 0x04000000, "WS_CLIPSIBLINGS"},
+	{0x08000000, 0x08000000, "WS_DISABLED"},
+	{0x10000000, 0x10000000, "WS_VISIBLE"},
+	{0x20000000, 0x20000000, "WS_MINIMIZE"},
+	{0x40000000, 0x40000000, "WS_CHILD"},
+	{0x80000000, 0x80000000, "WS_POPUP"},
+	{0, 0, NULL}
 };
+
+static const CWindowStyle::TName BS_Names[] = {
+	{0x000F, 0x0001, "BS_DEFPUSHBUTTON"},
+	{0x000F, 0x0002, "BS_CHECKBOX"},
+	{0x000F, 0x0003, "BS_AUTOCHECKBOX"},
+	{0x000F, 0x0004, "BS_RADIOBUTTON"},
+	{0x000F, 0x0005, "BS_3STATE"},
+	{0x000F, 0x0006, "BS_AUTO3STATE"},
+	{0x000F, 0x0007, "BS_GROUPBOX"},
+	{0x000F, 0x0008, "BS_USERBUTTON"},
+	{0x000F, 0x0009, "BS_AUTORADIOBUTTON"},
+	{0x000F, 0x000A, "BS_PUSHBOX"},
+	{0x000F, 0x000B, "BS_OWNERDRAW"},
+	{0x000F, 0x000C, "BS_SPLITBUTTON"},
+	{0x000F, 0x000D, "BS_DEFSPLITBUTTON"},
+	{0x000F, 0x000E, "BS_COMMANDLINK"},
+	{0x000F, 0x000F, "BS_DEFCOMMANDLINK"},
+	{0x0020, 0x0020, "BS_LEFTTEXT"},
+	{0x0040, 0x0040, "BS_ICON"},
+	{0x0080, 0x0080, "BS_BITMAP"},
+	{0x0300, 0x0100, "BS_LEFT"},
+	{0x0300, 0x0200, "BS_RIGHT"},
+	{0x0300, 0x0300, "BS_CENTER"},
+	{0x0C00, 0x0400, "BS_TOP"},
+	{0x0C00, 0x0800, "BS_BOTTOM"},
+	{0x0C00, 0x0C00, "BS_VCENTER"},
+	{0x1000, 0x1000, "BS_PUSHLIKE"},
+	{0x2000, 0x2000, "BS_MULTILINE"},
+	{0x4000, 0x4000, "BS_NOTIFY"},
+	{0x8000, 0x8000, "BS_FLAT"},
+	{0, 0, NULL}
+};
+
+static const CWindowStyle::TName SS_Names[] = {
+	{0x001F, 0x0001, "SS_CENTER"},
+	{0x001F, 0x0002, "SS_RIGHT"},
+	{0x001F, 0x0003, "SS_ICON"},
+	{0x001F, 0x0004, "SS_BLACKRECT"},
+	{0x001F, 0x0005, "SS_GRAYRECT"},
+	{0x001F, 0x0006, "SS_WHITERECT"},
+	{0x001F, 0x0007, "SS_BLACKFRAME"},
+	{0x001F, 0x0008, "SS_GRAYFRAME"},
+	{0x001F, 0x0009, "SS_WHITEFRAME"},
+	{0x001F, 0x000A, "SS_USERITEM"},
+	{0x001F, 0x000B, "SS_SIMPLE"},
+	{0x001F, 0x000C, "SS_LEFTNOWORDWRAP"},
+	{0x001F, 0x000D, "SS_OWNERDRAW"},
+	{0x001F, 0x000E, "SS_BITMAP"},
+	{0x001F, 0x000F, "SS_ENHMETAFILE"},
+	{0x001F, 0x0010, "SS_ETCHEDHORZ"},
+	{0x001F, 0x0011, "SS_ETCHEDVERT"},
+	{0x001F, 0x0012, "SS_ETCHEDFRAME"},
+	{0x0040, 0x0040, "SS_REALSIZECONTROL"},
+	{0x0080, 0x0080, "SS_NOPREFIX"},
+	{0x0100, 0x0100, "SS_NOTIFY"},
+	{0x0200, 0x0200, "SS_CENTERIMAGE"},
+	{0x0400, 0x0400, "SS_RIGHTJUST"},
+	{0x0800, 0x0800, "SS_REALSIZEIMAGE"},
+	{0x1000, 0x1000, "SS_SUNKEN"},
+	{0x2000, 0x2000, "SS_EDITCONTROL"},
+	{0xC000, 0x4000, "SS_ENDELLIPSIS"},
+	{0xC000, 0x8000, "SS_PATHELLIPSIS"},
+	{0xC000, 0xC000, "SS_WORDELLIPSIS"},
+	{0, 0, NULL}
+};
+
+static const CWindowStyle::TName ES_Names[] = {
+	{0x0003, 0x0001, "ES_CENTER"},
+	{0x0003, 0x0002, "ES_RIGHT"},
+	{0x0004, 0x0004, "ES_MULTILINE"},
+	{0x0008, 0x0008, "ES_UPPERCASE"},
+	{0x0010, 0x0010, "ES_LOWERCASE"},
+	{0x0020, 0x0020, "ES_PASSWORD"},
+	{0x0040, 0x0040, "ES_AUTOVSCROLL"},
+	{0x0080, 0x0080, "ES_AUTOHSCROLL"},
+	{0x0100, 0x0100, "ES_NOHIDESEL"},
+	{0x0400, 0x0400, "ES_OEMCONVERT"},
+	{0x0800, 0x0800, "ES_READONLY"},
+	{0x1000, 0x1000, "ES_WANTRETURN"},
+	{0x2000, 0x2000, "ES_NUMBER"},
+	{0, 0, NULL}
+};
+
+static const CWindowStyle::TName CBS_Names[] = {
+	{0x0003, 0x0001, "CBS_SIMPLE"},
+	{0x0003, 0x0002, "CBS_DROPDOWN"},
+	{0x0003, 0x0003, "CBS_DROPDOWNLIST"},
+	{0x0010, 0x0010, "CBS_OWNERDRAWFIXED"},
+	{0x0020, 0x0020, "CBS_OWNERDRAWVARIABLE"},
+	{0x0040, 0x0040, "CBS_AUTOHSCROLL"},
+	{0x0080, 0x0080, "CBS_OEMCONVERT"},
+	{0x0100, 0x0100, "CBS_SORT"},
+	{0x0200, 0x0200, "CBS_HASSTRINGS"},
+	{0x0400, 0x0400, "CBS_NOINTEGRALHEIGHT"},
+	{0x0800, 0x0800, "CBS_DISABLENOSCROLL"},
+	{0x2000, 0x2000, "CBS_UPPERCASE"},
+	{0x4000, 0x4000, "CBS_LOWERCASE"},
+	{0, 0, NULL}
+};
+
+static const CWindowStyle::TName LBS_Names[] = {
+	{0x0001, 0x0001, "LBS_NOTIFY"},
+	{0x0002, 0x0002, "LBS_SORT"},
+	{0x0004, 0x0004, "LBS_NOREDRAW"},
+	{0x0008, 0x0008, "LBS_MULTIPLESEL"},
+	{0x0010, 0x0010, "LBS_OWNERDRAWFIXED"},
+	{0x0020, 0x0020, "LBS_OWNERDRAWVARIABLE"},
+	{0x0040, 0x0040, "LBS_HASSTRINGS"},
+	{0x0080, 0x0080, "LBS_USETABSTOPS"},
+	{0x0100, 0x0100, "LBS_NOINTEGRALHEIGHT"},
+	{0x0200, 0x0200, "LBS_MULTICOLUMN"},
+	{0x0400, 0x0400, "LBS_WANTKEYBOARDINPUT"},
+	{0x0800, 0x0800, "LBS_EXTENDEDSEL"},
+	{0x1000, 0x1000, "LBS_DISABLENOSCROLL"},
+	{0x2000, 0x2000, "LBS_NODATA"},
+	{0x4000, 0x4000, "LBS_NOSEL"},
+	{0x8000, 0x8000, "LBS_COMBOBOX"},
+	{0, 0, NULL}
+};
+
+static const CWindowStyle::TName TVS_Names[] = {
+	{0x0001, 0x0001, "TVS_HASBUTTONS"},
+	{0x0002, 0x0002, "TVS_HASLINES"},
+	{0x0004, 0x0004, "TVS_LINESATROOT"},
+	{0x0008, 0x0008, "TVS_EDITLABELS"},
+	{0x0010, 0x0010, "TVS_DISABLEDRAGDROP"},
+	{0x0020, 0x0020, "TVS_SHOWSELALWAYS"},
+	{0x0040, 0x0040, "TVS_RTLREADING"},
+	{0x0080, 0x0080, "TVS_NOTOOLTIPS"},
+	{0x0100, 0x0100, "TVS_CHECKBOXES"},
+	{0x0200, 0x0200, "TVS_TRACKSELECT"},
+	{0x0400, 0x0400, "TVS_SINGLEEXPAND"},
+	{0x0800, 0x0800, "TVS_INFOTIP"},
+	{0x1000, 0x1000, "TVS_FULLROWSELECT"},
+	{0x2000, 0x2000, "TVS_NOSCROLL"},
+	{0x4000, 0x4000, "TVS_NONEVENHEIGHT"},
+	{0x8000, 0x8000, "TVS_NOHSCROLL"},
+	{0, 0, NULL}
+};
+
+//the Windows class of the elements: their styles match it
+const CWindowStyle::TClass CWindowStyle::Classes[] = {
+	{"BUTTON",        BS_Names},
+	{"CHECKBOX",      BS_Names},
+	{"RADIO",         BS_Names},
+	{"1CGROUPBOX",    BS_Names},
+	{"PICTURE",       BS_Names},
+	{"STATIC",        SS_Names},
+	{"1CEDIT",        ES_Names},
+	{"BMASKED",       ES_Names},
+	{"COMBOBOX",      CBS_Names},
+	{"LISTBOX",       LBS_Names},
+	{"SysTreeView32", TVS_Names},
+	{NULL, NULL}
+};
+const CWindowStyle::TName* CWindowStyle::WindowNames = WS_Names;
 
 char* CFormControlBase::BasicFlagList[] = {
 	"Flag0",						//0

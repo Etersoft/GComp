@@ -26,19 +26,19 @@ class CFormFont : public CMMSObject
 {
 public:
 	CFontSize FontSize; //-1 - 1pt; -2 - 1.5pt; -3 - 2pt; -4 - 2.5pt ... etc
-	//дальше параметры по видимому соответствуют стандартным полям структуры LOGFONT.  1С в основном их игнорирует.
-	int Param2; //LONG lfWidth;
-	int Param3; //LONG lfEscapement;
-	int Param4; //LONG lfOrientation
+	//the other fields of LOGFONT, named in descriptions after them
+	int Param2; //LONG lfWidth: ШиринаСимвола
+	int Param3; //LONG lfEscapement: УголСтроки
+	int Param4; //LONG lfOrientation: УголСимвола
 	CFontBold	FontBold; //in source: 400 - normal; 700 - bold   //LONG lfWeight
 	CStoredBool	FontItalic; //1 - italic; 0 - normal //BYTE lfItalic
 	CStoredBool	FontUnderline; //1 - undeline; 0 - normal  //BYTE lfUnderline
-	int Param8; //BYTE lfStrikeOut
-	int Param9; //charset (0 - ANSI, 204 - Russian)
-	int Param10; //BYTE lfOutPrecision
-	int Param11; //BYTE lfClipPrecision
-	int Param12; //BYTE lfQuality
-	int Param13; //BYTE lfPitchAndFamily
+	int Param8; //BYTE lfStrikeOut: Зачёркивание
+	int Param9; //BYTE lfCharSet: НаборСимволов (0 - ANSI, 204 - Russian)
+	int Param10; //BYTE lfOutPrecision: ТочностьВывода
+	int Param11; //BYTE lfClipPrecision: ТочностьОтсечения
+	int Param12; //BYTE lfQuality: Качество
+	int Param13; //BYTE lfPitchAndFamily: ШагИСемейство
 	GCString FontName;
 
 	bool FontNeeded; //для тех контролов, где шрифт не нужен
@@ -63,6 +63,41 @@ public:
 
 	virtual void BeautyString(CBeautyString& String, int level);
 	virtual void ToString(CMMSString& String);
+};
+
+
+/* The window style of a form element ("ДопФлаги"): the WinAPI names of
+   WS_ styles and of those of the element's Windows class (BS_ for
+   buttons, SS_ for STATIC, ES_ for fields, ...), FlagN for the other bits */
+class CWindowStyle : public CStoredProperty
+{
+public:
+	typedef struct {
+		unsigned int Mask;
+		unsigned int Value;
+		const char* Name;
+	} TName;
+	typedef struct {
+		const char* Class;
+		const TName* Names;
+	} TClass;
+
+	unsigned int Value;
+	const GCString* Class; //of the element
+
+private:
+	static const TClass Classes[];
+	static const TName* WindowNames;
+	const TName* ClassNames();
+	static void AddNames(const TName* Names, unsigned int& Rest, GCString& Out);
+
+public:
+	CWindowStyle() : Value(0), Class(NULL) {}
+	unsigned int operator=(unsigned int NewVal) { Value = NewVal; return Value; }
+
+	virtual void SetValue(GCString& Value);
+	virtual GCString BeautyString();
+	virtual GCString MMSString();
 };
 
 
@@ -102,7 +137,6 @@ public:
 	CStoredBitSet ValueFlags;  //1 - неотрицательный, 2 - разделять триады. Комбинируются по OR.
 
 protected:
-	static char* FlagList[]; //массив из 32_х элементов, к которому можно обращаться по номеру бита
 	static char* BasicFlagList[]; //массив из 32_х элементов, к которому можно обращаться по номеру бита
 	static char* ValueFlagList[]; //массив из двух элементов.
 
@@ -132,7 +166,7 @@ public:
 	void ApplyDefaults();
 	void ApplyDefaultFont();
 
-	CStoredBitSet Flags;
+	CWindowStyle Flags;
 	int PosX;
 	int PosY;
 	int Width;

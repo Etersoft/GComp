@@ -190,6 +190,16 @@ they are left out:
 `X`, `Y`, `Ширина`, `Высота` are one line, `Положение: X, Y, Ширина,
 Высота`.
 
+`ДопФлаги` are the window styles of the element with their WinAPI names:
+`WS_` ones and those of the element's Windows class (`BS_` for `BUTTON`,
+`CHECKBOX`, `RADIO`, `1CGROUPBOX` and `PICTURE`, `SS_` for `STATIC`, `ES_`
+for `1CEDIT` and `BMASKED`, `CBS_`, `LBS_`, `TVS_`), e.g. `ДопФлаги:
+SS_RIGHT, SS_CENTERIMAGE, WS_VISIBLE, WS_CHILD`; a bit without a name is
+`FlagN`. The font block names the fields of LOGFONT: `ШиринаСимвола`,
+`УголСтроки`, `УголСимвола`, `Жирный`, `Наклон`, `Подчёркивание`,
+`Зачёркивание`, `НаборСимволов` (204 is RUSSIAN_CHARSET), `ТочностьВывода`,
+`ТочностьОтсечения`, `Качество`, `ШагИСемейство`.
+
 ### Object descriptions
 
 An object's description (UserHelp) of up to 2000 bytes, whose lines end

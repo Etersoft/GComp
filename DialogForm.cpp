@@ -165,6 +165,102 @@ void CFormFont::ToString(CMMSString& String)
 }
 
 /////////////////////////////////////////////////////////////////
+//////  CWindowStyle  ///////////////////////////////////////////
+/////////////////////////////////////////////////////////////////
+const CWindowStyle::TName* CWindowStyle::ClassNames()
+{
+	if( Class != NULL )
+		for( int i = 0; Classes[i].Class != NULL; i++ )
+			if( strcmp(*Class, Classes[i].Class) == 0 )
+				return Classes[i].Names;
+	return NULL;
+}
+
+void CWindowStyle::AddNames(const TName* Names, unsigned int& Rest, GCString& Out)
+{
+	for( ; Names != NULL && Names->Name != NULL; Names++ )
+		if( (Rest & Names->Mask) == Names->Value )
+		{
+			if( !Out.IsEmpty() ) Out += ", ";
+			Out += Names->Name;
+			Rest &= ~Names->Mask;
+		}
+}
+
+GCString CWindowStyle::BeautyString()
+{
+	GCString Out;
+	unsigned int Rest = Value;
+	AddNames(ClassNames(), Rest, Out);
+	AddNames(WindowNames, Rest, Out);
+	for( int bit = 0; bit < 32; bit++ )
+		if( Rest & (1u << bit) )
+		{
+			GCString n;
+			n.Format("Flag%i", bit);
+			if( !Out.IsEmpty() ) Out += ", ";
+			Out += n;
+		}
+	return Out;
+}
+
+static bool FindStyle(const CWindowStyle::TName* Names, const char* Name, unsigned int& Value)
+{
+	for( ; Names != NULL && Names->Name != NULL; Names++ )
+		if( _stricmp(Name, Names->Name) == 0 )
+		{
+			Value = Names->Value;
+			return true;
+		}
+	return false;
+}
+
+void CWindowStyle::SetValue(GCString& NewValue)
+{
+	if( NewValue.IsNumber() )
+	{
+		Value = (unsigned int)strtoul(NewValue, NULL, 10);
+		if( NewValue[0] == '-' ) Value = (unsigned int)atoi(NewValue);
+		return;
+	}
+	Value = 0;
+	GCString Rest = NewValue;
+	while( !Rest.IsEmpty() )
+	{
+		GCString Name = Rest.SpanExcluding(", \t");
+		if( Name.IsEmpty() )
+		{
+			Rest.Delete(0, Rest.SpanIncluding(", \t").GetLength());
+			continue;
+		}
+		Rest.Delete(0, Name.GetLength());
+		unsigned int v;
+		if( FindStyle(ClassNames(), Name, v) || FindStyle(WindowNames, Name, v) )
+		{
+			Value |= v;
+			continue;
+		}
+		const char* p = Name;
+		char* end;
+		long bit = -1;
+		if( _strnicmp(p, "Flag", 4) == 0 && p[4] >= '0' && p[4] <= '9' )
+			bit = strtol(p + 4, &end, 10);
+		if( bit < 0 || bit > 31 || *end != '\0' )
+		{
+			Msg(0, "ERR: Неизвестный стиль окна '%s' у элемента %s", (LPCSTR)Name,
+				Class != NULL ? (LPCSTR)*Class : "");
+			throw NULL;
+		}
+		Value |= 1u << bit;
+	}
+}
+
+GCString CWindowStyle::MMSString()
+{
+	return GCString(Value);
+}
+
+/////////////////////////////////////////////////////////////////
 //////  CFormLayers  ////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
 bool CFormLayers::SetValue(int MMS_Index, GCString& Value)
@@ -394,7 +490,7 @@ void CFormControl::Setup()
 	Param40 = -1;
 	PictureID = 0;
 
-	Flags.SetTable(FlagList);
+	Flags.Class = &Class;
 	BasicFlags.SetTable(BasicFlagList);
 	ValueFlags.SetTable(ValueFlagList);
 
