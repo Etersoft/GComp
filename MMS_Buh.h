@@ -32,7 +32,7 @@ class CAccountSubcontoList : public CMMSAttributes
 public:
 	CAccountSubcontoList() {sID = "AccSbCnts";}
 
-	virtual const char*BeautyName() {return "Аналитика";}
+	virtual const char* BeautyName() {return "Аналитика";}
 	virtual CMMSObject* CreateChild(const char* Name, int MMS_Index = -1)
 		{return new CAccountSubconto;}
 };
@@ -73,7 +73,7 @@ class CMMSAccountList : public CMMSAttributes
 public:
 	CMMSAccountList() {sID = "Accounts";}
 
-	virtual const char*BeautyName() {return "Счета";}
+	virtual const char* BeautyName() {return "Счета";}
 
 	virtual CMMSObject* CreateChild(const char* Name, int MMS_Index = -1)
 		{return new CMMSAccount;}

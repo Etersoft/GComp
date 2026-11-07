@@ -33,7 +33,7 @@ private:
 
 public:
 	CMMSMainDataContDef();
-	virtual char* BeautyName() {return "MainDataContDef";}
+	virtual const char* BeautyName() {return "MainDataContDef";}
 
 public:
 	CPropertySet* GetPropSet() {return &PropSet;};

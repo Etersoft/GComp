@@ -206,7 +206,7 @@ void SystemErrorMessage()
 	LocalFree(ErrMsg);
 }
 
-void Msg(int MinimalVerbosityLevel, char *msg, ...)
+void Msg(int MinimalVerbosityLevel, const char *msg, ...)
 {
 	if( MinimalVerbosityLevel <= TaskParameters.Verbose )
 	{

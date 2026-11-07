@@ -6,7 +6,7 @@
 #include "Strings.h"
 #include "DLL/GComp.h"
 
-void Msg(int MinimalVerbosityLevel, char *msg, ...);
+void Msg(int MinimalVerbosityLevel, const char *msg, ...);
 void SystemErrorMessage();
 void PrintTime();
 void SendInfoMessage(TInfoMessageType MsgType, LPARAM lParam);
