@@ -20,6 +20,7 @@ int main()
     CString r("a.b.c"); CHECK(r.Replace(".", "::") == 2 && r == "a::b::c");
     r.Delete(1, 2); CHECK(r == "ab::c"); r.Insert(0, '['); CHECK(r == "[ab::c");
     CString g; char *p = g.GetBufferSetLength(3); memcpy(p, "xyz", 3); CHECK(g == "xyz" && g.GetLength() == 3);
+    { CString a("abc"), b(CString('x', 200)), c(CString('y', 600)); CHECK(((CStringData *)(LPCTSTR)a)[-1].nAllocLength == 64 && ((CStringData *)(LPCTSTR)b)[-1].nAllocLength == 256 && ((CStringData *)(LPCTSTR)c)[-1].nAllocLength == 600); }
     CHECK(s + "!" == "Hello!" && "<" + s == "<Hello" && s + '?' == "Hello?");
 
     CArray<int, int> a;

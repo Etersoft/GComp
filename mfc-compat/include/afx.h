@@ -379,16 +379,23 @@ protected:
         return &nil.d;
     }
     static int SafeStrlen(LPCTSTR p) { return p ? (int)strlen(p) : 0; }
-    static void FreeData(CStringData *d) { if (d != EmptyData()) free(d); }
+    /* The empty string is a per-module static with nRefs == -1 (as in MFC):
+       recognise it by nRefs, not by address, so that strings created in a DLL
+       can be destroyed in the EXE and vice versa. */
+    static void FreeData(CStringData *d) { if (d->nRefs >= 0) free(d); }
     void Release() { FreeData(GetData()); }
     void AllocBuffer(int nLen)
     {
         if (nLen == 0) { Init(); return; }
-        CStringData *d = (CStringData *)malloc(sizeof(CStringData) + nLen + 1);
+        /* MFC 4.2 release builds allocate strings up to 512 characters from
+           fixed 64/128/256/512 blocks and report that size in nAllocLength.
+           Programs may silently rely on the slack, so keep the same sizes. */
+        int nAlloc = nLen <= 64 ? 64 : nLen <= 128 ? 128 : nLen <= 256 ? 256 : nLen <= 512 ? 512 : nLen;
+        CStringData *d = (CStringData *)malloc(sizeof(CStringData) + nAlloc + 1);
         if (!d) AfxThrowMemoryException();
         d->nRefs = 1;
         d->nDataLength = nLen;
-        d->nAllocLength = nLen;
+        d->nAllocLength = nAlloc;
         d->data()[nLen] = 0;
         m_pchData = d->data();
     }
@@ -400,7 +407,7 @@ protected:
     }
     void AssignCopy(int nLen, LPCTSTR src)
     {
-        if (nLen > GetData()->nAllocLength || GetData() == EmptyData()) {
+        if (nLen > GetData()->nAllocLength || GetData()->nRefs < 0) {
             CStringData *old = GetData();
             AllocBuffer(nLen);
             if (nLen) memmove(m_pchData, src, nLen);
@@ -424,7 +431,7 @@ protected:
     {
         if (!n) return;
         CStringData *d = GetData();
-        if (d == EmptyData() || d->nDataLength + n > d->nAllocLength) {
+        if (d->nRefs < 0 || d->nDataLength + n > d->nAllocLength) {
             CStringData *old = d;
             CString tmp;
             tmp.ConcatCopy(old->nDataLength, m_pchData, n, src);
