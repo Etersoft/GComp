@@ -43,6 +43,11 @@ public:
 
 	bool FontNeeded; //для тех контролов, где шрифт не нужен
 	bool IsDefault(); //equals the font a compilation uses when none is given
+	bool SameAs(CFormFont& Font); //gives the same record in the stream
+	//Format 3: the font of an element without "Шрифт" - 1C's dialog font
+	//if the element uses the default font, else the empty LOGFONT with
+	//weight 0 that 1C stores for the others
+	void SetElementDefault(bool DefaultFont);
 
 private:
 	static CFormFont* DefVal;
@@ -116,6 +121,17 @@ class CFormControl : public CFormControlBase
 friend class CDialogForm;
 
 public:
+	/* Format 3, elements of the form (not of the table part): properties
+	   equal to the defaults of the element's class and position are left
+	   out. Prev is the previous element (tab order + 1, same layer), the
+	   first one gets tab order 4152 and the first layer of the form. */
+	bool FormatDefaults;
+	CFormControl* Prev;
+	GCString FirstLayer;
+	bool FontSet; //"Шрифт" was read from the description
+	void ApplyDefaults();
+	void ApplyDefaultFont();
+
 	CStoredBitSet Flags;
 	int PosX;
 	int PosY;
@@ -195,10 +211,17 @@ private:
 	void Setup();
 };
 
+class CFormLayers;
+
 class CFormControls : public CMMSAttributes
 {
 public:
 	CMMSObject* Parent;
+	CFormLayers* Layers; //of the form, for the default layer of elements
+
+private:
+	bool UseFormatDefaults();
+	GCString FirstLayer();
 
 public:
 	CFormControls();
@@ -207,8 +230,8 @@ public:
 	virtual const char* MMSName() {return "Controls";}
 	virtual CMMSObject* CreateChild(const char* Name, int MMS_Index = -1)
 		{return new CFormControl;};
-	virtual CMMSObject* CreateChild(const char* Name, const char* Value)
-		{return new CFormControl(Name, Value);}
+	virtual CMMSObject* CreateChild(const char* Name, const char* Value);
+	virtual CMMSObject* AddChild(CMMSObject* Child);
 
 	virtual void BeautyString(CBeautyString& String, int level);
 	virtual void ToString(CMMSString& String);

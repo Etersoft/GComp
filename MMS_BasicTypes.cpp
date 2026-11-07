@@ -289,9 +289,11 @@ void CPropertySet::SetValue(void* Object, int i, GCString& Value, bool Unquote)
 	}
 }
 
-void CPropertySet::BeautyString(CBeautyString& String, int level, const void* Object, int i)
+void CPropertySet::BeautyString(CBeautyString& String, int level, const void* Object, int i,
+	const void* Defaults)
 {
 	CObjectProperty& prop = Propertys[i];
+	const void* DefaultValues = Defaults != NULL ? Defaults : (const void*)this->DefaultValues;
 	
 	switch( prop.Type )
 	{

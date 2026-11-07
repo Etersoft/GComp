@@ -44,6 +44,9 @@ enum TGComp_Encoding {
 	enc_CP1251 = 0,
 	enc_UTF8 = 1
 };
+//The description format written by this version (see FormatVersion)
+#define GCOMP_FORMAT_VERSION 3
+
 enum TLogType {
 	LogType_stdout = 0,
 	LogType_file = 1,
@@ -113,6 +116,11 @@ struct CGCompParameters
 	//Takes the place of Reserved2 of the Delphi declaration (vgcomp/GComp.pas),
 	//so the size of the structure is the same
 	TGComp_Encoding Encoding;
+
+	//Version of the description format (Reserved3 in vgcomp/GComp.pas):
+	//2 - GComp 2.2.15; 3 - forms with defaults by element class and position.
+	//A gcomp.ini without "format" means 2, a new tree gets the current one
+	int FormatVersion;
 };
 
 extern "C" {

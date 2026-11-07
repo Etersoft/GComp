@@ -37,6 +37,7 @@ void CTask::HelpRu()
 	Msg(0,"  --translit - GComp попытается создать папки и файлы с транслитерованными именами (данная опция находится в состоянии beta)");
 	Msg(0,"	   * Опции --eng и --translit не проверяют уникальности получаемых имен.");
 	Msg(0,"");
+	Msg(0,"  --format <2|3> - версия формата описаний для нового каталога (по умолчанию 3; 2 - как GComp 2.2.15). Сохраняется в gcomp.ini (format); gcomp.ini без format означает 2.");
 	Msg(0,"  --utf8 - текстовые файлы выгрузки (модули, описания, формы) в кодировке UTF-8 вместо CP1251. Сохраняется в gcomp.ini (encoding), настройка из gcomp.ini имеет приоритет.");
 	Msg(0,"  --no-defaults - выводятся все параметры выгружаемых объектов. Без этой опции выводится только та информация, которая отличается от значений по умолчанию. Опция действует только при декомпиляции.");
 	Msg(0,"  --no-parse-dialogs - диалоговые формы будут выгружены As Is, без какой либо обработки. При компиляции формат диалогов определяется автоматически.");
@@ -105,6 +106,7 @@ void CTask::HelpEn()
 	Msg(0,"  --eng - GComp will be try to create folders and files with english names (beta state)");
 	Msg(0,"  --translit - GComp will be try to create folders and files with translit names (beta state)");
 	Msg(0,"		\'--eng\' and \'--translit\' options didn't check originality of result names.");
+	Msg(0,"  --format <2|3> - description format for a new tree (default 3; 2 - as GComp 2.2.15). Kept in gcomp.ini (format); gcomp.ini without format means 2.");
 	Msg(0,"  --utf8 - text files of the source tree (modules, descriptions, forms) are in UTF-8 instead of CP1251. Kept in gcomp.ini (encoding), which takes precedence.");
 	Msg(0,"  --no-defaults - objects will be extracted with all propertys regardless of defaul values. Works only for decompile.");
 	Msg(0,"  --no-version - file gcomp.ver (info about version of gcomp) will not create on decompile.");

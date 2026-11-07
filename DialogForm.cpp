@@ -113,6 +113,33 @@ bool CFormFont::IsDefault()
 	return a == b;
 }
 
+bool CFormFont::SameAs(CFormFont& Font)
+{
+	CMMSString a, b;
+	ToString(a);
+	Font.ToString(b);
+	return a == b;
+}
+
+void CFormFont::SetElementDefault(bool DefaultFont)
+{
+	CFormFont def;
+	if( DefaultFont )
+	{
+		def.Param9 = 204; //RUSSIAN_CHARSET
+		def.Param10 = 1;  //OUT_STRING_PRECIS
+		def.Param11 = 2;  //CLIP_STROKE_PRECIS
+		def.Param12 = 1;  //DRAFT_QUALITY
+		def.Param13 = 34; //VARIABLE_PITCH | FF_SWISS
+	}
+	else
+	{
+		GCString Weight("0");
+		def.FontBold.SetValue(Weight);
+	}
+	*this = def;
+}
+
 void CFormFont::BeautyString(CBeautyString& String, int level)
 {
 	if( !FontNeeded )
@@ -123,7 +150,8 @@ void CFormFont::BeautyString(CBeautyString& String, int level)
 	
 	level++;
 
-	for( int i = 0; i < PropSet.nProps; i++ )
+	//format 3: the name is already in the header
+	for( int i = (TaskParameters.FormatVersion >= 3 ? 1 : 0); i < PropSet.nProps; i++ )
 	{
 		PropSet.BeautyString(String, level, this, i);
 	}
@@ -370,7 +398,59 @@ void CFormControl::Setup()
 	BasicFlags.SetTable(BasicFlagList);
 	ValueFlags.SetTable(ValueFlagList);
 
+	FormatDefaults = false;
+	Prev = NULL;
+	FontSet = false;
+
 	ToDestroyChildren = false;
+}
+
+/* Window styles that 1C gives to elements of each class (WS_CHILD |
+   WS_VISIBLE and the class's own), the most frequent ones in 430
+   configurations */
+static const struct {
+	const char* Class;
+	unsigned int Flags;
+} ElementFlags[] = {
+	{"STATIC",        0x50000200},
+	{"BUTTON",        0x5000000B},
+	{"BMASKED",       0x50800000},
+	{"1CEDIT",        0x50800000},
+	{"1CGROUPBOX",    0x50000007},
+	{"CHECKBOX",      0x50000003},
+	{"RADIO",         0x50000009},
+	{"COMBOBOX",      0x50A00043},
+	{"LISTBOX",       0x50A00101},
+	{"TABLE",         0x50A00000},
+	{"SysTreeView32", 0x50A00007},
+	{"PICTURE",       0x5000800B},
+	{NULL, 0}
+};
+
+void CFormControl::ApplyDefaults()
+{
+	for( int i = 0; ElementFlags[i].Class != NULL; i++ )
+		if( strcmp(Class, ElementFlags[i].Class) == 0 )
+			Flags = ElementFlags[i].Flags;
+
+	GCString NoObject("-1");
+	ObjectID.SetValue(NoObject);
+
+	if( Prev != NULL )
+	{
+		TabOrder = Prev->TabOrder + 1;
+		Layer = Prev->Layer;
+	}
+	else
+	{
+		TabOrder = 4152;
+		Layer = FirstLayer;
+	}
+}
+
+void CFormControl::ApplyDefaultFont()
+{
+	Font.SetElementDefault(BasicFlags.BitValue(6)); //Ўрифтѕо”молчанию
 }
 
 CFormControl::CFormControl()
@@ -389,6 +469,7 @@ CMMSObject* CFormControl::CreateChild(const char* Name, const char* Value)
 {
 	if( _stricoll(Name, "Ўрифт") == 0 )
 	{
+		FontSet = true;
 		Font.FontName = Value;
 		return &Font;
 	}
@@ -397,11 +478,38 @@ CMMSObject* CFormControl::CreateChild(const char* Name, const char* Value)
 
 void CFormControl::BeautyString(CBeautyString& String, int level)
 {
-	Font.FontNeeded = NeedFont();
 	//a type may be left out only if compiling without it gives the same one
 	Type.NeedType = NeedType() || !Type.IsDefault();
 
-	CFormControlBase::BeautyString(String, level);
+	if( !FormatDefaults || TaskParameters.NoDefaults )
+	{
+		Font.FontNeeded = NeedFont();
+		CFormControlBase::BeautyString(String, level);
+		return;
+	}
+
+	CFormControl Def(Class, "");
+	Def.Prev = Prev;
+	Def.FirstLayer = FirstLayer;
+	Def.ApplyDefaults();
+	Def.Font.SetElementDefault(BasicFlags.BitValue(6)); //see ApplyDefaultFont
+	Font.FontNeeded = !Font.SameAs(Def.Font);
+
+	String.add_parameter(level, Class, Identifier, NULL, true);
+	String.add_brace(level, '{');
+	CPropertySet& PropSet = *GetPropSet();
+	for( int i = 2; i < PropSet.nProps; i++ ) //пропускаем Class и Identifier
+	{
+		//0 differs from the default -1 and would be written as an empty value
+		if( PropSet.GetObjProp(this, i) == &ObjectID && ObjectID.iTypeObjectID == 0 )
+		{
+			String.add_parameter(level+1, PropSet[i].Name, "0", "", true);
+			continue;
+		}
+		PropSet.BeautyString(String, level+1, this, i, &Def);
+	}
+	BeautyFieldCount(String, level+1);
+	String.add_brace(level, '}');
 }
 
 void CFormControl::ToString(CMMSString& String)
@@ -531,6 +639,43 @@ CFormControls::CFormControls()
 {
 	sID = "Controls";
 	Parent = NULL;
+	Layers = NULL;
+}
+
+bool CFormControls::UseFormatDefaults()
+{
+	return TaskParameters.FormatVersion >= 3 && !TaskParameters.NoDefaults;
+}
+
+GCString CFormControls::FirstLayer()
+{
+	if( Layers == NULL || Layers->GetNChildren() == 0 )
+		return GCString("");
+	return Layers->GetChild(0)->sID;
+}
+
+CMMSObject* CFormControls::CreateChild(const char* Name, const char* Value)
+{
+	CFormControl* Control = new CFormControl(Name, Value);
+	if( TaskParameters.FormatVersion >= 3 )
+	{
+		int n = GetNChildren();
+		Control->Prev = n > 0 ? (CFormControl*)GetChild(n - 1) : NULL;
+		Control->FirstLayer = FirstLayer();
+		Control->FormatDefaults = true;
+		Control->ApplyDefaults();
+	}
+	return Control;
+}
+
+//the default font depends on ќсн‘лаги, which may follow it in the description
+//(FormatDefaults is set only for elements read from a description)
+CMMSObject* CFormControls::AddChild(CMMSObject* Child)
+{
+	CFormControl* Control = (CFormControl*)Child;
+	if( Control->FormatDefaults && !Control->FontSet )
+		Control->ApplyDefaultFont();
+	return CMMSAttributes::AddChild(Child);
 }
 
 void CFormControls::BeautyString(CBeautyString& String, int level)
@@ -542,7 +687,13 @@ void CFormControls::BeautyString(CBeautyString& String, int level)
 	}
 
 	for( int i = 0; i < GetNChildren(); i++ )
-		((CFormControlBase*)GetChild(i))->CorrectObjectID(Parent);
+	{
+		CFormControl* Control = (CFormControl*)GetChild(i);
+		Control->CorrectObjectID(Parent);
+		Control->FormatDefaults = UseFormatDefaults();
+		Control->Prev = i > 0 ? (CFormControl*)GetChild(i - 1) : NULL;
+		Control->FirstLayer = FirstLayer();
+	}
 
 	CMMSAttributes::BeautyString(String, level);
 }
@@ -641,7 +792,10 @@ CMMSObject* CDialogFrameContent::CreateChild(const char* Name, const char* Value
 	if( _stricoll(Name, Layers.BeautyName()) == 0 )
 		return &Layers;
 	if( _stricoll(Name, Font.BeautyName()) == 0 )
+	{
+		Font.FontName = Value; //format 3 has the name only in the header
 		return &Font;
+	}
 	return NULL;
 }
 
@@ -704,6 +858,7 @@ CDialogForm::CDialogForm(CMMSObject* aParent)
 	Browser.Fixed.Parent = aParent;
 	Fixed.Parent = aParent;
 	Controls.Parent = aParent;
+	Controls.Layers = &Frame.Content.Layers;
 	ToDestroyChildren = false;
 }
 

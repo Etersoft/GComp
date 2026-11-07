@@ -83,7 +83,10 @@ public:
 	void SetValue(void* Object, int i, GCString& Value, bool Unqoute = true);
 	bool SetByMMSIndex(void* Object, int MMS_Index, GCString& Value, bool Unqoute = true);
 	
-	void BeautyString(CBeautyString& String, int level, const void* Object, int i);
+	//Defaults - an object of the same class to compare with instead of the
+	//table's defaults (e.g. defaults that depend on the element's class)
+	void BeautyString(CBeautyString& String, int level, const void* Object, int i,
+		const void* Defaults = NULL);
 	void ToString(CMMSString& String, const void* Object, int i, bool AddComma);
 };
 

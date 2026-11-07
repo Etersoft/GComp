@@ -82,6 +82,7 @@ void GComp_SetDefaults(CGCompParameters* Parameters)
 	Parameters->NoBrokenLinks = FALSE;
 	Parameters->MakeUserRightsInOneFile = FALSE;
 	Parameters->Encoding = enc_CP1251;
+	Parameters->FormatVersion = GCOMP_FORMAT_VERSION;
 };
 
 BOOL YesNoToBool(GCString& token, GCString& value)
@@ -133,6 +134,9 @@ void GComp_ReadSettings(CGCompParameters* Parameters)
 	ini_name.Format("%s\\gcomp.ini", Parameters->DirectoryName);
 	if( !FileExist(ini_name) ) return;
 
+	//trees written before "format" appeared
+	Parameters->FormatVersion = 2;
+
 	CLexer ini_file(ini_name);
 	GCString token, value;
 	while( ini_file.GetToken(token, "=: \t\r\n") )
@@ -158,6 +162,16 @@ void GComp_ReadSettings(CGCompParameters* Parameters)
 
 		else if( stricmp(token, "encoding") == 0 )
 			Parameters->Encoding = ReadEncoding(token, value);
+
+		else if( stricmp(token, "format") == 0 )
+		{
+			Parameters->FormatVersion = atoi(value);
+			if( Parameters->FormatVersion < 2 || Parameters->FormatVersion > GCOMP_FORMAT_VERSION )
+			{
+				Msg(0, "ERR: Неизвестная версия формата '%s' в gcomp.ini", (LPCSTR)value);
+				throw NULL;
+			}
+		}
 
 		else if( stricmp(token, "more-subfolders") == 0 )
 			Parameters->MetadataBySubfolders = YesNoToBool(token, value);
@@ -218,6 +232,7 @@ void GComp_SaveSettings(CGCompParameters* Parameters)
 
 	CBeautyString str;
 	str.add_parameter(0, "language",    LanguageToStr(Parameters->Language), "", true);
+	str.add_parameter(0, "format", Parameters->FormatVersion, -1, true);
 	str.add_parameter(0, "encoding", Parameters->Encoding == enc_UTF8 ? "UTF-8" : "CP1251", "", true);
 	str.add_parameter(0, "no-defaults", BoolToYesNo(Parameters->NoDefaults), "", true);
 	str.add_parameter(0, "no-parse-forms", BoolToYesNo(Parameters->NotParseForms), "", true);

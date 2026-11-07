@@ -126,6 +126,17 @@ void CTaskParameters::ParseCommandLine(int argc, TCHAR* argv[])
 		{
 			Language = lang_Translit;
 		}
+		else if( 0 == strcmp("--format", arg) )
+		{
+			TestArg(arg, argc, i);
+			arg = argv[++i];
+			FormatVersion = atoi(arg);
+			if( FormatVersion < 2 || FormatVersion > GCOMP_FORMAT_VERSION )
+			{
+				Msg(0, "ERR: Неизвестная версия формата '%s'", arg);
+				exit(1);
+			}
+		}
 		else if( 0 == strcmp("--utf8", arg) )
 		{
 			Encoding = enc_UTF8;
