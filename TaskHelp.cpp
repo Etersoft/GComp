@@ -37,7 +37,9 @@ void CTask::HelpRu()
 	Msg(0,"  --translit - GComp попытается создать папки и файлы с транслитерованными именами (данная опция находится в состоянии beta)");
 	Msg(0,"	   * Опции --eng и --translit не проверяют уникальности получаемых имен.");
 	Msg(0,"");
-	Msg(0,"  --utf8 - текстовые файлы выгрузки (модули, описания, формы) в кодировке UTF-8 вместо CP1251. Сохраняется в gcomp.ini (encoding), настройка из gcomp.ini имеет приоритет.");
+	Msg(0,"  --utf8 - текстовые файлы выгрузки (модули, тексты описаний) в UTF-8 (по умолчанию). Сохраняется в gcomp.ini (encoding), настройка из gcomp.ini имеет приоритет.");
+	Msg(0,"  --cp1251 - текстовые файлы выгрузки, кроме .yaml, в CP1251, как их хранит 1С.");
+	Msg(0,"  --eol <unix|windows> - концы строк текстовых файлов выгрузки: LF (по умолчанию) или CRLF, как их хранит 1С. Сохраняется в gcomp.ini (eol).");
 	Msg(0,"  --no-defaults - выводятся все параметры выгружаемых объектов. Без этой опции выводится только та информация, которая отличается от значений по умолчанию. Опция действует только при декомпиляции.");
 	Msg(0,"  --no-parse-dialogs - диалоговые формы будут выгружены As Is, без какой либо обработки. При компиляции формат диалогов определяется автоматически.");
 	Msg(0,"  --no-version - при декомпиляции не будет сформирован файл gcomp.ver с информацией о версии gcomp.");
@@ -105,7 +107,9 @@ void CTask::HelpEn()
 	Msg(0,"  --eng - GComp will be try to create folders and files with english names (beta state)");
 	Msg(0,"  --translit - GComp will be try to create folders and files with translit names (beta state)");
 	Msg(0,"		\'--eng\' and \'--translit\' options didn't check originality of result names.");
-	Msg(0,"  --utf8 - text files of the source tree (modules, descriptions, forms) are in UTF-8 instead of CP1251. Kept in gcomp.ini (encoding), which takes precedence.");
+	Msg(0,"  --utf8 - text files of the source tree (modules, description texts) are in UTF-8 (default). Kept in gcomp.ini (encoding), which takes precedence.");
+	Msg(0,"  --cp1251 - text files of the source tree but .yaml are in CP1251, as 1C keeps them.");
+	Msg(0,"  --eol <unix|windows> - line ends of the text files of the source tree: LF (default) or CRLF, as 1C keeps them. Kept in gcomp.ini (eol).");
 	Msg(0,"  --no-defaults - objects will be extracted with all propertys regardless of defaul values. Works only for decompile.");
 	Msg(0,"  --no-version - file gcomp.ver (info about version of gcomp) will not create on decompile.");
 	Msg(0,"  --no-empty-folders - empty folders will be deleted on decompile (for SVN repository).");

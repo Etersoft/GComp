@@ -9,6 +9,8 @@
 #include "StreamInfo.h"
 #include "MMS.h"
 #include "Lexer.h"
+#include "NameTable.h"
+#include "Yaml.h"
 
 
 void SetIOPre(LPCTSTR MsgPrefix, LPCTSTR FileName)
@@ -553,7 +555,7 @@ bool CStorage::CopyToFile(GCString& FileName, bool OnlyRestOfSream)
 		if( bytes_to_copy == 0 ) return true;
 	}
 
-	if( IsUtf8File(FileName) )
+	if( NeedsTextConversion(FileName) )
 	{
 		//text goes through CopyStringToFile, which converts it
 		if( bytes_to_copy == 0 )
@@ -1295,10 +1297,10 @@ FilesDiffer:
 bool CStorage::CopyStringToFile(GCString& Source, GCString& FileName)
 {
 	char* MsgPrefix;
-	GCString Utf8;
-	if( IsUtf8File(FileName) )
-		Cp1251ToUtf8(Source, Source.GetLength(), Utf8);
-	GCString& String = IsUtf8File(FileName) ? Utf8 : Source;
+	GCString Converted;
+	if( NeedsTextConversion(FileName) )
+		ConvertTextForFile(Source, FileName, Converted);
+	GCString& String = NeedsTextConversion(FileName) ? Converted : Source;
 
 	AddToExtractedList(FileName, NULL);
 
@@ -1328,7 +1330,7 @@ bool CStorage::CopyStringToFile(GCString& Source, GCString& FileName)
 bool IsTextFileName(LPCSTR FileName)
 {
 	static const char* const TextExt[] = {
-		"1s", "txt", "mdp", "frm", "ord", "acc", "Profile", "ini", NULL
+		"1s", "txt", "yaml", "ord", "acc", "Profile", "ini", NULL
 	};
 	const char* dot = strrchr(FileName, '.');
 	if( dot == NULL || strchr(dot, '\\') != NULL || strchr(dot, '/') != NULL )
@@ -1338,14 +1340,219 @@ bool IsTextFileName(LPCSTR FileName)
 	return false;
 }
 
+static bool HasExt(LPCSTR FileName, LPCSTR Ext)
+{
+	const char* dot = strrchr(FileName, '.');
+	if( dot == NULL || strchr(dot, '\\') != NULL || strchr(dot, '/') != NULL )
+		return false;
+	return _stricmp(dot + 1, Ext) == 0;
+}
+
+bool IsYamlFile(LPCSTR FileName)
+{
+	return HasExt(FileName, "yaml");
+}
+
+//YAML is UTF-8 whatever the encoding of the other files
 bool IsUtf8File(LPCSTR FileName)
 {
-	return TaskParameters.Encoding == enc_UTF8 && IsTextFileName(FileName);
+	return IsTextFileName(FileName) && (TaskParameters.Encoding == enc_UTF8 || IsYamlFile(FileName));
+}
+
+//Container.Profile keeps its bytes: 1C writes it with bare LF
+static bool IsUnixEolFile(LPCSTR FileName)
+{
+	return TaskParameters.Eol == eol_Unix && IsTextFileName(FileName) &&
+		!IsYamlFile(FileName) && !HasExt(FileName, "Profile");
+}
+
+bool NeedsTextConversion(LPCSTR FileName)
+{
+	return IsUtf8File(FileName) || IsYamlFile(FileName) || IsUnixEolFile(FileName);
+}
+
+//the top level of rights and panels is a list whatever it holds
+static int YamlFlags(LPCSTR FileName)
+{
+	GCString Name = FileName;
+	Name.Replace('/', '\\');
+	CNameTableRecord* Rights = NameTable.Find(NT_UserRights);
+	CNameTableRecord* Panels = NameTable.Find(NT_UIPanels);
+	if( Rights != NULL && Name.Find("\\" + Rights->Dir + "\\") >= 0 )
+		return YAML_TOP_SEQUENCE;
+	if( Panels != NULL )
+	{
+		int slash = Name.ReverseFind('\\');
+		GCString Base = Name.Mid(slash + 1);
+		if( Base.CompareNoCase(Panels->FileName + "." + Panels->Ext) == 0 )
+			return YAML_TOP_SEQUENCE;
+	}
+	return 0;
+}
+
+/* Text files with line breaks of bare LF in the MD (rare; CRLF is what 1C
+   writes) cannot be told from converted ones in a tree with unix line ends;
+   they are listed in gcomp.lf. */
+static CMapStringToPtr LfFiles; //lower case names
+static CStringArray LfNames;    //as they are, for gcomp.lf
+
+static void AddLfFile(const GCString& Name)
+{
+	GCString Key = Name;
+	Key.MakeLower();
+	void* p;
+	if( LfFiles.Lookup(Key, p) ) return;
+	LfFiles.SetAt(Key, NULL);
+	LfNames.Add(Name);
+}
+
+static GCString LfListName(const GCString& Dir) { return Dir + "\\gcomp.lf"; }
+
+static GCString RelativeName(const GCString& Dir, LPCSTR FileName)
+{
+	GCString Name = FileName;
+	GCString Prefix = Dir + "\\";
+	if( Name.GetLength() > Prefix.GetLength() && Name.Left(Prefix.GetLength()).CompareNoCase(Prefix) == 0 )
+		return Name.Mid(Prefix.GetLength());
+	return Name;
+}
+
+static bool IsLfFile(LPCSTR FileName)
+{
+	void* p;
+	GCString Name = RelativeName(TaskParameters.DirectoryName, FileName);
+	Name.MakeLower();
+	return LfFiles.Lookup(Name, p) != 0;
+}
+
+void LoadLfFiles(const GCString& Dir)
+{
+	ClearLfFiles();
+	FILE* f = fopen(LfListName(Dir), "rb");
+	if( f == NULL ) return;
+	char buf[1024];
+	while( fgets(buf, sizeof(buf), f) != NULL )
+	{
+		GCString Name;
+		int n = Utf8ToCp1251(buf, (int)strlen(buf), Name);
+		if( n >= 0 )
+		{
+			Msg(0, "ERR: %s: не UTF-8", (LPCSTR)LfListName(Dir));
+			fclose(f);
+			throw NULL;
+		}
+		Name.TrimRight("\r\n");
+		Name.Replace('/', '\\');
+		if( !Name.IsEmpty() ) AddLfFile(Name);
+	}
+	fclose(f);
+}
+
+void ClearLfFiles()
+{
+	LfFiles.RemoveAll();
+	LfNames.RemoveAll();
+}
+
+void SaveLfFiles(const GCString& Dir)
+{
+	GCString FileName = LfListName(Dir);
+	if( LfFiles.IsEmpty() )
+	{
+		if( FileExist(FileName) ) remove(FileName);
+		return;
+	}
+	CStringArray Names;
+	for( int n = 0; n < LfNames.GetSize(); n++ )
+		Names.Add(LfNames[n]);
+	//sorted, so that the file does not change between decompilations
+	for( int i = 1; i < Names.GetSize(); i++ )
+		for( int j = i; j > 0 && Names[j-1].Compare(Names[j]) > 0; j-- )
+		{
+			CString t = Names[j];
+			Names[j] = Names[j-1];
+			Names[j-1] = t;
+		}
+	GCString Text;
+	for( int k = 0; k < Names.GetSize(); k++ )
+	{
+		GCString Name = Names[k];
+		Name.Replace('\\', '/');
+		GCString Utf8;
+		Cp1251ToUtf8(Name, Name.GetLength(), Utf8);
+		Text += Utf8 + "\n";
+	}
+	FILE* f = fopen(FileName, "wb");
+	if( f == NULL )
+	{
+		Msg(0, "ERR: Невозможно записать файл '%s'", (LPCSTR)FileName);
+		throw NULL;
+	}
+	fwrite((LPCSTR)Text, 1, Text.GetLength(), f);
+	fclose(f);
+}
+
+static int CountSubstr(const GCString& s, LPCSTR What)
+{
+	int n = 0, at = 0, len = (int)strlen(What);
+	while( (at = s.Find(What, at)) >= 0 ) { n++; at += len; }
+	return n;
+}
+
+void ConvertTextForFile(const GCString& Source, LPCSTR FileName, GCString& Out)
+{
+	GCString Text;
+	if( IsYamlFile(FileName) )
+	{
+		BraceToYaml(Source, Text, YamlFlags(FileName));
+		if( TaskParameters.Eol == eol_Windows )
+			Text.Replace("\n", "\r\n");
+	}
+	else if( IsUnixEolFile(FileName) )
+	{
+		int crlf = CountSubstr(Source, "\r\n");
+		int cr = CountSubstr(Source, "\r");
+		int lf = CountSubstr(Source, "\n");
+		Text = Source;
+		if( cr == crlf && lf == crlf )
+			Text.Replace("\r\n", "\n");
+		else if( cr == 0 )
+			AddLfFile(RelativeName(TaskParameters.DirectoryName, FileName));
+		//with CR the file is taken as is
+	}
+	else
+		Text = Source;
+
+	if( IsUtf8File(FileName) )
+		Cp1251ToUtf8(Text, Text.GetLength(), Out);
+	else
+		Out = Text;
+}
+
+/* Brace lines -> YAML lines of the description files open for reading, so
+   that CLexer reports the line of the file */
+static CMapStringToPtr SourceLineMaps;
+
+int SourceLine(LPCSTR FileName, int Line)
+{
+	void* p;
+	if( !SourceLineMaps.Lookup(FileName, p) ) return Line;
+	CYamlArray<int>& Map = *(CYamlArray<int>*)p;
+	if( Line >= 1 && Line <= (int)Map.size() ) return Map[Line-1];
+	return Map.empty() ? Line : Map.back();
+}
+
+void ReleaseSourceLines(LPCSTR FileName)
+{
+	void* p;
+	if( !SourceLineMaps.Lookup(FileName, p) ) return;
+	delete (CYamlArray<int>*)p;
+	SourceLineMaps.RemoveKey(FileName);
 }
 
 FILE* OpenSourceFile(LPCSTR FileName, const char* Mode)
 {
-	if( !IsUtf8File(FileName) ) return fopen(FileName, Mode);
+	if( !NeedsTextConversion(FileName) ) return fopen(FileName, Mode);
 
 	FILE* File = fopen(FileName, "rb");
 	if( File == NULL ) return NULL;
@@ -1361,24 +1568,41 @@ FILE* OpenSourceFile(LPCSTR FileName, const char* Mode)
 	}
 	fclose(File);
 
-	const char* src = Raw;
-	int len = Raw.GetLength();
-	if( len >= 3 && memcmp(src, "\xEF\xBB\xBF", 3) == 0 ) //BOM of Windows editors
-	{
-		src += 3;
-		len -= 3;
-	}
-
 	GCString Text;
-	int bad = Utf8ToCp1251(src, len, Text);
-	if( bad >= 0 )
+	if( IsUtf8File(FileName) )
 	{
-		int line = 1;
-		for( int i = 0; i < bad; i++ )
-			if( src[i] == '\n' ) line++;
-		Msg(0, "ERR: %s:%i: не UTF-8 или символ, которого нет в CP1251", FileName, line);
-		throw NULL;
+		const char* src = Raw;
+		int len = Raw.GetLength();
+		if( len >= 3 && memcmp(src, "\xEF\xBB\xBF", 3) == 0 ) //BOM of Windows editors
+		{
+			src += 3;
+			len -= 3;
+		}
+
+		int bad = Utf8ToCp1251(src, len, Text);
+		if( bad >= 0 )
+		{
+			int line = 1;
+			for( int i = 0; i < bad; i++ )
+				if( src[i] == '\n' ) line++;
+			Msg(0, "ERR: %s:%i: не UTF-8 или символ, которого нет в CP1251", FileName, line);
+			throw NULL;
+		}
 	}
+	else
+		Text = Raw;
+
+	if( IsYamlFile(FileName) )
+	{
+		GCString Brace;
+		CYamlArray<int>* Map = new CYamlArray<int>;
+		try { YamlToBrace(Text, Brace, FileName, Map); } catch(...) { delete Map; throw; }
+		ReleaseSourceLines(FileName);
+		SourceLineMaps.SetAt(FileName, Map);
+		Text = Brace;
+	}
+	else if( IsUnixEolFile(FileName) && Text.Find('\r') < 0 && !IsLfFile(FileName) )
+		Text.Replace("\n", "\r\n");
 
 	// FIXME: the converted text goes through a temporary file, so that every
 	// reader keeps working on FILE*; "D" (Microsoft CRT) deletes it on close.

@@ -446,7 +446,7 @@ void Cp1251ToUtf8(const char* src, int len, GCString& dst)
 	dst.ReleaseBuffer(n);
 }
 
-static int UnicodeToCp1251(unsigned int c)
+int UnicodeToCp1251(unsigned int c)
 {
 	if( c < 0x80 ) return (int)c;
 	if( c >= 0x410 && c <= 0x44F ) return (int)(c - 0x410 + 0xC0);

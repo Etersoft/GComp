@@ -44,10 +44,15 @@ enum TGComp_Encoding {
 	enc_CP1251 = 0,
 	enc_UTF8 = 1
 };
+//Line ends of the text files of the source tree; 1C itself keeps CRLF
+enum TGComp_Eol {
+	eol_Windows = 0,
+	eol_Unix = 1
+};
 //The format of the source tree written by this version (see FormatVersion)
-#define GCOMP_FORMAT_VERSION 4
+#define GCOMP_FORMAT_VERSION 5
 //The oldest format this version compiles
-#define GCOMP_FORMAT_OLDEST 3
+#define GCOMP_FORMAT_OLDEST 5
 
 enum TLogType {
 	LogType_stdout = 0,
@@ -123,9 +128,13 @@ struct CGCompParameters
 	//2 - GComp 2.2.15 (a gcomp.ini without "format"); 3 - forms with
 	//defaults by element class and position; 4 - without the usual
 	//ПорядокОбъектов.ord and Container.Profile of a work book, one-line
-	//descriptions in .mdp. Decompiling always writes GCOMP_FORMAT_VERSION,
-	//compiling takes GCOMP_FORMAT_OLDEST and newer.
+	//descriptions in .mdp; 5 - descriptions in YAML (.yaml). Decompiling
+	//always writes GCOMP_FORMAT_VERSION, compiling takes GCOMP_FORMAT_OLDEST
+	//and newer.
 	int FormatVersion;
+
+	//Takes the place of Reserved4 in vgcomp/GComp.pas
+	TGComp_Eol Eol;
 };
 
 extern "C" {

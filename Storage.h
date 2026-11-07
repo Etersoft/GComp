@@ -138,6 +138,18 @@ bool CopyStringToFile(GCString& String, GCString& FileName);
 //are converted from/to CP1251, the rest (pictures, work books...) never
 bool IsTextFileName(LPCSTR FileName);
 bool IsUtf8File(LPCSTR FileName);
+bool IsYamlFile(LPCSTR FileName);
+//the file is not the stream's bytes: YAML, UTF-8 or unix line ends
+bool NeedsTextConversion(LPCSTR FileName);
+//the text of a stream or a description as written to FileName
+void ConvertTextForFile(const GCString& Source, LPCSTR FileName, GCString& Out);
+//gcomp.lf: text files whose lines end with bare LF in the MD
+void LoadLfFiles(const GCString& Dir);
+void SaveLfFiles(const GCString& Dir);
+void ClearLfFiles();
+//the line of a description file for a line of its text as parsed
+int SourceLine(LPCSTR FileName, int Line);
+void ReleaseSourceLines(LPCSTR FileName);
 //fopen() for reading a file of the source tree: a UTF-8 text file is
 //converted to CP1251 first; a character without CP1251 stops the work
 FILE* OpenSourceFile(LPCSTR FileName, const char* Mode);

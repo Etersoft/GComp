@@ -11,7 +11,7 @@ void CMMSObject::AssembleMetadata(GCString& Dir)
 {
 	CNameTableRecord* nt_rec = NameTable.Find(MMS_Type);
 	
-	if( nt_rec == NULL || nt_rec->Ext != "mdp" )
+	if( nt_rec == NULL || nt_rec->Ext != "yaml" )
 		nt_rec = NameTable.Find(NT_MetadataPart);
 
 	GCString FileName = nt_rec->PrepareFileName(Dir);
@@ -51,7 +51,7 @@ void CMMSAttributes::AssembleMetadata(GCString& Dir)
 			if( IsIgnoredFile(find_data.name) ) continue;
 
 			SubDir.Format("%s\\%s", (LPCSTR)DirName, find_data.name);
-			if( !FilesExist(SubDir+"\\*.mdp") ) continue; //пустые каталоги нам не нужны
+			if( !FilesExist(SubDir+"\\*.yaml") ) continue; //пустые каталоги нам не нужны
 
 			CMMSObject* Child = CreateChild(NULL);
 			Child->AssembleMetadata(SubDir);

@@ -38,7 +38,10 @@ public:
 	bool GetLine(GCString& String);
 	bool GetToken(GCString& Token, const char* delimiters = ": \t\r\n", bool ProceedOnNextLine = true);
 	void GetRest(GCString& String);
-	int CurrentLine() { return nLine; }
+	//the line of the description file (of YAML for .yaml), for messages
+	int CurrentLine();
+	//the line of the text being parsed
+	int TextLine() { return nLine; }
 	const GCString& GetFileName() const { return FileName; }
 
 	bool GetMMSToken(GCString& Token, TTokenType& TokenType);

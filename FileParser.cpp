@@ -78,7 +78,7 @@ void CMMSObject::ParseFile(CLexer& Lexer)
 
 		if( Token == '{' )
 		{
-			if( Lexer.CurrentLine() <= 2 )
+			if( Lexer.TextLine() <= 2 )
 			{
 				//просто установим ID и sID для текущего объекта
 				PrevValue.TrimLeft();

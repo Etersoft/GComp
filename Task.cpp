@@ -130,6 +130,22 @@ void CTaskParameters::ParseCommandLine(int argc, TCHAR* argv[])
 		{
 			Encoding = enc_UTF8;
 		}
+		else if( 0 == strcmp("--cp1251", arg) )
+		{
+			Encoding = enc_CP1251;
+		}
+		else if( 0 == strcmp("--eol", arg) )
+		{
+			TestArg(arg, argc, i);
+			arg = argv[++i];
+			if( _stricmp(arg, "unix") == 0 ) Eol = eol_Unix;
+			else if( _stricmp(arg, "windows") == 0 ) Eol = eol_Windows;
+			else
+			{
+				Msg(0, "ERR: --eol: unix или windows, а не '%s'", arg);
+				exit(1);
+			}
+		}
 		else if( 0 == strcmp("--no-defaults", arg) )
 		{
 			NoDefaults = true;

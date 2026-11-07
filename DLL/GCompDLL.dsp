@@ -152,6 +152,14 @@ SOURCE=..\Strings.cpp
 
 SOURCE=..\Strings.h
 # End Source File
+# Begin Source File
+
+SOURCE=..\Yaml.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\Yaml.h
+# End Source File
 # End Group
 # Begin Group "MMS"
 

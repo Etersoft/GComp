@@ -81,7 +81,8 @@ void GComp_SetDefaults(CGCompParameters* Parameters)
 	Parameters->CancelWork = FALSE;
 	Parameters->NoBrokenLinks = FALSE;
 	Parameters->MakeUserRightsInOneFile = FALSE;
-	Parameters->Encoding = enc_CP1251;
+	Parameters->Encoding = enc_UTF8;
+	Parameters->Eol = eol_Unix;
 	Parameters->FormatVersion = GCOMP_FORMAT_VERSION;
 };
 
@@ -105,6 +106,16 @@ TGComp_Encoding ReadEncoding(GCString& token, GCString& value)
 	if( value.CompareNoCase("UTF-8") == 0 || value.CompareNoCase("UTF8") == 0 )
 		return enc_UTF8;
 	Msg(0, "ERR: Неизвестная кодировка '%s' в gcomp.ini", (LPCSTR)value);
+	throw NULL;
+}
+
+TGComp_Eol ReadEol(GCString& value)
+{
+	if( value.CompareNoCase("unix") == 0 || value.CompareNoCase("LF") == 0 )
+		return eol_Unix;
+	if( value.CompareNoCase("windows") == 0 || value.CompareNoCase("CRLF") == 0 )
+		return eol_Windows;
+	Msg(0, "ERR: Неизвестные концы строк '%s' (unix или windows)", (LPCSTR)value);
 	throw NULL;
 }
 
@@ -162,6 +173,9 @@ void GComp_ReadSettings(CGCompParameters* Parameters)
 
 		else if( stricmp(token, "encoding") == 0 )
 			Parameters->Encoding = ReadEncoding(token, value);
+
+		else if( stricmp(token, "eol") == 0 )
+			Parameters->Eol = ReadEol(value);
 
 		else if( stricmp(token, "format") == 0 )
 		{
@@ -234,6 +248,7 @@ void GComp_SaveSettings(CGCompParameters* Parameters)
 	str.add_parameter(0, "language",    LanguageToStr(Parameters->Language), "", true);
 	str.add_parameter(0, "format", Parameters->FormatVersion, -1, true);
 	str.add_parameter(0, "encoding", Parameters->Encoding == enc_UTF8 ? "UTF-8" : "CP1251", "", true);
+	str.add_parameter(0, "eol", Parameters->Eol == eol_Unix ? "unix" : "windows", "", true);
 	str.add_parameter(0, "no-defaults", BoolToYesNo(Parameters->NoDefaults), "", true);
 	str.add_parameter(0, "no-parse-forms", BoolToYesNo(Parameters->NotParseForms), "", true);
 	str.add_parameter(0, "more-subfolders", BoolToYesNo(Parameters->MetadataBySubfolders), "", true);
@@ -318,10 +333,12 @@ BOOL GComp_Decompile(CGCompParameters* Parameters)
 			Storage.CopyStringToFile(Version, FName);
 		}
 
+		ClearLfFiles();
 		MainMetadataStream->Decompile(csDirectoryName, Storage, TypedTextStorage);
 
 		if( MMS_Filter.IsEmpty() )
 			Storage.PruneDirectory(csDirectoryName, TaskParameters.NoEmptyFolders);
+		SaveLfFiles(csDirectoryName);
 
 		CStorage::ReleaseZLibEngine();
 		SendInfoMessage(InfoMsg_Stop, 0);
@@ -376,10 +393,9 @@ BOOL GComp_Compile(CGCompParameters* Parameters)
 	//0: a caller that does not know the field (e.g. vgcomp without gcomp.ini)
 	if( TaskParameters.FormatVersion != 0 && TaskParameters.FormatVersion < GCOMP_FORMAT_OLDEST )
 	{
-		Msg(0, "ERR: каталог '%s' выгружен в формате %i, эта версия собирает форматы %i-%i. "
+		Msg(0, "ERR: каталог '%s' выгружен в формате %i, эта версия собирает формат %i и новее. "
 			"Соберите MD той версией GComp, которой он выгружен, и выгрузите заново.",
-			TaskParameters.DirectoryName, TaskParameters.FormatVersion,
-			GCOMP_FORMAT_OLDEST, GCOMP_FORMAT_VERSION);
+			TaskParameters.DirectoryName, TaskParameters.FormatVersion, GCOMP_FORMAT_OLDEST);
 		return FALSE;
 	}
 
@@ -409,6 +425,7 @@ BOOL GComp_Compile(CGCompParameters* Parameters)
 			Msg(0, "ERR: Source directory '%s' not exist", TaskParameters.DirectoryName);
 			return FALSE;
 		}
+		LoadLfFiles(csDirectoryName);
 		CStorage Storage;
 
 		if( MMS_Filter.IsEmpty() )

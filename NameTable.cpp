@@ -9,32 +9,32 @@ void CNameTable::RusConstructor()
 	nRecords = 0;
 	NameTable.SetSize(100);
 
-	AddRecord(MMS_MainDataContDef, NULL,                     "MainDataContDef",  NULL, false, NULL, "ИдентификаторыКонфигурации", "mdp");
-	AddRecord(MMS_TaskItem,        NULL,                     "TaskItem",         NULL, false, NULL, "ОписаниеКонфигурации", "mdp");
-	AddRecord(MMS_TaskItemContent, "Задача",                 NULL,               NULL, false, NULL, "ОписаниеКонфигурации", "mdp");
-	AddRecord(MMS_GenJrnlFldDef,   "ОбщийРеквизитДокумента", "GenJrnlFldDef",    NULL, false, "ОбщиеПоляДокументов", "ОбщиеПоляДокументов", "mdp");
-	AddRecord(MMS_DocSelRefObj,    "ГрафаОтбора",            "DocSelRefObj",     NULL, false, "ГрафыОтбораДокументов", "ГрафыОтбораДокументов", "mdp");
-	AddRecord(MMS_DocNumDef,       "Нумератор",              "DocNumDef",        NULL, false, "Нумераторы", "Нумераторы", "mdp");
-	AddRecord(MMS_Consts,          "Константа",              "Consts",           NULL, false, "Константы", "Константы", "mdp");
-	AddRecord(MMS_Registers,       "Регистр",                "Registers",        NULL, false, "Регистры", "Регистры", "mdp");
-	AddRecord(MMS_EnumList,        "Перечисление",           "EnumList",         NULL, false, "Перечисления", "Перечисления", "mdp");
-	AddRecord(MMS_Calendars,       "Календарь",              "Calendars",        NULL, false, "Календари", "Календари", "mdp");
-	AddRecord(MMS_RecalcRules,     "ПравилоПерерасчета",     "RecalcRules",      NULL, false, "ПравилаПерерасчета", "ПравилаПерерасчета", "mdp");
-	AddRecord(MMS_Groups,          "ГруппаРасчетов",         "Groups",           NULL, false, "ГруппыРасчетов", "ГруппыРасчетов", "mdp");
-	AddRecord(MMS_DocumentStreams, "Последовательность",     "Document Streams", NULL, false, "ПоследовательностиДокументов", "ПоследовательностиДокументов", "mdp");
-	AddRecord(MMS_Buh,             "Бухгалтерия",            NULL,               NULL, false, "ПараметрыБухгалтерии", "Метаданные", "mdp");
+	AddRecord(MMS_MainDataContDef, NULL,                     "MainDataContDef",  NULL, false, NULL, "ИдентификаторыКонфигурации", "yaml");
+	AddRecord(MMS_TaskItem,        NULL,                     "TaskItem",         NULL, false, NULL, "ОписаниеКонфигурации", "yaml");
+	AddRecord(MMS_TaskItemContent, "Задача",                 NULL,               NULL, false, NULL, "ОписаниеКонфигурации", "yaml");
+	AddRecord(MMS_GenJrnlFldDef,   "ОбщийРеквизитДокумента", "GenJrnlFldDef",    NULL, false, "ОбщиеПоляДокументов", "ОбщиеПоляДокументов", "yaml");
+	AddRecord(MMS_DocSelRefObj,    "ГрафаОтбора",            "DocSelRefObj",     NULL, false, "ГрафыОтбораДокументов", "ГрафыОтбораДокументов", "yaml");
+	AddRecord(MMS_DocNumDef,       "Нумератор",              "DocNumDef",        NULL, false, "Нумераторы", "Нумераторы", "yaml");
+	AddRecord(MMS_Consts,          "Константа",              "Consts",           NULL, false, "Константы", "Константы", "yaml");
+	AddRecord(MMS_Registers,       "Регистр",                "Registers",        NULL, false, "Регистры", "Регистры", "yaml");
+	AddRecord(MMS_EnumList,        "Перечисление",           "EnumList",         NULL, false, "Перечисления", "Перечисления", "yaml");
+	AddRecord(MMS_Calendars,       "Календарь",              "Calendars",        NULL, false, "Календари", "Календари", "yaml");
+	AddRecord(MMS_RecalcRules,     "ПравилоПерерасчета",     "RecalcRules",      NULL, false, "ПравилаПерерасчета", "ПравилаПерерасчета", "yaml");
+	AddRecord(MMS_Groups,          "ГруппаРасчетов",         "Groups",           NULL, false, "ГруппыРасчетов", "ГруппыРасчетов", "yaml");
+	AddRecord(MMS_DocumentStreams, "Последовательность",     "Document Streams", NULL, false, "ПоследовательностиДокументов", "ПоследовательностиДокументов", "yaml");
+	AddRecord(MMS_Buh,             "Бухгалтерия",            NULL,               NULL, false, "ПараметрыБухгалтерии", "Метаданные", "yaml");
 	
-	AddRecord(MMS_AccParams,       "РеквизитСчета",          "AccParams",        NULL, false, "Счета",    "РеквизитыСчета", "mdp");
+	AddRecord(MMS_AccParams,       "РеквизитСчета",          "AccParams",        NULL, false, "Счета",    "РеквизитыСчета", "yaml");
 	AddRecord(MMS_Plans,           "ПланСчетов",             "Plans",            NULL, false, "Счета",    NULL, NULL);
 	AddRecord(MMS_Plan,            "sID",                     "Plan",            NULL, false, "%sID%",    NULL, "pln");
 	AddRecord(MMS_Account,         "sID",                     NULL,              NULL, false, NULL,       "%Code%", "acc");
-	AddRecord(MMS_ProvParams,      "Проводка",               "ProvParams",       NULL, false, "Проводка", "ПараметрыПроводки", "mdp");
-	AddRecord(MMS_OperParams,      "Операция",               "OperParams",       NULL, false, "Операция", "ПараметрыОперации", "mdp");
-	AddRecord(MMS_SbKind,          "ВидСубконто",            "SbKind",           NULL, false, "Счета",    "ВидыСубконто", "mdp");
-	AddRecord(MMS_TypOpersDef,     "ТиповаяОперация",        "TypOpersDef",      NULL, false, "Операция", "TypOpersDef", "mdp");
-	AddRecord(MMS_CorrProvsDef,    "КорректнаяПроводка",     "CorrProvsDef",     NULL, false, "Проводка", "CorrProvsDef", "mdp");
-	AddRecord(MMS_ProvHardFldDef,  NULL,                     "ProvHardFldDef",   NULL, false, "Проводка", "ПредопределённыеПоля", "mdp");
-	AddRecord(MMS_OperJournal,     "Операция",               "OperJournal",      "OperationList", false, "ЖурналОпераций", "ЖурналОпераций", "mdp");
+	AddRecord(MMS_ProvParams,      "Проводка",               "ProvParams",       NULL, false, "Проводка", "ПараметрыПроводки", "yaml");
+	AddRecord(MMS_OperParams,      "Операция",               "OperParams",       NULL, false, "Операция", "ПараметрыОперации", "yaml");
+	AddRecord(MMS_SbKind,          "ВидСубконто",            "SbKind",           NULL, false, "Счета",    "ВидыСубконто", "yaml");
+	AddRecord(MMS_TypOpersDef,     "ТиповаяОперация",        "TypOpersDef",      NULL, false, "Операция", "TypOpersDef", "yaml");
+	AddRecord(MMS_CorrProvsDef,    "КорректнаяПроводка",     "CorrProvsDef",     NULL, false, "Проводка", "CorrProvsDef", "yaml");
+	AddRecord(MMS_ProvHardFldDef,  NULL,                     "ProvHardFldDef",   NULL, false, "Проводка", "ПредопределённыеПоля", "yaml");
+	AddRecord(MMS_OperJournal,     "Операция",               "OperJournal",      "OperationList", false, "ЖурналОпераций", "ЖурналОпераций", "yaml");
 
 	AddRecord(MMS_SbCnts,          "Справочник",             "SbCnts",           "Subconto", false, "Справочники");
 	AddRecord(MMS_Documents,       "Документ",               "Documents",        "Document", false, "Документы");
@@ -47,9 +47,9 @@ void CNameTable::RusConstructor()
 	AddRecord(MMS_TaskItemDescr,   "Описание", NULL,        NULL,               false, NULL);
 	AddRecord(MMS_Enum,            "sID", NULL,             NULL,               false, NULL);
 	AddRecord(MMS_EnumVal,         NULL, "EnumVal",         NULL,               false, NULL);
-	AddRecord(MMS_Const,           "sID", NULL,             NULL,               false, "%sID%", NULL, "mdp");
+	AddRecord(MMS_Const,           "sID", NULL,             NULL,               false, "%sID%", NULL, "yaml");
 	AddRecord(MMS_SbCnt,           "sID", NULL,             "Subconto_Number",  true,  "%sID%");
-	AddRecord(MMS_SbCntParams,     NULL, "Params",          NULL,               false, NULL, "Метаданные", "mdp");
+	AddRecord(MMS_SbCntParams,     NULL, "Params",          NULL,               false, NULL, "Метаданные", "yaml");
 	AddRecord(MMS_Document,        "sID", NULL,             "Document_Number",  true,  NULL);
 	AddRecord(MMS_Report,          "sID", NULL,             "Report_Number",    true,  NULL);
 	AddRecord(MMS_DocHeadFields,   NULL, "Head Fields",     NULL,               false, NULL);
@@ -67,11 +67,11 @@ void CNameTable::RusConstructor()
 	AddRecord(MMS_DistributionRuler, NULL, "Distribution ruler", NULL,  false,  NULL);
 
 	AddRecord(NT_ObjNameTable,     NULL, NULL,   NULL,                  false, NULL, "ОбъектыМетаданных", "txt");
-	AddRecord(NT_MainMetadataStream, NULL, NULL, "Main MetaData Stream", false, NULL, "Структура", "mdp");
-	AddRecord(NT_MetadataPart,     NULL, NULL,   NULL,                  false, NULL, "Структура", "mdp");
+	AddRecord(NT_MainMetadataStream, NULL, NULL, "Main MetaData Stream", false, NULL, "Структура", "yaml");
+	AddRecord(NT_MetadataPart,     NULL, NULL,   NULL,                  false, NULL, "Структура", "yaml");
 	AddRecord(NT_Workbook,         NULL, NULL,   "WorkBook",            false, NULL);
 	AddRecord(NT_FormModule,       NULL, NULL,   "MD Programm text",    false, NULL, "МодульФормы", "1s");
-	AddRecord(NT_DialogForm,       NULL, NULL,   "Dialog Stream",       false, NULL, "Форма", "frm");
+	AddRecord(NT_DialogForm,       NULL, NULL,   "Dialog Stream",       false, NULL, "Форма", "yaml");
 	AddRecord(NT_MoxelSheet,       NULL, NULL,   "Page",                false, NULL, "%sID%", "mxl");
 	AddRecord(NT_ListForm,         "Форма", NULL, NULL,                 false, "%sID%", NULL, "fls");
 	AddRecord(NT_GlobalModuleStor, NULL, NULL,   "ModuleText_Number1",  false, NULL);
@@ -88,23 +88,23 @@ void CNameTable::RusConstructor()
 	AddRecord(NT_AccForm,          NULL, NULL,   "AccountChart_Number", true,  "ФормаСчета");
 	AddRecord(NT_OperFormStor,     NULL, NULL,   "Operation",           false, "Операция");
 	AddRecord(NT_OperForm,         NULL, NULL,   "Operation_Number",    true,  "ФормаОперации");
-	AddRecord(NT_AccListForm,      "ПланСчетов.ФормаСписка", NULL, "AccountChartList", false, "Счета", "ФормыСписка", "mdp");
-	AddRecord(NT_OperListForm,     "ФормаСписка", NULL, "OperationList", false, "Операция", "ФормыЖурнала", "mdp");
-	AddRecord(NT_ProvListForm,     "Проводка.ФормаСписка", NULL, "ProvList", false, "Проводка", "ФормыЖурнала", "mdp");
-	AddRecord(NT_UnknownListForm,  NULL, NULL,   NULL,                  false,  NULL, "НеизвестнаяФорма", "mdp");
+	AddRecord(NT_AccListForm,      "ПланСчетов.ФормаСписка", NULL, "AccountChartList", false, "Счета", "ФормыСписка", "yaml");
+	AddRecord(NT_OperListForm,     "ФормаСписка", NULL, "OperationList", false, "Операция", "ФормыЖурнала", "yaml");
+	AddRecord(NT_ProvListForm,     "Проводка.ФормаСписка", NULL, "ProvList", false, "Проводка", "ФормыЖурнала", "yaml");
+	AddRecord(NT_UnknownListForm,  NULL, NULL,   NULL,                  false,  NULL, "НеизвестнаяФорма", "yaml");
 	AddRecord(NT_GlobalData,       NULL, NULL,   "GlobalData",          false,  NULL);
 	AddRecord(NT_CommonMXL,        NULL, NULL,   "GlobalData_Number1",  false,  "ОбщиеТаблицы");
 	AddRecord(NT_PictureGallery,   NULL, NULL,   "Picture",             false,  "PictureGallery");
 	AddRecord(NT_GUIDData,         NULL, NULL,   "Metadata\\GUIDData",  false,  NULL, "GUIDData");
 	AddRecord(NT_TagStream,        NULL, NULL,   "Metadata\\TagStream", false,  NULL, "TagStream");
 	AddRecord(NT_UserInterface,    NULL, NULL,   "UserDef\\Page.1",     false,  "Интерфейсы");
-	AddRecord(NT_UserRights,       NULL, NULL,   "UserDef\\Page.2",     false,  "Права", "%sID%", "txt");
+	AddRecord(NT_UserRights,       NULL, NULL,   "UserDef\\Page.2",     false,  "Права", "%sID%", "yaml");
 	AddRecord(NT_UserRightsOneFile,NULL, NULL,   "UserDef\\Page.2",     false,  "Права", "НаборыПравОбъединенные", "csv");
 	AddRecord(NT_ObjectOrdering,   NULL, NULL,   NULL,                  false,  NULL, "ПорядокОбъектов", "ord");
 
-	AddRecord(NT_UICommands,       NULL, NULL,   "Commands",            false,  NULL, "Команды", "txt");
-	AddRecord(NT_UIMenu,           NULL, NULL,   "Page.1",              false,  NULL, "Меню", "txt");
-	AddRecord(NT_UIPanels,         NULL, NULL,   "Page.2",              false,  NULL, "Панели", "txt");
+	AddRecord(NT_UICommands,       NULL, NULL,   "Commands",            false,  NULL, "Команды", "yaml");
+	AddRecord(NT_UIMenu,           NULL, NULL,   "Page.1",              false,  NULL, "Меню", "yaml");
+	AddRecord(NT_UIPanels,         NULL, NULL,   "Page.2",              false,  NULL, "Панели", "yaml");
 	AddRecord(NT_UIPanelsBMP,      NULL, NULL,   "Page.2",              false,  NULL, "Панели", "bmp");
 }
 
@@ -114,32 +114,32 @@ void CNameTable::EngConstructor()
 	nRecords = 0;
 	NameTable.SetSize(100);
 
-	AddRecord(MMS_MainDataContDef, NULL,                     "MainDataContDef",  NULL, false, NULL, "ConfigIdentifiers", "mdp");
-	AddRecord(MMS_TaskItem,        "Задача",                 "TaskItem",         NULL, false, NULL, "ConfigDescription", "mdp");
-	AddRecord(MMS_TaskItemContent, "Задача",                 NULL,               NULL, false, NULL, "ConfigDescription", "mdp");
-	AddRecord(MMS_GenJrnlFldDef,   "ОбщийРеквизитДокумента", "GenJrnlFldDef",    NULL, false, "CommonFiledsOfDocs", "CommonFiledsOfDocs", "mdp");
-	AddRecord(MMS_DocSelRefObj,    "ГрафаОтбора",            "DocSelRefObj",     NULL, false, "DocumentSelectionRules", "DocumentSelectionRules", "mdp");
-	AddRecord(MMS_DocNumDef,       "Нумератор",              "DocNumDef",        NULL, false, "Numerators", "Numerators", "mdp");
-	AddRecord(MMS_Consts,          "Константа",              "Consts",           NULL, false, "Constants", "Constants", "mdp");
-	AddRecord(MMS_Registers,       "Регистр",                "Registers",        NULL, false, "Registers", "Registers", "mdp");
-	AddRecord(MMS_EnumList,        "Перечисление",           "EnumList",         NULL, false, "Enumerations", "Enumerations", "mdp");
-	AddRecord(MMS_Calendars,       "Календарь",              "Calendars",        NULL, false, "Calendars", "Calendars", "mdp");
-	AddRecord(MMS_RecalcRules,     "ПравилоПерерасчета",     "RecalcRules",      NULL, false, "RecalcRules", "RecalcRules", "mdp");
-	AddRecord(MMS_Groups,          "ГруппаРасчетов",         "Groups",           NULL, false, "RecalcGroups", "RecalcGroups", "mdp");
-	AddRecord(MMS_DocumentStreams, "Последовательность",     "Document Streams", NULL, false, "DocumentStreams", "DocumentStreams", "mdp");
-	AddRecord(MMS_Buh,             "Бухгалтерия",            NULL,               NULL, false, "AccountSettings", "Metadata", "mdp");
+	AddRecord(MMS_MainDataContDef, NULL,                     "MainDataContDef",  NULL, false, NULL, "ConfigIdentifiers", "yaml");
+	AddRecord(MMS_TaskItem,        "Задача",                 "TaskItem",         NULL, false, NULL, "ConfigDescription", "yaml");
+	AddRecord(MMS_TaskItemContent, "Задача",                 NULL,               NULL, false, NULL, "ConfigDescription", "yaml");
+	AddRecord(MMS_GenJrnlFldDef,   "ОбщийРеквизитДокумента", "GenJrnlFldDef",    NULL, false, "CommonFiledsOfDocs", "CommonFiledsOfDocs", "yaml");
+	AddRecord(MMS_DocSelRefObj,    "ГрафаОтбора",            "DocSelRefObj",     NULL, false, "DocumentSelectionRules", "DocumentSelectionRules", "yaml");
+	AddRecord(MMS_DocNumDef,       "Нумератор",              "DocNumDef",        NULL, false, "Numerators", "Numerators", "yaml");
+	AddRecord(MMS_Consts,          "Константа",              "Consts",           NULL, false, "Constants", "Constants", "yaml");
+	AddRecord(MMS_Registers,       "Регистр",                "Registers",        NULL, false, "Registers", "Registers", "yaml");
+	AddRecord(MMS_EnumList,        "Перечисление",           "EnumList",         NULL, false, "Enumerations", "Enumerations", "yaml");
+	AddRecord(MMS_Calendars,       "Календарь",              "Calendars",        NULL, false, "Calendars", "Calendars", "yaml");
+	AddRecord(MMS_RecalcRules,     "ПравилоПерерасчета",     "RecalcRules",      NULL, false, "RecalcRules", "RecalcRules", "yaml");
+	AddRecord(MMS_Groups,          "ГруппаРасчетов",         "Groups",           NULL, false, "RecalcGroups", "RecalcGroups", "yaml");
+	AddRecord(MMS_DocumentStreams, "Последовательность",     "Document Streams", NULL, false, "DocumentStreams", "DocumentStreams", "yaml");
+	AddRecord(MMS_Buh,             "Бухгалтерия",            NULL,               NULL, false, "AccountSettings", "Metadata", "yaml");
 
-	AddRecord(MMS_AccParams,       "РеквизитСчета",          "AccParams",        NULL, false, "Accounts",    "AccParams", "mdp");
+	AddRecord(MMS_AccParams,       "РеквизитСчета",          "AccParams",        NULL, false, "Accounts",    "AccParams", "yaml");
 	AddRecord(MMS_Plans,           "ПланСчетов",             "Plans",            NULL, false, "Accounts",    NULL, NULL);
 	AddRecord(MMS_Plan,            "sID",                    "Plan",             NULL, false, "%sID%",    NULL, "pln");
 	AddRecord(MMS_Account,         "sID",                    NULL,               NULL, false, NULL,       "%Code%", "acc");
-	AddRecord(MMS_ProvParams,      "Проводка",               "ProvParams",       NULL, false, "Entry", "ProvParams", "mdp");
-	AddRecord(MMS_OperParams,      "Операция",               "OperParams",       NULL, false, "Operation", "OperParams", "mdp");
-	AddRecord(MMS_SbKind,          "ВидСубконто",            "SbKind",           NULL, false, "Accounts",    "SbKind", "mdp");
-	AddRecord(MMS_TypOpersDef,     "ТиповаяОперация",        "TypOpersDef",      NULL, false, "Operation", "TypOpersDef", "mdp");
-	AddRecord(MMS_CorrProvsDef,    "КорректнаяПроводка",     "CorrProvsDef",     NULL, false, "Entry", "CorrProvsDef", "mdp");
-	AddRecord(MMS_ProvHardFldDef,  NULL,                     "ProvHardFldDef",   NULL, false, "Entry", "ProvHardFldDef", "mdp");
-	AddRecord(MMS_OperJournal,     "Операция",               "OperJournal",      "OperationList", false, "OperationJournal", "OperationJournal", "mdp");
+	AddRecord(MMS_ProvParams,      "Проводка",               "ProvParams",       NULL, false, "Entry", "ProvParams", "yaml");
+	AddRecord(MMS_OperParams,      "Операция",               "OperParams",       NULL, false, "Operation", "OperParams", "yaml");
+	AddRecord(MMS_SbKind,          "ВидСубконто",            "SbKind",           NULL, false, "Accounts",    "SbKind", "yaml");
+	AddRecord(MMS_TypOpersDef,     "ТиповаяОперация",        "TypOpersDef",      NULL, false, "Operation", "TypOpersDef", "yaml");
+	AddRecord(MMS_CorrProvsDef,    "КорректнаяПроводка",     "CorrProvsDef",     NULL, false, "Entry", "CorrProvsDef", "yaml");
+	AddRecord(MMS_ProvHardFldDef,  NULL,                     "ProvHardFldDef",   NULL, false, "Entry", "ProvHardFldDef", "yaml");
+	AddRecord(MMS_OperJournal,     "Операция",               "OperJournal",      "OperationList", false, "OperationJournal", "OperationJournal", "yaml");
 
 	AddRecord(MMS_SbCnts,          "Справочник",             "SbCnts",           "Subconto", false, "References");
 	AddRecord(MMS_Documents,       "Документ",               "Documents",        "Document", false, "Documents");
@@ -152,9 +152,9 @@ void CNameTable::EngConstructor()
 	AddRecord(MMS_TaskItemDescr,   "Описание", NULL,        NULL,               false, NULL);
 	AddRecord(MMS_Enum,            "sID", NULL,             NULL,               false, NULL);
 	AddRecord(MMS_EnumVal,         NULL, "EnumVal",         NULL,               false, NULL);
-	AddRecord(MMS_Const,           "sID", NULL,             NULL,               false, "%sID%", NULL, "mdp");
+	AddRecord(MMS_Const,           "sID", NULL,             NULL,               false, "%sID%", NULL, "yaml");
 	AddRecord(MMS_SbCnt,           "sID", NULL,             "Subconto_Number",  true,  "%sID%");
-	AddRecord(MMS_SbCntParams,     NULL, "Params",          NULL,               false, NULL, "Structure", "mdp");
+	AddRecord(MMS_SbCntParams,     NULL, "Params",          NULL,               false, NULL, "Structure", "yaml");
 	AddRecord(MMS_Document,        "sID", NULL,             "Document_Number",  true,  NULL);
 	AddRecord(MMS_Report,          "sID", NULL,             "Report_Number",    true,  NULL);
 	AddRecord(MMS_DocHeadFields,   NULL, "Head Fields",     NULL,               false, NULL);
@@ -172,11 +172,11 @@ void CNameTable::EngConstructor()
 	AddRecord(MMS_DistributionRuler, NULL, "Distribution ruler", NULL,  false,  NULL);
 
 	AddRecord(NT_ObjNameTable,     NULL, NULL,   NULL,                  false, NULL, "MetaObjects", "txt");
-	AddRecord(NT_MainMetadataStream, NULL, NULL, "Main MetaData Stream", false, NULL, "Structure", "mdp");
-	AddRecord(NT_MetadataPart,     NULL, NULL,   NULL,                  false, NULL, "Structure", "mdp");
+	AddRecord(NT_MainMetadataStream, NULL, NULL, "Main MetaData Stream", false, NULL, "Structure", "yaml");
+	AddRecord(NT_MetadataPart,     NULL, NULL,   NULL,                  false, NULL, "Structure", "yaml");
 	AddRecord(NT_Workbook,         NULL, NULL,   "WorkBook",            false, NULL);
 	AddRecord(NT_FormModule,       NULL, NULL,   "MD Programm text",    false, NULL, "FormModule", "1s");
-	AddRecord(NT_DialogForm,       NULL, NULL,   "Dialog Stream",       false, NULL, "Form", "frm");
+	AddRecord(NT_DialogForm,       NULL, NULL,   "Dialog Stream",       false, NULL, "Form", "yaml");
 	AddRecord(NT_MoxelSheet,       NULL, NULL,   "Page",                false, NULL, "%sID%", "mxl");
 	AddRecord(NT_ListForm,         "Форма", NULL, NULL,                 false, "%sID%", NULL, "fls");
 	AddRecord(NT_GlobalModuleStor, NULL, NULL,   "ModuleText_Number1",  false, NULL);
@@ -193,23 +193,23 @@ void CNameTable::EngConstructor()
 	AddRecord(NT_AccForm,          NULL, NULL,   "AccountChart_Number", true,  "AccountForm");
 	AddRecord(NT_OperFormStor,     NULL, NULL,   "Operation",           false, "Operation");
 	AddRecord(NT_OperForm,         NULL, NULL,   "Operation_Number",    true,  "OperationForm");
-	AddRecord(NT_AccListForm,      "ПланСчетов.ФормаСписка", NULL, "AccountChartList", false,  "Accounts", "ListForms", "mdp");
-	AddRecord(NT_OperListForm,     "ФормаСписка", NULL, "OperationList", false, "Operation", "JournalForms", "mdp");
-	AddRecord(NT_ProvListForm,     "Проводка.ФормаСписка", NULL, "ProvList", false, "Entry", "JournalForms", "mdp");
-	AddRecord(NT_UnknownListForm,  NULL, NULL,   NULL,                  false,  NULL, "UnknownForm", "mdp");
+	AddRecord(NT_AccListForm,      "ПланСчетов.ФормаСписка", NULL, "AccountChartList", false,  "Accounts", "ListForms", "yaml");
+	AddRecord(NT_OperListForm,     "ФормаСписка", NULL, "OperationList", false, "Operation", "JournalForms", "yaml");
+	AddRecord(NT_ProvListForm,     "Проводка.ФормаСписка", NULL, "ProvList", false, "Entry", "JournalForms", "yaml");
+	AddRecord(NT_UnknownListForm,  NULL, NULL,   NULL,                  false,  NULL, "UnknownForm", "yaml");
 	AddRecord(NT_GlobalData,       NULL, NULL,   "GlobalData",          false,  NULL);
 	AddRecord(NT_CommonMXL,        NULL, NULL,   "GlobalData_Number1",  false,  "CommonMoxel");
 	AddRecord(NT_PictureGallery,   NULL, NULL,   "Picture",             false,  "PictureGallery");
 	AddRecord(NT_GUIDData,         NULL, NULL,   "Metadata\\GUIDData",  false,  NULL, "GUIDData");
 	AddRecord(NT_TagStream,        NULL, NULL,   "Metadata\\TagStream", false,  NULL, "TagStream");
 	AddRecord(NT_UserInterface,    NULL, NULL,   "UserDef\\Page.1",     false,  "Interfaces");
-	AddRecord(NT_UserRights,       NULL, NULL,   "UserDef\\Page.2",     false,  "UserRights", "%sID%", "txt");
+	AddRecord(NT_UserRights,       NULL, NULL,   "UserDef\\Page.2",     false,  "UserRights", "%sID%", "yaml");
 	AddRecord(NT_UserRightsOneFile,NULL, NULL,   "UserDef\\Page.2",     false,  "UserRights", "Rights", "csv");
 	AddRecord(NT_ObjectOrdering,   NULL, NULL,   NULL,                  false,  NULL, "ObjectOrder", "ord");
 
-	AddRecord(NT_UICommands,       NULL, NULL,   "Commands",            false,  NULL, "Commands", "txt");
-	AddRecord(NT_UIMenu,           NULL, NULL,   "Page.1",              false,  NULL, "Menu", "txt");
-	AddRecord(NT_UIPanels,         NULL, NULL,   "Page.2",              false,  NULL, "Panels", "txt");
+	AddRecord(NT_UICommands,       NULL, NULL,   "Commands",            false,  NULL, "Commands", "yaml");
+	AddRecord(NT_UIMenu,           NULL, NULL,   "Page.1",              false,  NULL, "Menu", "yaml");
+	AddRecord(NT_UIPanels,         NULL, NULL,   "Page.2",              false,  NULL, "Panels", "yaml");
 	AddRecord(NT_UIPanelsBMP,      NULL, NULL,   "Page.2",              false,  NULL, "Panels", "bmp");
 }
 

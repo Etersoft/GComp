@@ -22,6 +22,7 @@ CLexer::~CLexer()
 {
 	if( File != NULL )
 		fclose(File);
+	ReleaseSourceLines(FileName);
 	if( LineBuff != NULL )
 		delete[] LineBuff;
 }
@@ -204,11 +205,16 @@ bool CLexer::PopMMSToken(GCString& Token, TTokenType& TokenType)
 }
 
 GCString CLexer::error_string;
+int CLexer::CurrentLine()
+{
+	return SourceLine(FileName, nLine);
+}
+
 GCString& CLexer::FilePosInfo()
 {
 	if( nColumn == 0 )
-		error_string.Format("%s: line %i", (LPCSTR)FileName, nLine);
+		error_string.Format("%s: line %i", (LPCSTR)FileName, CurrentLine());
 	else
-		error_string.Format("%s: line %i, column %i", (LPCSTR)FileName, nLine, nColumn);
+		error_string.Format("%s: line %i, column %i", (LPCSTR)FileName, CurrentLine(), nColumn);
 	return error_string;
 }

@@ -13,6 +13,8 @@ public:
 	GCString() :CString() {};
 	GCString(const char* str) :CString(str) {};
 	GCString(const char c) :CString(c) {};
+	GCString(const char c, int nRepeat) :CString(c, nRepeat) {};
+	GCString(const char* str, int nLength) :CString(str, nLength) {};
 	GCString(int val) :CString() {Format("%i", val);};
 	GCString(double val) :CString() {Format("%g", val);};
 	GCString(unsigned int val) :CString() {Format("%u", val);};
@@ -136,6 +138,8 @@ void UnquoteEdgeSpaces(GCString& v);
 //or has no CP1251 character, -1 if the whole text converted
 void Cp1251ToUtf8(const char* src, int len, GCString& dst);
 int Utf8ToCp1251(const char* src, int len, GCString& dst);
+//the CP1251 byte of a Unicode character, or -1
+int UnicodeToCp1251(unsigned int c);
 
 //Функции транслитерации
 GCString Translit(GCString& str);
