@@ -150,8 +150,8 @@ void CFormFont::BeautyString(CBeautyString& String, int level)
 	
 	level++;
 
-	//format 3: the name is already in the header
-	for( int i = (TaskParameters.FormatVersion >= 3 ? 1 : 0); i < PropSet.nProps; i++ )
+	//the name is already in the header
+	for( int i = 1; i < PropSet.nProps; i++ )
 	{
 		PropSet.BeautyString(String, level, this, i);
 	}
@@ -686,7 +686,7 @@ CFormControls::CFormControls()
 
 bool CFormControls::UseFormatDefaults()
 {
-	return TaskParameters.FormatVersion >= 3 && !TaskParameters.NoDefaults;
+	return !TaskParameters.NoDefaults;
 }
 
 GCString CFormControls::FirstLayer()
@@ -699,7 +699,6 @@ GCString CFormControls::FirstLayer()
 CMMSObject* CFormControls::CreateChild(const char* Name, const char* Value)
 {
 	CFormControl* Control = new CFormControl(Name, Value);
-	if( TaskParameters.FormatVersion >= 3 )
 	{
 		int n = GetNChildren();
 		Control->Prev = n > 0 ? (CFormControl*)GetChild(n - 1) : NULL;
@@ -864,12 +863,11 @@ void CDialogFrameContent::ApplyDefaults()
 void CDialogFrameContent::ParseFile(CLexer& Lexer)
 {
 	Flags2Set = false;
-	if( TaskParameters.FormatVersion >= 3 )
-		ApplyDefaults();
+	ApplyDefaults();
 
 	CMMSObject::ParseFile(Lexer);
 
-	if( TaskParameters.FormatVersion >= 3 && !Flags2Set )
+	if( !Flags2Set )
 		Flags2 = Flags1;
 }
 
@@ -885,7 +883,7 @@ void CDialogFrameContent::BeautyString(CBeautyString& String, int level)
 	String.add_parameter(level, BeautyName(), "", "", true);
 	String.add_brace(level, '{');
 
-	if( TaskParameters.FormatVersion >= 3 && !TaskParameters.NoDefaults )
+	if( !TaskParameters.NoDefaults )
 	{
 		CDialogFrameContent Def;
 		Def.ApplyDefaults();

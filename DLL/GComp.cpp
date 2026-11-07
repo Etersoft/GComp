@@ -264,6 +264,7 @@ BOOL GComp_Decompile(CGCompParameters* Parameters)
 	pPassedParameters->CancelWork = false;
 	TotalObjectsProcessed = 0;
 
+	Parameters->FormatVersion = GCOMP_FORMAT_VERSION;
 	TaskParameters = *Parameters;
 	TaskType = TaskType_Decompile;
 
@@ -371,6 +372,16 @@ BOOL GComp_Compile(CGCompParameters* Parameters)
 
 	TaskParameters = *Parameters;
 	TaskType = TaskType_Compile;
+
+	//0: a caller that does not know the field (e.g. vgcomp without gcomp.ini)
+	if( TaskParameters.FormatVersion != 0 && TaskParameters.FormatVersion < GCOMP_FORMAT_OLDEST )
+	{
+		Msg(0, "ERR: каталог '%s' выгружен в формате %i, эта версия собирает форматы %i-%i. "
+			"Соберите MD той версией GComp, которой он выгружен, и выгрузите заново.",
+			TaskParameters.DirectoryName, TaskParameters.FormatVersion,
+			GCOMP_FORMAT_OLDEST, GCOMP_FORMAT_VERSION);
+		return FALSE;
+	}
 
 	char* locale = setlocale( LC_ALL, ".ACP");
 	GCString csDirectoryName = TaskParameters.DirectoryName;

@@ -102,11 +102,18 @@ stop it with the file and line instead of being dropped silently.
 A compiled MD with a changed configuration opens in 1C:Enterprise and
 the Configurator under Wine; the full syntax check passes.
 
-## Description format 3
+## Source tree format
 
-Most lines of a decompiled form repeat what 1C writes into every form. A
-new tree gets format 3 (`format: 3` in `gcomp.ini`), which leaves out what
-follows from an element's class and position:
+The tree format is kept in `gcomp.ini` (`format: 4`). Decompiling always
+writes the current format; compiling takes formats 3 and 4 and stops on
+an older tree (format 2: GComp 2.2.15 and earlier versions of this one,
+whose `gcomp.ini` has no `format`). Such a tree is converted through the
+MD: compile it with the GComp that decompiled it, then decompile the MD
+with this one.
+
+Most lines of a decompiled form repeat what 1C writes into every form.
+Since format 3 they leave out what follows from an element's class and
+position:
 
 - `ДопФлаги` (window styles) usual for the class;
 - `ИдентификаторМетаданных: -1` (no attribute; 0 is written as `0`);
@@ -120,13 +127,24 @@ follows from an element's class and position:
 
 `X`, `Y`, `Ширина`, `Высота` become one line, `Положение: X, Y, Ширина,
 Высота`. On the 430 configurations above forms shrink from 6.0 to 3.3
-million lines (the whole tree by 16%), and every MD compiled from a
-format 3 tree is byte-identical to the one compiled from format 2.
+million lines (the whole tree by 16%).
 
-A `gcomp.ini` without `format` means format 2, so trees decompiled
-earlier keep their format on compilation and on decompilation into the
-same tree; `--format 2` writes format 2 into a new tree. To convert a
-tree, decompile into an empty directory.
+Format 4 drops small files:
+
+- a work book with the usual single moxel page (Page.1 "Moxel WorkPlace")
+  has no `ПорядокОбъектов.ord`, compiling takes `Таблица.mxl` as that
+  page;
+- `Container.Profile` equal to the one compiling creates is not written
+  (before, it was written for every work book because of a comparison
+  error); an empty file still means that the work book has none;
+- an object description without line breaks, up to 1000 bytes, is the
+  line `Описание: "..."` (quotes doubled) in the object's block of its
+  `.mdp` instead of a `.txt` file; longer ones stay in files.
+
+On the 430 configurations that is 77 thousand files instead of 98. Every
+stream of an MD compiled from format 4 is the same as from format 3; the
+storages of `TypedText` may come in another order inside the compound
+file.
 
 ## Source tree in UTF-8
 

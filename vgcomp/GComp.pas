@@ -58,7 +58,7 @@ TGCompParameters = record
 
 	Reserved1: DWORD;
 	Reserved2: DWORD; // Encoding: 0 - CP1251, 1 - UTF-8
-	Reserved3: DWORD; // FormatVersion: 2 or 3
+	Reserved3: DWORD; // FormatVersion of the tree: 3 or 4, see DLL/GComp.h
 	Reserved4: DWORD;
 	//=== params for safety in Delphi ===
 	strCompoundFileName: String;

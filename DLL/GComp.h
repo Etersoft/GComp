@@ -44,8 +44,10 @@ enum TGComp_Encoding {
 	enc_CP1251 = 0,
 	enc_UTF8 = 1
 };
-//The description format written by this version (see FormatVersion)
-#define GCOMP_FORMAT_VERSION 3
+//The format of the source tree written by this version (see FormatVersion)
+#define GCOMP_FORMAT_VERSION 4
+//The oldest format this version compiles
+#define GCOMP_FORMAT_OLDEST 3
 
 enum TLogType {
 	LogType_stdout = 0,
@@ -117,9 +119,12 @@ struct CGCompParameters
 	//so the size of the structure is the same
 	TGComp_Encoding Encoding;
 
-	//Version of the description format (Reserved3 in vgcomp/GComp.pas):
-	//2 - GComp 2.2.15; 3 - forms with defaults by element class and position.
-	//A gcomp.ini without "format" means 2, a new tree gets the current one
+	//Format of the source tree, from gcomp.ini (Reserved3 in vgcomp/GComp.pas):
+	//2 - GComp 2.2.15 (a gcomp.ini without "format"); 3 - forms with
+	//defaults by element class and position; 4 - without the usual
+	//ПорядокОбъектов.ord and Container.Profile of a work book, one-line
+	//descriptions in .mdp. Decompiling always writes GCOMP_FORMAT_VERSION,
+	//compiling takes GCOMP_FORMAT_OLDEST and newer.
 	int FormatVersion;
 };
 
