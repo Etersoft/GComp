@@ -1009,9 +1009,16 @@ void CStorage::ParseStream(CMMSObject* Object, const GCString& StreamName, bool 
 
 	if( !OpenStream(StreamName) ) return;
 	GetCleanStream();
-	char* fname = NULL;	
-	fname =  _tempnam( NULL, "tmp_");//"c:\\tmp"
-	File = fopen(fname, "w+b");	
+	/* GetTempFileName creates the file, so parallel gcomp processes cannot
+	   get the same name (_tempnam only checked that the name was free). */
+	char tmpdir[MAX_PATH], tmpname[MAX_PATH];
+	char* fname = NULL;
+	File = NULL;
+	if( GetTempPathA(MAX_PATH, tmpdir) && GetTempFileNameA(tmpdir, "gcp", 0, tmpname) )
+	{
+		fname = _strdup(tmpname);
+		File = fopen(fname, "w+b");
+	}
 	if( File == NULL )
 	{
 		Msg(0, "ERR: Невозможно создать временный файл: %s", strerror(errno));
