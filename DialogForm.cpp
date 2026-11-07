@@ -825,6 +825,7 @@ CDialogFrameContent::CDialogFrameContent()
 
 	Flags1.SetTable(FlagList);
 	Flags2.SetTable(FlagList);
+	Flags2Set = false;
 
 	ToDestroyChildren = false;
 }
@@ -835,6 +836,9 @@ CMMSObject* CDialogFrameContent::CreateChild(const char* Name, const char* Value
 		return &Layers;
 	if( _stricoll(Name, Font.BeautyName()) == 0 )
 	{
+		//the block lists what differs from CFormFont(), not from the default
+		CFormFont Standard;
+		Font = Standard;
 		Font.FontName = Value; //format 3 has the name only in the header
 		return &Font;
 	}
@@ -850,14 +854,53 @@ CMMSObject* CDialogFrameContent::CreateChild(const char* Name, int MMS_Index)
 	return NULL;
 }
 
+void CDialogFrameContent::ApplyDefaults()
+{
+	Font.SetElementDefault(true);
+	Param24 = "6";
+	Param25 = "25";
+}
+
+void CDialogFrameContent::ParseFile(CLexer& Lexer)
+{
+	Flags2Set = false;
+	if( TaskParameters.FormatVersion >= 3 )
+		ApplyDefaults();
+
+	CMMSObject::ParseFile(Lexer);
+
+	if( TaskParameters.FormatVersion >= 3 && !Flags2Set )
+		Flags2 = Flags1;
+}
+
+bool CDialogFrameContent::SetValue(GCString& Name, GCString& Value)
+{
+	if( Name == "дыруш2" )
+		Flags2Set = true;
+	return CMMSObject::SetValue(Name, Value);
+}
+
 void CDialogFrameContent::BeautyString(CBeautyString& String, int level)
 {
-	if( !TaskParameters.NoDefaults && Font.IsDefault() )
-		Font.FontNeeded = false;
-
 	String.add_parameter(level, BeautyName(), "", "", true);
 	String.add_brace(level, '{');
-	CMMSObject::BeautyString(String, level+1);
+
+	if( TaskParameters.FormatVersion >= 3 && !TaskParameters.NoDefaults )
+	{
+		CDialogFrameContent Def;
+		Def.ApplyDefaults();
+		Def.Flags2 = Flags1;
+		Font.FontNeeded = !Font.SameAs(Def.Font);
+		for( int i = 0; i < PropSet.nProps; i++ )
+			PropSet.BeautyString(String, level+1, this, i, &Def);
+	}
+	else
+	{
+		if( !TaskParameters.NoDefaults && Font.IsDefault() )
+			Font.FontNeeded = false;
+		CMMSObject::BeautyString(String, level+1);
+	}
+
 	BeautyFieldCount(String, level+1);
 	String.add_brace(level, '}');
 }

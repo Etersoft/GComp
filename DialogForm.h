@@ -364,6 +364,15 @@ public:
 	virtual CMMSObject* CreateChild(const char* Name, const char* Value);
 	virtual CMMSObject* AddChild(CMMSObject* Child) {return NULL;}
 
+	//Format 3: 1C's dialog font, Param24 6, Param25 25 (as in nearly all
+	//forms) and Флаги2 equal to Флаги are left out
+	void ApplyDefaults();
+	bool Flags2Set;
+	virtual void ParseFile(CLexer& Lexer);
+	virtual bool SetValue(GCString& Name, GCString& Value);
+	virtual bool SetValue(int MMS_Index, GCString& Value)
+		{return CMMSObject::SetValue(MMS_Index, Value);}
+
 	virtual const char* BeautyName() {return "Параметры";}
 	virtual void BeautyString(CBeautyString& String, int level);
 };
