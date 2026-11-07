@@ -3,10 +3,8 @@
  * (zlibeng.dll), which GComp used through `#import "zlibeng.dll"`.
  *
  * 1C 7.7 stores "MD Programm text", "Inplace description" and pictures as
- * raw deflate (no zlib header, windowBits -15), written by zlib 1.0.4 with
- * level 4 and memLevel 9. Compression uses the deflate of zlib 1.0.4 linked
- * under zlib104_* names (zlib104-rename.h): newer zlib gives other bytes on
- * larger inputs. Decompression uses the current zlib.
+ * raw deflate (no zlib header, windowBits -15). Compression level 4 with
+ * memLevel 9 reproduces the bytes written by 1C on the samples checked.
  *
  * pkDecompress: inflate `src` from its current position to the end and write
  *               to `dst`; `dst` is rewound to the start afterwards.
@@ -22,14 +20,6 @@
 #include <windows.h>
 #include <ole2.h>
 #include <zlib.h>
-
-/* deflate of zlib 1.0.4; its z_stream has the same layout as the current one */
-extern "C" {
-int zlib104_deflateInit2_(z_streamp strm, int level, int method, int windowBits,
-                          int memLevel, int strategy, const char *version, int stream_size);
-int zlib104_deflate(z_streamp strm, int flush);
-int zlib104_deflateEnd(z_streamp strm);
-}
 
 class CZLibEngine
 {
@@ -52,10 +42,9 @@ public:
     HRESULT pkCompress(IStream *src, IStream *dst)
     {
         z_stream z = {};
-        if (zlib104_deflateInit2_(&z, 4, Z_DEFLATED, -15, 9, Z_DEFAULT_STRATEGY,
-                                  "1.0.4", (int)sizeof(z_stream)) != Z_OK) return E_FAIL;
+        if (deflateInit2(&z, 4, Z_DEFLATED, -15, 9, Z_DEFAULT_STRATEGY) != Z_OK) return E_FAIL;
         HRESULT hr = Pump(src, dst, z, true);
-        zlib104_deflateEnd(&z);
+        deflateEnd(&z);
         return hr;
     }
 
@@ -74,7 +63,7 @@ private:
             do {
                 z.next_out = out;
                 z.avail_out = sizeof out;
-                ret = compress ? zlib104_deflate(&z, flush) : inflate(&z, Z_NO_FLUSH);
+                ret = compress ? deflate(&z, flush) : inflate(&z, Z_NO_FLUSH);
                 if (ret == Z_STREAM_ERROR || ret == Z_DATA_ERROR || ret == Z_MEM_ERROR || ret == Z_NEED_DICT)
                     return E_FAIL;
                 ULONG n = (ULONG)(sizeof out - z.avail_out);
