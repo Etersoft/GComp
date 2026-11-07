@@ -46,6 +46,10 @@ for f in $DLLSRC; do
     $WINEGXX $CXXFLAGS -D_WINDOWS -D_USRDLL -DGCOMPDLL_EXPORTS -D_WINDLL -c "$SRC/$f" -o "$o"
     DOBJ="$DOBJ $o"
 done
+# Wine's static atexit() leaves its onexit table uninitialised, which corrupts
+# the heap on Windows; link our replacement into both modules.
+$WINEGCC $TARGET -O2 -c "$SRC/wine-pe-atexit.c" -o "$BUILD/obj/wine-pe-atexit.o"
+DOBJ="$DOBJ $BUILD/obj/wine-pe-atexit.o"
 $WRC --nostdinc -I"$MFC_COMPAT" -I"$SRC/DLL" -I/usr/include/wine/windows \
     -l0x419 -DNDEBUG -o "$BUILD/obj/dll/GComp.res" "$SRC/DLL/GComp.rc"
 $WINEGXX $TARGET -shared -o "$BUILD/GComp.dll" $DOBJ $ZOBJ "$BUILD/obj/dll/GComp.res" \
@@ -59,6 +63,6 @@ for f in $EXESRC; do
     $WINEGXX $CXXFLAGS -D_CONSOLE -c "$SRC/$f" -o "$o"
     EOBJ="$EOBJ $o"
 done
-$WINEGXX $TARGET -mconsole -o "$BUILD/gcomp.exe" $EOBJ -L"$BUILD" -lGComp -lole32
+$WINEGXX $TARGET -mconsole -o "$BUILD/gcomp.exe" $EOBJ "$BUILD/obj/wine-pe-atexit.o" -L"$BUILD" -lGComp -lole32
 
 echo "built: $BUILD/GComp.dll $BUILD/gcomp.exe"
