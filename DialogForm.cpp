@@ -476,6 +476,38 @@ CMMSObject* CFormControl::CreateChild(const char* Name, const char* Value)
 	return NULL;
 }
 
+bool CFormControl::SetValue(GCString& Name, GCString& Value)
+{
+	if( Name != "Положение" )
+		return CFormControlBase::SetValue(Name, Value);
+
+	int v[4];
+	char* p = (char*)(LPCSTR)Value;
+	for( int i = 0; i < 4; i++ )
+	{
+		char* end;
+		while( *p == ' ' || *p == '\t' || (i > 0 && *p == ',') ) p++;
+		v[i] = strtol(p, &end, 10);
+		if( end == p ) BadPosition(Value);
+		p = end;
+		while( *p == ' ' || *p == '\t' ) p++;
+		if( i < 3 && *p != ',' ) BadPosition(Value);
+	}
+	if( *p != '\0' ) BadPosition(Value);
+
+	PosX = v[0];
+	PosY = v[1];
+	Width = v[2];
+	Height = v[3];
+	return true;
+}
+
+void CFormControl::BadPosition(GCString& Value)
+{
+	Msg(0, "ERR: '%s' - не 'X, Y, Ширина, Высота'", (LPCSTR)Value);
+	throw NULL;
+}
+
 void CFormControl::BeautyString(CBeautyString& String, int level)
 {
 	//a type may be left out only if compiling without it gives the same one
@@ -500,8 +532,18 @@ void CFormControl::BeautyString(CBeautyString& String, int level)
 	CPropertySet& PropSet = *GetPropSet();
 	for( int i = 2; i < PropSet.nProps; i++ ) //пропускаем Class и Identifier
 	{
+		void* prop = PropSet.GetObjProp(this, i);
+		if( prop == &PosY || prop == &Width || prop == &Height )
+			continue;
+		if( prop == &PosX )
+		{
+			GCString Position;
+			Position.Format("%i, %i, %i, %i", PosX, PosY, Width, Height);
+			String.add_parameter(level+1, "Положение", Position, "", true);
+			continue;
+		}
 		//0 differs from the default -1 and would be written as an empty value
-		if( PropSet.GetObjProp(this, i) == &ObjectID && ObjectID.iTypeObjectID == 0 )
+		if( prop == &ObjectID && ObjectID.iTypeObjectID == 0 )
 		{
 			String.add_parameter(level+1, PropSet[i].Name, "0", "", true);
 			continue;

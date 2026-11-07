@@ -166,6 +166,10 @@ public:
 
 	CPropertySet* GetPropSet() {return &PropSet;};
 	virtual CMMSObject* CreateChild(const char* Name, const char* Value);
+	//"Положение: X, Y, Ширина, Высота" of format 3
+	virtual bool SetValue(GCString& Name, GCString& Value);
+	virtual bool SetValue(int MMS_Index, GCString& Value)
+		{return CFormControlBase::SetValue(MMS_Index, Value);}
 
 	virtual void BeautyString(CBeautyString& String, int level);
 	virtual void ToString(CMMSString& String);
@@ -177,6 +181,7 @@ private:
 	void Setup();
 	bool NeedFont();
 	bool NeedType();
+	static void BadPosition(GCString& Value);
 };
 
 class CFormColumn : public CFormControlBase
