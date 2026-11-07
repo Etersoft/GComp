@@ -595,9 +595,6 @@ void CMMS::ReadObjNameCacheFromDir(GCString& Dir)
 
 void CMMS::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedTextStorage)
 {
-	//»зменим номер версии ћћ— ещЄ при декомпил€ции - а то будет посто€нно прыгать туда-сюда
-	MainDataContDef.MD_ver = 10009;
-
 	//Build names cache and save it
 	BuildObjNameCache(ObjNameCache_compare_id, Dir, Storage);
 

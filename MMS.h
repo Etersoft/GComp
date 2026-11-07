@@ -126,6 +126,9 @@ private:
 
 public:
 	CMMS();
+	//1C 7.7 refuses to load an MMS of version above 10010 without a valid CRC
+	bool HasCRC() const { return MainDataContDef.MD_ver > 10010; }
+	static unsigned int CalcCRC(const char* Text, int Len);
 	virtual CMMSObject* CreateChild(const char* Name, const char* Value);
 	virtual CMMSObject* CreateChild(const char* Name, int MMS_Index);
 	virtual CMMSObject* AddChild(CMMSObject* Child);

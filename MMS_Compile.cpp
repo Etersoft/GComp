@@ -463,13 +463,36 @@ void CMMS::ImportGlobalModule(CStorage& Storage, GCString& Dir)
 }
 
 
+/* Checksum of the Main Metadata Stream as computed by 1C 7.7
+   (BkEnd.dll, called from CMetaDataCont::LoadFromList and SaveToList):
+   over the root list without the CRC record, serialised without line
+   breaks, i.e. CR/LF outside quoted strings are skipped. */
+unsigned int CMMS::CalcCRC(const char* Text, int Len)
+{
+	unsigned char b0 = 0, b1 = 0, b2 = 0, b3 = 0;
+	bool quoted = false;
+	int i = 0;
+	for( int p = 0; p < Len; p++ )
+	{
+		signed char c = (signed char)Text[p];
+		if( c == '"' )
+			quoted = !quoted;
+		else if( !quoted && (c == '\r' || c == '\n') )
+			continue;
+		b3 = (unsigned char)(b3 + c);
+		b1 ^= (unsigned char)(c % 3);
+		b2 ^= (unsigned char)(c % 7);
+		signed char d = (signed char)(unsigned char)(i + c);
+		b0 ^= (unsigned char)(d % 11);
+		i++;
+	}
+	return b0 | (b1 << 8) | (b2 << 16) | ((unsigned int)b3 << 24);
+}
+
 void CMMS::ImportMMS(CStorage& Storage)
 {
 	CNameTableRecord* nt_rec = NameTable.Find(NT_MainMetadataStream);
 	CMMSString String;
-
-	//Изменим номер версии
-	MainDataContDef.MD_ver = 10009;
 
 	if( TaskParameters.CompoundType != external_report )
 	{
@@ -477,6 +500,14 @@ void CMMS::ImportMMS(CStorage& Storage)
 	}
 
 	ToString(String);
+	if( HasCRC() && String.GetLength() > 0 && String[String.GetLength()-1] == '}' )
+	{
+		//Insert {"CRC","..."} as the last element of the root list
+		GCString CRCRecord;
+		CRCRecord.Format(",\r\n{\"CRC\",\"%u\"}}\r\n", CalcCRC(String, String.GetLength()));
+		String.Delete(String.GetLength()-1);
+		String += CRCRecord;
+	}
 	Storage.StreamFromString(nt_rec->StorageName, String);
 
 	if( TaskParameters.CompoundType == external_report )
