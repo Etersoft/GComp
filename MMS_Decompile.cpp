@@ -195,7 +195,12 @@ void CMMSObject::ExtractMoxelPages(GCString& DestDir, CStorage& WBStorage)
 		Order.Add(page_suffix, (LPCSTR)mxlFName, (LPCSTR)Translit(mxlFName), (LPCSTR)rec->ObjectName);
 	}
 
-	if( Order.Order.GetLength() > 0 ) Order.WriteFile(WBStorage, DestDir);
+	//The usual single page is not written, see ImportMoxelPages
+	GCString DefaultName = DefaultMoxelFile, DefaultOrder;
+	DefaultOrder.Format("1\t%s\t%s\t%s\r\n", DefaultMoxelFile,
+		(LPCSTR)Translit(DefaultName), DefaultMoxelName);
+	if( Order.Order.GetLength() > 0 && Order.Order != DefaultOrder )
+		Order.WriteFile(WBStorage, DestDir);
 }
 
 void CMMSObject::ExtractWorkBook(GCString& DestDir, CStorage& Storage, CMMSObject* Parent)

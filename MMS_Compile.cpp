@@ -123,37 +123,56 @@ void CMMSObject::ImportDescriptions(CStorage& TypedTextStor, const GCString& FNa
 ///////////////////////////////////////////////////////////////////////
 ///////////  class CMMSObjectWithProps methods  ///////////////////////
 ///////////////////////////////////////////////////////////////////////
+static bool ImportMoxelPage(CStorage& Storage, GCString& FName,
+	LPCSTR PageNumber, LPCSTR PageName, GCString& ContCont)
+{
+	GCString Page, CC;
+
+	Page.Format("Page.%s", PageNumber);
+
+	if( TaskParameters.NoEmptyMxl ) //Поскипаем пустые шаблоны
+	{
+		long size = GetFileSize(FName);
+		if( size == 147 || size == 139 ) return false;
+	}
+
+	Storage.StreamFromFile(Page, FName);
+
+	CC.Format(",{\"Moxcel.Worksheet\",\"%s\",\"%s\",\"\"}", (LPCSTR)Page, PageName);
+	ContCont += CC;
+	return true;
+}
+
+/* Without ПорядокОбъектов.ord the work book has the usual single page:
+   Page.1 "Moxel WorkPlace" in Таблица.mxl, if the file exists. */
 bool CMMSObject::ImportMoxelPages(CStorage& Storage, const GCString& SrcDir, GCString& ContCont)
 {
 	bool HavePages = false;
-	GCString FName, Page, CC;
+	GCString FName;
 
 	CObjectOrdering Order(4);
 
-	if( !Order.OpenFile(SrcDir) ) return false;
+	if( !Order.OpenFile(SrcDir) )
+	{
+		GCString TabName = DefaultMoxelFile;
+		FName.Format("%s\\%s", (LPCSTR)SrcDir, (LPCSTR)Translit(TabName));
+		if( !FileExist(FName) ) return false;
+		return ImportMoxelPage(Storage, FName, "1", DefaultMoxelName, ContCont);
+	}
 
 	while( Order.ReadString() )
 	{
 		//Соберём имена
 		FName.Format("%s\\%s", (LPCSTR)SrcDir, Order.GetValue(2));
-		Page.Format("Page.%s", Order.GetValue(0));
-
-		if( TaskParameters.NoEmptyMxl ) //Поскипаем пустые шаблоны
-		{
-			long size = GetFileSize(FName);
-			if( size == 147 || size == 139 ) continue;
-		}
-
-		Storage.StreamFromFile(Page, FName);
-
-		CC.Format(",{\"Moxcel.Worksheet\",\"%s\",\"%s\",\"\"}", (LPCSTR)Page, Order.GetValue(3));
-		ContCont += CC;
-
-		HavePages = true;
+		if( ImportMoxelPage(Storage, FName, Order.GetValue(0), Order.GetValue(3), ContCont) )
+			HavePages = true;
 	}
 
 	return HavePages;
 }
+
+const char* DefaultMoxelFile = "Таблица.mxl";
+const char* DefaultMoxelName = "Moxel WorkPlace";
 
 //The Container.Profile 1C writes for a work book without a named moxel
 const char* DefaultContainerProfile = "{\n\

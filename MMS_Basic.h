@@ -23,6 +23,9 @@ typedef CArray<TObjNameCacheRecord, TObjNameCacheRecord&> CObjNameCache;
 //// Generic MMS object ///////////////////////////////////
 ///////////////////////////////////////////////////////////
 extern const char* DefaultContainerProfile;
+//The usual single moxel page of a work book
+extern const char* DefaultMoxelFile;
+extern const char* DefaultMoxelName;
 
 class CMMSObject : public CStoredObject
 {
