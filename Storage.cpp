@@ -971,20 +971,26 @@ int CStorage::CompareWithString(GCString& str2)
 	int cmp_res = 0;
 	do
 	{
+		//skip \r \n in string
+		while( *p2 == '\r' || *p2 == '\n' ) p2++;
+
 		pStream->Read(&c1, sizeof(c1), &BytesRead);
 		if( BytesRead < sizeof(c1) )
 		{
-			cmp_res = 1;
+			//the stream has ended: equal if the string has ended too
+			if( *p2 != '\0' )
+				cmp_res = -1;
 			break;
 		}
 		//skip \r \n in stream
 		if( c1 == '\r' || c1 == '\n' ) continue;
 
-		//skip \r \n in string
-		while( *p2 == '\r' || *p2 == '\n' ) p2++;
 		c2 = *p2++;
 		if( c2 == '\0' )
+		{
+			cmp_res = 1; //the stream is longer
 			break;
+		}
 
 		if( c1 < c2 )
 			cmp_res = -1;
