@@ -68,14 +68,39 @@ implement `__iscsym` as a macro and are not affected.
 
 ## Round trip
 
-Decompiling a `1Cv7.MD` and compiling it back gives the same streams as
-the original (checked on several test configurations). Unlike GComp
-2.2.15, the Main Metadata Stream keeps its version (10011 instead of
-10009), both account masks and the `CRC` record that 1C 7.7 requires for
-versions above 10010; `Container.Contents` lists elements in the order 1C
-uses. A compiled MD with a changed configuration opens in 1C:Enterprise
-and the Configurator. Trees decompiled by older GComp keep version 10009
-and compile as before.
+The goal is that decompiling and compiling back loses nothing; it is not a
+byte copy of the original MD. Checked on 431 1C 7.7 configurations and
+external reports (and a production configuration): 430 decompile and
+compile, and comparing the result stream by stream (compressed streams
+after inflating) shows no lost data. What still differs:
+
+- storages and pages that no Container.Contents refers to (left-overs of
+  deleted forms and rights) are not decompiled;
+- the order of elements in Container.Contents;
+- garbage that 1C leaves after the end of some streams;
+- deflate output (zlib 1.3.1 instead of 1C's 1.0.4).
+
+GComp 2.2.15 "normalized" much on the way; this version keeps:
+
+- the MMS version and the `CRC` record that 1C 7.7 requires for versions
+  above 10010, both account masks (from 10010), IDs of "based on" lists;
+- fonts and types of form elements, the structure of dialog streams,
+  references and types stored in forms, Container.Profile, the whole
+  work book of common tables, rights values, spaces at string ends.
+
+Where the description format had no place for a detail, it gets a
+property that older descriptions simply lack: `ЧислоПолей`,
+`Cnt_Ver: Нет`, `СкобкиКомпактно`, `ПробелыВКонце`, `ОснФлаги: Пусто`;
+values with spaces at the ends are written in quotes; an empty
+`Container.Profile` file means "no profile". Trees decompiled by older
+GComp compile as before (version 10009, no CRC).
+
+Compilation writes `<name>.gcomp-tmp` and replaces the target only on
+success. Unknown properties, invalid values and broken description files
+stop it with the file and line instead of being dropped silently.
+
+A compiled MD with a changed configuration opens in 1C:Enterprise and
+the Configurator under Wine; the full syntax check passes.
 
 See `PORTING.md` for dependencies and the plan for a native Linux build.
 The Delphi GUIs (`vgcomp/`, `gcomp_vis/`) are not built.
