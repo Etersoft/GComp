@@ -31,5 +31,26 @@ Wine:
     wine build-pe/gcomp.exe -d -F 1Cv7.MD -D src    # decompile
     wine build-pe/gcomp.exe -c -F 1Cv7.MD -D src    # compile
 
+`wine-pe-atexit.c` works around a Wine bug: the static `atexit()` that
+winegcc links into PE modules uses an uninitialised onexit table, and a C++
+DLL with global destructors crashes on Windows with STATUS_HEAP_CORRUPTION
+(https://bugs.etersoft.ru/show_bug.cgi?id=19907).
+
+## Building a Windows PE with MinGW-w64
+
+Requires the i686-w64-mingw32 cross compiler (Fedora: `mingw32-gcc-c++`).
+The modules are linked with `-static` and need only system DLLs.
+
+    ./build-mingw.sh
+
+Result: `build-mingw/GComp.dll`, `build-mingw/gcomp.exe`.
+
+Both builds were checked on Windows 10 against the original GComp 2.2.15
+binary: the decompiled tree is byte-identical and the compiled MD has the
+same streams. Under Wine the winegcc build names Cyrillic files with `_`
+because Wine's `__iscsym` is ASCII-only
+(https://bugs.etersoft.ru/show_bug.cgi?id=19905); the MinGW headers
+implement `__iscsym` as a macro and are not affected.
+
 See `PORTING.md` for dependencies and the plan for a native Linux build.
 The Delphi GUIs (`vgcomp/`, `gcomp_vis/`) are not built.
