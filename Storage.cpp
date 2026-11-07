@@ -783,13 +783,13 @@ bool CStorage::StreamFromString(GCString StreamName, GCString& String)
 	else
 		pStreamText = pStream;
 
-	WriteSizeToStream(pStream);
-	pStream->Write((LPCSTR)String, String.GetLength(), NULL);
+	WriteSizeToStream(pStreamText);
+	pStreamText->Write((LPCSTR)String, String.GetLength(), NULL);
 
 	if( StreamInfo.Packed )
 	{
 		LARGE_INTEGER SeekZero = {0, 0};
-		pStream->Seek(SeekZero, STREAM_SEEK_SET, NULL);
+		pStreamText->Seek(SeekZero, STREAM_SEEK_SET, NULL);
 
 		iLibEngine->pkCompress(pStreamText, pStream);
 		
