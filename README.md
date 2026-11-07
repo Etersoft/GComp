@@ -104,16 +104,75 @@ the Configurator under Wine; the full syntax check passes.
 
 ## Source tree format
 
-The tree format is kept in `gcomp.ini` (`format: 4`). Decompiling always
-writes the current format; compiling takes formats 3 and 4 and stops on
-an older tree (format 2: GComp 2.2.15 and earlier versions of this one,
-whose `gcomp.ini` has no `format`). Such a tree is converted through the
-MD: compile it with the GComp that decompiled it, then decompile the MD
-with this one.
+The tree format is kept in `gcomp.ini` (`format: 5`). Decompiling always
+writes the current format; compiling stops on an older tree with a hint:
+such a tree is converted through the MD, compiled with the GComp that
+decompiled it and decompiled with this one.
 
-Most lines of a decompiled form repeat what 1C writes into every form.
-Since format 3 they leave out what follows from an element's class and
-position:
+### Files
+
+- descriptions of metadata, forms, rights, menus, commands and panels are
+  YAML (`.yaml`, see below);
+- modules (`.1s`) and long descriptions (`.txt`) are text as 1C keeps
+  them; work books (`.mxl`) and pictures are copied as they are;
+- `ПорядокОбъектов.ord` keeps the order of objects; a work book with the
+  usual single page (Page.1 "Moxel WorkPlace" in `Таблица.mxl`) has none;
+- `Container.Profile` is written only when it differs from the one that
+  compiling creates; an empty file means that the work book has none.
+
+Text files are UTF-8 (`encoding: UTF-8`; `--cp1251` keeps CP1251 for all
+but YAML) with unix line ends (`eol: unix`; `--eol windows` writes CRLF
+as 1C keeps them). Compilation converts back: a character that CP1251
+does not have or a file that is not valid UTF-8 stops it with the file and
+line, a BOM is skipped, the byte 0x98 maps to U+0098. With unix line ends
+a file is converted only when all its lines end with CRLF in the MD; a
+file with CR is taken as is, and the rare texts whose lines end with a
+bare LF are listed in `gcomp.lf`. As with the other settings, `gcomp.ini`
+takes precedence over the command line. Names starting with a dot
+(`.git`, `.gitignore`) are left alone.
+
+### Descriptions in YAML
+
+GComp keeps parsing its descriptions of `Name: value` lines and `{ }`
+blocks; `.yaml` files are converted on reading and writing:
+
+```yaml
+Валюты:
+  Комментарий: "Валюта"
+  Длина кода: 3
+  Атрибуты:
+    Курс:
+      Тип: Число
+      Описание: |-
+        Текущий курс
+        валюты
+  Формы списка:
+    ФормаСписка: {}
+```
+
+- A block is a mapping, or a sequence when its names repeat or it lists
+  values (references, buttons); form elements, menus and buttons are
+  always sequences.
+- A block whose header has a value: in a mapping the value goes under `_`
+  (`Шрифт: {_: MS Sans Serif, Жирный: 0}`), in a sequence the item starts
+  with it and goes on with the block's lines (`- BUTTON: Закрыть` and
+  `Заголовок: ...` below); `_:` holds lines that cannot be keys of the
+  item.
+- Values: a double quoted or block (`|`) scalar is a string that GComp
+  writes in quotes, a plain or single quoted one is a value as is
+  (`Да`, `3`, `Справочник.Валюты`). Values that YAML would read as other
+  things (numbers like `0050`, `yes`, `-`, leading `&`) are single quoted;
+  `!u "..."` is a value with characters YAML cannot hold unescaped.
+- A file written by another YAML program is read too: a string that lost
+  its quotes is quoted again when it has to be (line breaks, spaces at the
+  ends, a property that 1C keeps in quotes). Anchors, aliases, tags other
+  than `!u` and complex keys are not supported.
+- Errors report the line of the `.yaml` file.
+
+### Forms
+
+Most lines of a decompiled form repeat what 1C writes into every form;
+they are left out:
 
 - `ДопФлаги` (window styles) usual for the class;
 - `ИдентификаторМетаданных: -1` (no attribute; 0 is written as `0`);
@@ -125,43 +184,24 @@ position:
 - of the form parameters, the dialog font, `Param24: 6`, `Param25: 25`
   and `Флаги2` equal to `Флаги`.
 
-`X`, `Y`, `Ширина`, `Высота` become one line, `Положение: X, Y, Ширина,
-Высота`. On the 430 configurations above forms shrink from 6.0 to 3.3
-million lines (the whole tree by 16%).
+`X`, `Y`, `Ширина`, `Высота` are one line, `Положение: X, Y, Ширина,
+Высота`.
 
-Format 4 drops small files:
+### Object descriptions
 
-- a work book with the usual single moxel page (Page.1 "Moxel WorkPlace")
-  has no `ПорядокОбъектов.ord`, compiling takes `Таблица.mxl` as that
-  page;
-- `Container.Profile` equal to the one compiling creates is not written
-  (before, it was written for every work book because of a comparison
-  error); an empty file still means that the work book has none;
-- an object description without line breaks, up to 1000 bytes, is the
-  line `Описание: "..."` (quotes doubled) in the object's block of its
-  `.mdp` instead of a `.txt` file; longer ones stay in files.
+An object's description (UserHelp) of up to 2000 bytes, whose lines end
+with CRLF, is `Описание:` in the object's block of its `.yaml`; longer
+ones stay in `.txt` files.
 
-On the 430 configurations that is 77 thousand files instead of 98. Every
-stream of an MD compiled from format 4 is the same as from format 3; the
-storages of `TypedText` may come in another order inside the compound
-file.
+### On the corpus
 
-## Source tree in UTF-8
-
-1C keeps text in CP1251, and so did GComp. With `--utf8` the text files of
-the tree (modules `.1s`, descriptions `.mdp`, `.frm`, `.txt`, `.ord`,
-`.acc`, `Container.Profile`) are written in UTF-8, which git, web
-interfaces and editors show without settings; pictures and work books stay
-as they are. The choice is kept in `gcomp.ini` (`encoding: UTF-8`), so
-compilation and later decompilations into the same tree use it; as with
-the other settings, `gcomp.ini` takes precedence over the command line.
-
-Compilation converts back to CP1251. A character that CP1251 does not
-have, or a file that is not valid UTF-8, stops it with the file and line;
-a BOM is skipped. The byte 0x98, which has no CP1251 character, maps to
-U+0098, so any module survives. On the 430 configurations above the MD
-compiled from a UTF-8 tree is byte-identical to the one compiled from the
-CP1251 tree.
+On the 430 configurations above the trees hold 70 thousand files (98
+thousand before format 4) and forms take 2.6 million lines instead of 6.0
+(3.3 million in braces, YAML is 23% shorter). Every
+stream of an MD compiled from a format 5 tree is the same as from GComp
+before these formats; the storages of `TypedText` may come in another
+order inside the compound file. Trees rewritten by PyYAML, which drops
+the quoting styles, compile to the same streams.
 
 See `PORTING.md` for dependencies and the plan for a native Linux build.
 The Delphi GUIs (`vgcomp/`, `gcomp_vis/`) are not built.
