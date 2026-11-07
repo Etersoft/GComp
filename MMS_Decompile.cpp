@@ -539,8 +539,10 @@ void CMMS::CheckObjNameCache()
 	{
 		if( ObjNameCache[i-1].ID == ObjNameCache[i].ID )
 		{
-			Msg(0, "ERR: Неуникальный числовой идентификатор - %i: %s", ObjNameCache[i].ID, (LPCSTR)ObjNameCache[i].Name);
-			error = true;
+			//1C itself allows it (e.g. a calendar's holidays and an attribute
+			//share an ID); compilation maps names to IDs, so it is harmless
+			Msg(0, "WARN: Неуникальный числовой идентификатор - %i: %s, %s", ObjNameCache[i].ID,
+				(LPCSTR)ObjNameCache[i-1].Name, (LPCSTR)ObjNameCache[i].Name);
 		}
 	}
 	qsort(ObjNameCache.GetData(), ObjNameCache.GetSize(), sizeof(TObjNameCacheRecord), ObjNameCache_compare_str);
