@@ -1,4 +1,5 @@
 #!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Build GComp.dll and gcomp.exe as 32-bit Windows PE with winegcc (no MSVC,
 # no Microsoft MFC). Needs: wine development tools with i386-windows import
 # libraries, mfc-compat headers, network access or a cached zlib tarball.

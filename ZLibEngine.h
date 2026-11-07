@@ -11,7 +11,8 @@
  * pkCompress:   deflate `src` from its current position to the end into
  *               `dst` at its current position.
  *
- * This file is part of GComp, GNU GPL.
+ * This file is part of GComp.
+ * SPDX-License-Identifier: GPL-2.0-or-later
  */
 #ifndef ZLIBENGINE_H
 #define ZLIBENGINE_H

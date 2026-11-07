@@ -1,4 +1,5 @@
 #!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Build GComp.dll and gcomp.exe as 32-bit Windows PE with MinGW-w64 GCC (no MSVC,
 # no Microsoft MFC). Needs: i686-w64-mingw32 g++/gcc/windres (Fedora:
 # mingw32-gcc-c++), network access or a cached zlib tarball. Linked with

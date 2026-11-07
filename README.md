@@ -7,6 +7,20 @@ configurations can be kept in a version control system.
 This repository is based on GComp 2.2.15 by the Alterplast team
 (https://1c.alterplast.ru/gcomp/), GNU GPL (see `Documentation/txt`).
 
+## License
+
+GComp is free software under the GNU General Public License. The original
+`Documentation/txt/license.txt` does not state a version, and the English
+text it refers to (`gnugpl.eng.txt`) was not in the 2.2.15 source archive;
+the bundled Russian translation is of GPL version 2. Under section 9 of
+GPL v2 a program that specifies no version may be used under any version,
+so GComp with the changes in this repository is distributed under
+GPL-2.0-or-later (`COPYING`, text from gnu.org). New files carry
+`SPDX-License-Identifier: GPL-2.0-or-later`.
+
+Bundled components: `mfc-compat/` — LGPL-2.1-or-later; zlib (downloaded
+at build time) — zlib license. Both are compatible with the GPL.
+
 ## History
 
 - `Import GComp 2.2.15 sources` — upstream `gcomp_src_2.2.15.zip`

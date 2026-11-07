@@ -1,4 +1,6 @@
 /*
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ *
  * Workaround for Wine's static atexit() used by winegcc PE modules
  * (dlls/ucrtbase/atexit.c): it registers functions in an _onexit_table_t
  * that is never passed to _initialize_onexit_table(). Wine's ucrtbase
