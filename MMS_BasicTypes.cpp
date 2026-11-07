@@ -779,6 +779,16 @@ CObjectProperty CMMSAttributeType::Props[] = {
 
 CPropertySet CMMSAttributeType::PropSet(Props, DefAttrType);
 
+bool CMMSAttributeType::IsDefault()
+{
+	CMMSAttributeType def;
+	def.TypeLetter.Numeric = TypeLetter.Numeric;
+	CMMSString a, b;
+	ToString(a);
+	def.ToString(b);
+	return a == b;
+}
+
 void CMMSAttributeType::BeautyString(CBeautyString& String, int level)
 {
 	if( NeedType )

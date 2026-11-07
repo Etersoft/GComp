@@ -250,6 +250,8 @@ private:
 public:
 	CMMSAttributeType() { Length = Precision = 0; NeedType = true; };
 	void SetNumeric() {TypeLetter.Numeric = true;}
+	//equals the type a compilation writes when the description has none
+	bool IsDefault();
 	CPropertySet* GetPropSet() {return &PropSet;};
 	virtual void BeautyString(CBeautyString& String, int level);
 };

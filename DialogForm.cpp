@@ -398,7 +398,8 @@ CMMSObject* CFormControl::CreateChild(const char* Name, const char* Value)
 void CFormControl::BeautyString(CBeautyString& String, int level)
 {
 	Font.FontNeeded = NeedFont();
-	Type.NeedType = NeedType();
+	//a type may be left out only if compiling without it gives the same one
+	Type.NeedType = NeedType() || !Type.IsDefault();
 
 	CFormControlBase::BeautyString(String, level);
 }
@@ -573,7 +574,7 @@ void CFormMulticolumn::BeautyString(CBeautyString& String, int level)
 	{
 		CFormControl* browser = (CFormControl*)GetChild(0);
 		//У параметров многострочной части не может быть типа. Откуда он берётся в 1С - непонятно
-		browser->Type.NeedType = false;
+		browser->Type.NeedType = !browser->Type.IsDefault();
 		//1C does store an identifier and a field reference here; GComp 2.2.15
 		//cleared them, which changed the form on compilation
 	}
