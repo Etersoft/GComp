@@ -52,5 +52,16 @@ because Wine's `__iscsym` is ASCII-only
 (https://bugs.etersoft.ru/show_bug.cgi?id=19905); the MinGW headers
 implement `__iscsym` as a macro and are not affected.
 
+## Round trip
+
+Decompiling a `1Cv7.MD` and compiling it back gives the same streams as
+the original (checked on several test configurations). Unlike GComp
+2.2.15, the Main Metadata Stream keeps its version (10011 instead of
+10009), both account masks and the `CRC` record that 1C 7.7 requires for
+versions above 10010; `Container.Contents` lists elements in the order 1C
+uses. A compiled MD with a changed configuration opens in 1C:Enterprise
+and the Configurator. Trees decompiled by older GComp keep version 10009
+and compile as before.
+
 See `PORTING.md` for dependencies and the plan for a native Linux build.
 The Delphi GUIs (`vgcomp/`, `gcomp_vis/`) are not built.
