@@ -109,7 +109,7 @@ char* CObjectOrdering::GetValue(int i)
 bool CObjectOrdering::OpenFile(const GCString& Dir, MMSObjectType Type)
 {
 	CNameTableRecord* nt_rec_ord = NameTable.Find(Type);
-	OrderFile = fopen(nt_rec_ord->PrepareFileName(Dir), "rt");
+	OrderFile = OpenSourceFile(nt_rec_ord->PrepareFileName(Dir), "rt");
 	if( OrderFile == NULL ) return false;
 	return true;
 }

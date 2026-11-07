@@ -38,6 +38,12 @@ enum TGComp_Languages {
 	lang_Eng = 1,
 	lang_Translit = 2
 };
+//Encoding of the text files of the source tree (modules, descriptions,
+//forms...). 1C itself keeps CP1251.
+enum TGComp_Encoding {
+	enc_CP1251 = 0,
+	enc_UTF8 = 1
+};
 enum TLogType {
 	LogType_stdout = 0,
 	LogType_file = 1,
@@ -103,6 +109,10 @@ struct CGCompParameters
 	BOOL NoBrokenLinks; // не выгружать объекты прав и интерфейсов, ссылающиес€ на отсутствующие метаданные
 
 	BOOL MakeUserRightsInOneFile; // —оздавать единый csv файл со всеми правами сразу (при компил€ции игнорируетс€)
+
+	//Takes the place of Reserved2 of the Delphi declaration (vgcomp/GComp.pas),
+	//so the size of the structure is the same
+	TGComp_Encoding Encoding;
 };
 
 extern "C" {

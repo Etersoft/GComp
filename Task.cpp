@@ -126,6 +126,10 @@ void CTaskParameters::ParseCommandLine(int argc, TCHAR* argv[])
 		{
 			Language = lang_Translit;
 		}
+		else if( 0 == strcmp("--utf8", arg) )
+		{
+			Encoding = enc_UTF8;
+		}
 		else if( 0 == strcmp("--no-defaults", arg) )
 		{
 			NoDefaults = true;

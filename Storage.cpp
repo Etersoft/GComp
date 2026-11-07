@@ -553,6 +553,25 @@ bool CStorage::CopyToFile(GCString& FileName, bool OnlyRestOfSream)
 		if( bytes_to_copy == 0 ) return true;
 	}
 
+	if( IsUtf8File(FileName) )
+	{
+		//text goes through CopyStringToFile, which converts it
+		if( bytes_to_copy == 0 )
+		{
+			Rewind();
+			bytes_to_copy = ::GetStreamSize(pStream).LowPart;
+		}
+		GCString Text;
+		if( bytes_to_copy > 0 )
+		{
+			DWORD BytesRead = 0;
+			char* buf = Text.GetBufferSetLength(bytes_to_copy);
+			pStream->Read(buf, bytes_to_copy, &BytesRead);
+			Text.ReleaseBuffer(BytesRead);
+		}
+		return CopyStringToFile(Text, FileName);
+	}
+
 	AddToExtractedList(FileName, NULL);
 
 	if( FileExist(FileName) )
@@ -711,7 +730,7 @@ bool CStorage::FromFile(FILE* File, LPCSTR FileName)
 bool CStorage::FromFile(GCString& FileName)
 {
 	FILE* File;
-	File = fopen((LPCSTR)FileName, "rb");
+	File = OpenSourceFile(FileName, "rb");
 	if( File == NULL ) return false;
 
 	FromFile(File, FileName);
@@ -1249,9 +1268,13 @@ FilesDiffer:
 	return true;
 }
 
-bool CStorage::CopyStringToFile(GCString& String, GCString& FileName)
+bool CStorage::CopyStringToFile(GCString& Source, GCString& FileName)
 {
 	char* MsgPrefix;
+	GCString Utf8;
+	if( IsUtf8File(FileName) )
+		Cp1251ToUtf8(Source, Source.GetLength(), Utf8);
+	GCString& String = IsUtf8File(FileName) ? Utf8 : Source;
 
 	AddToExtractedList(FileName, NULL);
 
@@ -1277,3 +1300,84 @@ bool CStorage::CopyStringToFile(GCString& String, GCString& FileName)
 
 
 
+
+bool IsTextFileName(LPCSTR FileName)
+{
+	static const char* const TextExt[] = {
+		"1s", "txt", "mdp", "frm", "ord", "acc", "Profile", "ini", NULL
+	};
+	const char* dot = strrchr(FileName, '.');
+	if( dot == NULL || strchr(dot, '\\') != NULL || strchr(dot, '/') != NULL )
+		return false;
+	for( int i = 0; TextExt[i] != NULL; i++ )
+		if( _stricmp(dot + 1, TextExt[i]) == 0 ) return true;
+	return false;
+}
+
+bool IsUtf8File(LPCSTR FileName)
+{
+	return TaskParameters.Encoding == enc_UTF8 && IsTextFileName(FileName);
+}
+
+FILE* OpenSourceFile(LPCSTR FileName, const char* Mode)
+{
+	if( !IsUtf8File(FileName) ) return fopen(FileName, Mode);
+
+	FILE* File = fopen(FileName, "rb");
+	if( File == NULL ) return NULL;
+	fseek(File, 0, SEEK_END);
+	long Size = ftell(File);
+	rewind(File);
+	GCString Raw;
+	if( Size > 0 )
+	{
+		char* buf = Raw.GetBufferSetLength(Size);
+		size_t got = fread(buf, 1, Size, File);
+		Raw.ReleaseBuffer((int)got);
+	}
+	fclose(File);
+
+	const char* src = Raw;
+	int len = Raw.GetLength();
+	if( len >= 3 && memcmp(src, "\xEF\xBB\xBF", 3) == 0 ) //BOM of Windows editors
+	{
+		src += 3;
+		len -= 3;
+	}
+
+	GCString Text;
+	int bad = Utf8ToCp1251(src, len, Text);
+	if( bad >= 0 )
+	{
+		int line = 1;
+		for( int i = 0; i < bad; i++ )
+			if( src[i] == '\n' ) line++;
+		Msg(0, "ERR: %s:%i: не UTF-8 или символ, которого нет в CP1251", FileName, line);
+		throw NULL;
+	}
+
+	// FIXME: the converted text goes through a temporary file, so that every
+	// reader keeps working on FILE*; "D" (Microsoft CRT) deletes it on close.
+	char TempDir[MAX_PATH], TempName[MAX_PATH];
+	if( GetTempPathA(sizeof(TempDir), TempDir) == 0
+		|| GetTempFileNameA(TempDir, "gcu", 0, TempName) == 0 )
+	{
+		Msg(0, "ERR: Невозможно создать временный файл для '%s'", FileName);
+		throw NULL;
+	}
+	File = fopen(TempName, "wb");
+	if( File == NULL || fwrite((LPCSTR)Text, 1, Text.GetLength(), File) != (size_t)Text.GetLength() )
+	{
+		if( File != NULL ) fclose(File);
+		DeleteFileA(TempName);
+		Msg(0, "ERR: Невозможно записать временный файл '%s'", TempName);
+		throw NULL;
+	}
+	fclose(File);
+
+	GCString TempMode = Mode;
+	TempMode += "D";
+	File = fopen(TempName, TempMode);
+	if( File == NULL ) DeleteFileA(TempName);
+	return File;
+}

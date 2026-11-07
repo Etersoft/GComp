@@ -217,7 +217,7 @@ bool CMMSObject::ImportStreamByType(CStorage& Storage, MMSObjectType Type, const
 
 bool DialogInBeautyFormat(GCString FormFName)
 {
-	FILE *f = fopen(FormFName, "rt");
+	FILE *f = OpenSourceFile(FormFName, "rt");
 	char buf[16];
 	fgets(buf, sizeof(buf)-1, f);
 	fclose(f);

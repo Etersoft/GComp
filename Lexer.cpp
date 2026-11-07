@@ -2,17 +2,15 @@
 #include "CommonFunctions.h"
 #include "Lexer.h"
 #include "Strings.h"
+#include "Storage.h"
 
 #define BUFF_SIZE 4096  //этого должно быть достаточно. Наверное. А может и нет.
 
 CLexer::CLexer(const GCString& FileName)
 {
-	try {
-	File = fopen(FileName, "rt");
-	} catch(...)
-	{
+	File = OpenSourceFile(FileName, "rt");
+	if( File == NULL )
 		Msg(0, "ERR: Невозможно открыть файл '%s' : %s", (LPCSTR)FileName, strerror(errno));
-	}
 	this->FileName = FileName;
 	LineBuff = new char[BUFF_SIZE];
 	ptr = NULL;

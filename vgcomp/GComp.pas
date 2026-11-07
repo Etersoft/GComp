@@ -57,7 +57,7 @@ TGCompParameters = record
 	NoBrokenLinks: BOOL;
 
 	Reserved1: DWORD;
-	Reserved2: DWORD;
+	Reserved2: DWORD; // Encoding: 0 - CP1251, 1 - UTF-8
 	Reserved3: DWORD;
 	Reserved4: DWORD;
 	//=== params for safety in Delphi ===

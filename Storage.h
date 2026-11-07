@@ -132,4 +132,12 @@ IStream* OpenStream(IStorage* pParentStorage, const GCString& StreamName);
 bool StringDifferFromFile(GCString& String, GCString& FileName);
 bool CopyStringToFile(GCString& String, GCString& FileName);
 
+//Text files of the source tree (by extension): with "encoding: UTF-8" they
+//are converted from/to CP1251, the rest (pictures, work books...) never
+bool IsTextFileName(LPCSTR FileName);
+bool IsUtf8File(LPCSTR FileName);
+//fopen() for reading a file of the source tree: a UTF-8 text file is
+//converted to CP1251 first; a character without CP1251 stops the work
+FILE* OpenSourceFile(LPCSTR FileName, const char* Mode);
+
 #endif

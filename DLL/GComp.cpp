@@ -81,6 +81,7 @@ void GComp_SetDefaults(CGCompParameters* Parameters)
 	Parameters->CancelWork = FALSE;
 	Parameters->NoBrokenLinks = FALSE;
 	Parameters->MakeUserRightsInOneFile = FALSE;
+	Parameters->Encoding = enc_CP1251;
 };
 
 BOOL YesNoToBool(GCString& token, GCString& value)
@@ -93,6 +94,16 @@ BOOL YesNoToBool(GCString& token, GCString& value)
 	if( value.CollateNoCase("нет")   == 0 ) return false;
 
 	Msg(0, "ERR: Неизвестное значение '%s' параметра %s в gcomp.ini", (LPCSTR)value, (LPCSTR)token);
+	throw NULL;
+}
+
+TGComp_Encoding ReadEncoding(GCString& token, GCString& value)
+{
+	if( value.CompareNoCase("CP1251") == 0 )
+		return enc_CP1251;
+	if( value.CompareNoCase("UTF-8") == 0 || value.CompareNoCase("UTF8") == 0 )
+		return enc_UTF8;
+	Msg(0, "ERR: Неизвестная кодировка '%s' в gcomp.ini", (LPCSTR)value);
 	throw NULL;
 }
 
@@ -144,6 +155,9 @@ void GComp_ReadSettings(CGCompParameters* Parameters)
 
 		else if( stricmp(token, "language") == 0 )
 			Parameters->Language = ReadLanguage(token, value);
+
+		else if( stricmp(token, "encoding") == 0 )
+			Parameters->Encoding = ReadEncoding(token, value);
 
 		else if( stricmp(token, "more-subfolders") == 0 )
 			Parameters->MetadataBySubfolders = YesNoToBool(token, value);
@@ -204,6 +218,7 @@ void GComp_SaveSettings(CGCompParameters* Parameters)
 
 	CBeautyString str;
 	str.add_parameter(0, "language",    LanguageToStr(Parameters->Language), "", true);
+	str.add_parameter(0, "encoding", Parameters->Encoding == enc_UTF8 ? "UTF-8" : "CP1251", "", true);
 	str.add_parameter(0, "no-defaults", BoolToYesNo(Parameters->NoDefaults), "", true);
 	str.add_parameter(0, "no-parse-forms", BoolToYesNo(Parameters->NotParseForms), "", true);
 	str.add_parameter(0, "more-subfolders", BoolToYesNo(Parameters->MetadataBySubfolders), "", true);

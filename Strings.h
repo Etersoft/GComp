@@ -131,6 +131,12 @@ bool IsBoolString(const char* str);
 GCString QuoteEdgeSpaces(const GCString& v);
 void UnquoteEdgeSpaces(GCString& v);
 
+//CP1251 <-> UTF-8 for source trees written with "encoding: UTF-8".
+//Utf8ToCp1251 returns the offset of the first byte that is not valid UTF-8
+//or has no CP1251 character, -1 if the whole text converted
+void Cp1251ToUtf8(const char* src, int len, GCString& dst);
+int Utf8ToCp1251(const char* src, int len, GCString& dst);
+
 //Функции транслитерации
 GCString Translit(GCString& str);
 void InplaceTranslit(GCString& str);

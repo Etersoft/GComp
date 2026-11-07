@@ -102,5 +102,22 @@ stop it with the file and line instead of being dropped silently.
 A compiled MD with a changed configuration opens in 1C:Enterprise and
 the Configurator under Wine; the full syntax check passes.
 
+## Source tree in UTF-8
+
+1C keeps text in CP1251, and so did GComp. With `--utf8` the text files of
+the tree (modules `.1s`, descriptions `.mdp`, `.frm`, `.txt`, `.ord`,
+`.acc`, `Container.Profile`) are written in UTF-8, which git, web
+interfaces and editors show without settings; pictures and work books stay
+as they are. The choice is kept in `gcomp.ini` (`encoding: UTF-8`), so
+compilation and later decompilations into the same tree use it; as with
+the other settings, `gcomp.ini` takes precedence over the command line.
+
+Compilation converts back to CP1251. A character that CP1251 does not
+have, or a file that is not valid UTF-8, stops it with the file and line;
+a BOM is skipped. The byte 0x98, which has no CP1251 character, maps to
+U+0098, so any module survives. On the 430 configurations above the MD
+compiled from a UTF-8 tree is byte-identical to the one compiled from the
+CP1251 tree.
+
 See `PORTING.md` for dependencies and the plan for a native Linux build.
 The Delphi GUIs (`vgcomp/`, `gcomp_vis/`) are not built.

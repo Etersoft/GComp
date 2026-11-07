@@ -396,3 +396,130 @@ GCString Translit(GCString& str)
 	InplaceTranslit(Result);
 	return Result;
 }
+
+/* CP1251 <-> UTF-8. Only 0x80-0xBF need the table: 0xC0-0xFF are U+0410-U+044F.
+   Byte 0x98 has no character in CP1251; it maps to U+0098 so that every byte
+   of a module survives the round trip. */
+static const unsigned short Cp1251High[64] = {
+	0x0402, 0x0403, 0x201A, 0x0453, 0x201E, 0x2026, 0x2020, 0x2021,
+	0x20AC, 0x2030, 0x0409, 0x2039, 0x040A, 0x040C, 0x040B, 0x040F,
+	0x0452, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
+	0x0098, 0x2122, 0x0459, 0x203A, 0x045A, 0x045C, 0x045B, 0x045F,
+	0x00A0, 0x040E, 0x045E, 0x0408, 0x00A4, 0x0490, 0x00A6, 0x00A7,
+	0x0401, 0x00A9, 0x0404, 0x00AB, 0x00AC, 0x00AD, 0x00AE, 0x0407,
+	0x00B0, 0x00B1, 0x0406, 0x0456, 0x0491, 0x00B5, 0x00B6, 0x00B7,
+	0x0451, 0x2116, 0x0454, 0x00BB, 0x0458, 0x0405, 0x0455, 0x0457,
+};
+
+void Cp1251ToUtf8(const char* src, int len, GCString& dst)
+{
+	if( len <= 0 )
+	{
+		dst.Empty();
+		return;
+	}
+
+	char* out = dst.GetBufferSetLength(len * 3);
+	int n = 0;
+	for( int i = 0; i < len; i++ )
+	{
+		unsigned int c = (unsigned char)src[i];
+		if( c >= 0xC0 )
+			c += 0x410 - 0xC0;
+		else if( c >= 0x80 )
+			c = Cp1251High[c - 0x80];
+
+		if( c < 0x80 )
+			out[n++] = (char)c;
+		else if( c < 0x800 )
+		{
+			out[n++] = (char)(0xC0 | (c >> 6));
+			out[n++] = (char)(0x80 | (c & 0x3F));
+		}
+		else
+		{
+			out[n++] = (char)(0xE0 | (c >> 12));
+			out[n++] = (char)(0x80 | ((c >> 6) & 0x3F));
+			out[n++] = (char)(0x80 | (c & 0x3F));
+		}
+	}
+	dst.ReleaseBuffer(n);
+}
+
+static int UnicodeToCp1251(unsigned int c)
+{
+	if( c < 0x80 ) return (int)c;
+	if( c >= 0x410 && c <= 0x44F ) return (int)(c - 0x410 + 0xC0);
+	for( int i = 0; i < 64; i++ )
+		if( Cp1251High[i] == c ) return 0x80 + i;
+	return -1;
+}
+
+int Utf8ToCp1251(const char* src, int len, GCString& dst)
+{
+	if( len <= 0 )
+	{
+		dst.Empty();
+		return -1;
+	}
+
+	char* out = dst.GetBufferSetLength(len);
+	int n = 0;
+	int i = 0;
+	while( i < len )
+	{
+		unsigned int c = (unsigned char)src[i];
+		int extra;
+		unsigned int min;
+		if( c < 0x80 )
+		{
+			extra = 0;
+			min = 0;
+		}
+		else if( (c & 0xE0) == 0xC0 )
+		{
+			extra = 1;
+			min = 0x80;
+			c &= 0x1F;
+		}
+		else if( (c & 0xF0) == 0xE0 )
+		{
+			extra = 2;
+			min = 0x800;
+			c &= 0x0F;
+		}
+		else
+		{
+			//4-byte sequences are outside CP1251 anyway
+			dst.ReleaseBuffer(n);
+			return i;
+		}
+
+		if( i + extra >= len ) //truncated sequence
+		{
+			dst.ReleaseBuffer(n);
+			return i;
+		}
+		for( int k = 1; k <= extra; k++ )
+		{
+			unsigned int b = (unsigned char)src[i + k];
+			if( (b & 0xC0) != 0x80 )
+			{
+				dst.ReleaseBuffer(n);
+				return i;
+			}
+			c = (c << 6) | (b & 0x3F);
+		}
+
+		int ch = (c < min) ? -1 : UnicodeToCp1251(c);
+		if( ch < 0 )
+		{
+			dst.ReleaseBuffer(n);
+			return i;
+		}
+		out[n++] = (char)ch;
+		i += extra + 1;
+	}
+	dst.ReleaseBuffer(n);
+	return -1;
+}
