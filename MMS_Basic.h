@@ -36,10 +36,11 @@ public:
 	int ID;
 	int Order; //для сортировки
 
-	/* Описание (the object's UserHelp stream) written as a line of the
-	   description file instead of a file of its own, see LoadInlineHelp. */
+	/* Описание (the object's UserHelp stream) given as a line of the
+	   description file instead of a file of its own; decompiling always
+	   writes the files */
 	GCString Help;
-	enum {help_none = 0, help_inline, help_written, help_file} HelpState;
+	enum {help_none = 0, help_inline, help_file} HelpState;
 
 	//bool Used; //для удаления ненужных записей в ММС внешних отчетов
 
@@ -112,11 +113,6 @@ public:
 	//          Описания всех вложенных объектов выгружаются по sID.
 	void ExtractDescriptions(const GCString& FNamePrefix, CStorage& TypedTextStor, bool StdName);
 	void ImportDescriptions(CStorage& TypedTextStor, const GCString& FNamePrefix, bool StdName);
-	//read the one-line descriptions of the object and its children before
-	//the description files are written
-	void LoadInlineHelp(CStorage& TypedTextStor);
-	//"Описание: ..." of an inline description that has not been written yet
-	void BeautyHelp(CBeautyString& String, int level);
 	//"Описание: ..." read from a description file
 	bool SetHelp(GCString& Value);
 

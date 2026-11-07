@@ -93,8 +93,6 @@ public:
 	int Compare(FILE* File, unsigned long bytes_to_compare);
 	int Compare(GCString& FileName, unsigned long bytes_to_compare);
 	int CompareWithString(GCString& str2);
-	//the whole (unpacked) stream
-	bool ReadStreamText(const GCString& StreamName, GCString& Text);
 	//Операторы сравнения потока целиком (перед сравнением происходит перепозиционирование)
 	int FullCompare(GCString& FileName);
 

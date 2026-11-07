@@ -55,61 +55,6 @@ void CMMSObject::ExtractMetadata(GCString& DestDir, CStorage& TypedTextStorage)
 	ExtractMetadata(DestDir, NT_MetadataPart, TypedTextStorage);
 }
 
-/* A description of up to 2000 bytes in the description file, whose lines
-   end with CRLF and that has no control characters but tabs goes into the
-   description file as "Описание: ..." (see CMMSObject::BeautyHelp); the
-   others, and those of objects that no description file shows, are written
-   to files by ExtractDescriptions. */
-static bool IsInlineHelp(const GCString& Text)
-{
-	int len = Text.GetLength();
-	int escaped = len;
-	for( int i = 0; i < len; i++ )
-	{
-		unsigned char c = Text[i];
-		if( c == '\r' )
-		{
-			if( i + 1 >= len || Text[i+1] != '\n' ) return false;
-			i++;
-			continue;
-		}
-		if( c < ' ' && c != '\t' ) return false;
-		if( c == '"' || c == '\\' ) escaped++;
-	}
-	return escaped <= 2000;
-}
-
-void CMMSObject::LoadInlineHelp(CStorage& TypedTextStor)
-{
-	if( MMS_Type == MMS_Property ) return;
-
-	CPropertySet* pPropSet = GetPropSet();
-	if( ID_Type == IDT_BothIDs && HelpState == help_none &&
-		(pPropSet == NULL || pPropSet->FindByName("Описание") < 0) )
-	{
-		CNameTableRecord* nt_rec = NameTable.Find(NT_UserHelpStor);
-		CNameTableRecord* nt_rec_file = NameTable.Find(NT_UserHelp);
-		GCString StorName = nt_rec->PrepareStorageName(ID);
-		if( TypedTextStor.StorageExist(StorName) && TypedTextStor.Open(StorName) )
-		{
-			GCString StreamName = nt_rec_file->PrepareStorageName(ID);
-			GCString Text;
-			if( TypedTextStor.ReadStreamText(StreamName, Text) && IsInlineHelp(Text) )
-			{
-				Help = Text;
-				HelpState = help_inline;
-			}
-			TypedTextStor.Close();
-		}
-	}
-
-	if( MMS_Type != MMS_Plan )
-	{
-		for( int i = 0; i < GetNChildren(); i++ )
-			GetChild(i)->LoadInlineHelp(TypedTextStor);
-	}
-}
-
 void CMMSObject::ExtractDescriptions(const GCString& FNamePrefix, CStorage& TypedTextStor, bool StdName)
 {
 	if( MMS_Type == MMS_Property ) return; //Вытаскиваем описания только для объектов
@@ -141,7 +86,7 @@ void CMMSObject::ExtractDescriptions(const GCString& FNamePrefix, CStorage& Type
 		InplaceTranslit(Suffix);
 		NewPrefix += Suffix;
 
-		if( ID_Type == IDT_BothIDs && HelpState != help_written &&
+		if( ID_Type == IDT_BothIDs &&
 			!TypedTextStor.ObjectExtracted(this) && 
 			TypedTextStor.StorageExist(StorName) )
 		{
@@ -682,8 +627,6 @@ void CMMS::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedTextStorag
 
 	SendInfoMessage(InfoMsg_Total, CountObjects());
 	TotalObjectsProcessed = 0;
-
-	LoadInlineHelp(TypedTextStorage);
 
 	int nProps = GetNChildren();
 	for( int i = 0; i < nProps; i++ )
