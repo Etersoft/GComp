@@ -30,7 +30,23 @@ if [ ! -f "$Z/zlib.h" ]; then
     echo "$ZLIB_SHA256  $T" | sha256sum -c -
     tar -xzf "$T" -C "$BUILD"
 fi
+# deflate of zlib 1.0.4, the version in 1C 7.7 zlibeng.dll: newer zlib
+# compresses larger module texts differently (see zlib104-rename.h)
+Z104_SHA256=e5c260cd3db1370fb3e0c193e9cbd9f127a9bd055d622b3fb55b82747f6e5b24
+Z104="$BUILD/zlib-1.0.4"
+if [ ! -f "$Z104/deflate.c" ]; then
+    T="$BUILD/zlib-1.0.4.tar.gz"
+    U=https://zlib.net/fossils/zlib-1.0.4.tar.gz
+    [ -f "$T" ] || { curl -fsSL -o "$T" "$U" || wget -q -O "$T" "$U"; }
+    echo "$Z104_SHA256  $T" | sha256sum -c -
+    tar -xzf "$T" -C "$BUILD"
+fi
+mkdir -p "$BUILD/obj/zlib104"
 ZOBJ=
+for f in adler32 deflate trees zutil; do
+    $CC -O2 -w -include "$SRC/zlib104-rename.h" -I"$Z104" -c "$Z104/$f.c" -o "$BUILD/obj/zlib104/$f.o"
+    ZOBJ="$ZOBJ $BUILD/obj/zlib104/$f.o"
+done
 for f in adler32 compress crc32 deflate infback inffast inflate inftrees trees uncompr zutil; do
     $CC -O2 -c "$Z/$f.c" -o "$BUILD/obj/zlib/$f.o"
     ZOBJ="$ZOBJ $BUILD/obj/zlib/$f.o"
