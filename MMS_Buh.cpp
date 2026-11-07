@@ -159,7 +159,7 @@ CMMSAccountPlan::CMMSAccountPlan()
 
 void CMMSAccountPlan::BeautyString(CBeautyString& String, int level)
 {
-	if( AccountMask2.IsEmpty() && !MainMetadataStream->HasCRC() ) AccountMask2 = AccountMask1;
+	if( AccountMask2.IsEmpty() && MainMetadataStream->MainDataContDef.MD_ver <= 10009 ) AccountMask2 = AccountMask1;
 
 	CPropertySet* pPropSet = GetPropSet();
 
@@ -171,8 +171,8 @@ void CMMSAccountPlan::BeautyString(CBeautyString& String, int level)
 		CObjectProperty& Prop = PropSet[i];
 		if( TaskParameters.CompoundType != external_report && Prop.MMS_Index == 6 )
 			continue; //не выводим счета, если это ћƒшник - они будут в отдельном каталоге
-		else if( Prop.MMS_Index == 4 && !MainMetadataStream->HasCRC() )
-			continue; //an MMS of version 10009 has a single account mask
+		else if( Prop.MMS_Index == 4 && MainMetadataStream->MainDataContDef.MD_ver <= 10009 )
+			continue; //an MMS of version 10009 (old GComp output) has a single account mask; 10010 has two
 
 		PropSet.BeautyString(String, level+1, this, i);
 	}
@@ -181,7 +181,7 @@ void CMMSAccountPlan::BeautyString(CBeautyString& String, int level)
 
 void CMMSAccountPlan::ToString(CMMSString& String)
 {
-	if( AccountMask2.IsEmpty() && !MainMetadataStream->HasCRC() ) AccountMask2 = AccountMask1;
+	if( AccountMask2.IsEmpty() && MainMetadataStream->MainDataContDef.MD_ver <= 10009 ) AccountMask2 = AccountMask1;
 
 	String += "\r\n{";
 
@@ -192,8 +192,8 @@ void CMMSAccountPlan::ToString(CMMSString& String)
 		int i = PropSet.FindByMMSIndex(MMS_Index);
 		if( i >= 0 )
 		{
-			if( PropSet[i].MMS_Index == 4 && !MainMetadataStream->HasCRC() )
-				continue; //an MMS of version 10009 has a single account mask
+			if( PropSet[i].MMS_Index == 4 && MainMetadataStream->MainDataContDef.MD_ver <= 10009 )
+				continue; //an MMS of version 10009 (old GComp output) has a single account mask; 10010 has two
 			PropSet.ToString(String, this, i, AddComma);
 			AddComma = true;
 		}
