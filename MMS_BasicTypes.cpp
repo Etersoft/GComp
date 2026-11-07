@@ -228,7 +228,18 @@ void CPropertySet::SetValue(void* Object, int i, GCString& Value, bool Unquote)
 	case CObjectProperty::t_quotstring:
 		{
 		GCString* str_prop_val = (GCString*) ((char*)Object + prop.Offset );
-		*str_prop_val = Value;
+		int len = Value.GetLength();
+		if( StrictPropertyValues && !(len >= 2 && Value[0] == '"' && Value[len-1] == '"') )
+		{
+			//a description file without the quotes (e.g. YAML written by another
+			//program): the text itself, so quote it as GComp writes it
+			GCString q = Value;
+			q.Replace("\\", "\\\\");
+			q.Replace("\"", "\"\"");
+			*str_prop_val = "\"" + q + "\"";
+		}
+		else
+			*str_prop_val = Value;
 		}
 		break;
 	case CObjectProperty::t_string:
