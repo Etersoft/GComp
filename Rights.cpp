@@ -85,12 +85,16 @@ const char* CUserRightsProp::TypeAsString()
 	return str;
 }
 
+//1C stores "yes" as 1 or as 0xFFFFFFFF; values other than 0 and 1 are kept as numbers
 const char* CUserRightsProp::ValueAsString()
 {
+	static char str[16];
 	if( Value == 0 )
 		return "Нет";
-	else
+	if( Value == 1 )
 		return "Да";
+	sprintf(str, "%ld", (long)Value);
+	return str;
 }
 
 void CUserRightsProp::BeautyString(CBeautyString& String, int level)

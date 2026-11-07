@@ -32,6 +32,13 @@ DWORD CUserRightsProp::ValueFromString(GCString& strValue)
 		return 1;
 	if( strValue.CollateNoCase("Yes") == 0 )
 		return 1;
+	if( strValue.IsNumber() )
+		return (DWORD)atol(strValue);
+	if( strValue.CollateNoCase("Нет") != 0 && strValue.CollateNoCase("No") != 0 )
+	{
+		Msg(0, "ERR: Недопустимое значение права: '%s'", (LPCSTR)strValue);
+		throw NULL;
+	}
 	return 0;
 }
 
