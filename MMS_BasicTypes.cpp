@@ -521,6 +521,15 @@ bool CStoredBitSet::BitValue(int i)
 
 void CStoredBitSet::SetValue(GCString& NewValue)
 {
+	EmptyRaw = false;
+	//1C writes some flag words as "" in the MMS; descriptions say "Пусто"
+	//(an empty value in an older description still means 0)
+	if( (NewValue.IsEmpty() && !StrictPropertyValues) || NewValue == "Пусто" )
+	{
+		Value = 0;
+		EmptyRaw = true;
+		return;
+	}
 	if( NewValue.IsNumber() )
 	{
 		Value = atoi(NewValue);
@@ -552,6 +561,8 @@ void CStoredBitSet::SetValue(GCString& NewValue)
 
 GCString CStoredBitSet::BeautyString()
 {
+	if( EmptyRaw )
+		return "Пусто";
 	GCString flags;
 	bool delimit = false;
 	int bit = 0;
@@ -575,6 +586,8 @@ GCString CStoredBitSet::BeautyString()
 
 GCString CStoredBitSet::MMSString()
 {
+	if( EmptyRaw )
+		return "";
 	return GCString(Value);
 }
 

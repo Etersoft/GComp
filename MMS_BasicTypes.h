@@ -168,15 +168,16 @@ class CStoredBitSet : public CStoredProperty
 private:
 	char** BitNames;
 	unsigned int Value;
+	bool EmptyRaw; //stored as an empty string, not "0"; described as "Пусто"
 
 public:
-	CStoredBitSet() {BitNames = NULL;}
+	CStoredBitSet() {BitNames = NULL; EmptyRaw = false;}
 	void SetTable(char** Names) {BitNames = Names;}
 
 	int BitByName(const char* BitName);
 	bool BitValue(int i);
 
-	unsigned int operator=(unsigned int NewVal) { Value = NewVal; return Value; };
+	unsigned int operator=(unsigned int NewVal) { Value = NewVal; EmptyRaw = false; return Value; };
 	virtual void SetValue(GCString& Value);
 
 	virtual GCString BeautyString();

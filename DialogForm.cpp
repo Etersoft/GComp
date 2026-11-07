@@ -207,8 +207,13 @@ void CFormControlBase::BeautyString(CBeautyString& String, int level)
 }
 
 
+/* GComp 2.2.15 replaced the stored attribute reference and type of a form
+   element with those of the owner's attribute of the same name. 1C keeps
+   its own copy in the form (it may be stale), and a decompiled form must
+   compile back to the same bytes, so the stored values are kept. */
 void CFormControlBase::CorrectObjectID(CMMSObject* ParentObject)
 {
+	return;
 	if( ParentObject == NULL ) return;
 	if( ObjectID.iTypeObjectID <= 0 ) return;
 
@@ -568,11 +573,9 @@ void CFormMulticolumn::BeautyString(CBeautyString& String, int level)
 	{
 		CFormControl* browser = (CFormControl*)GetChild(0);
 		//У параметров многострочной части не может быть типа. Откуда он берётся в 1С - непонятно
-		browser->Identifier = "";
 		browser->Type.NeedType = false;
-		//Ссылки на поле тоже не может быть
-		browser->ObjectID.iTypeObjectID = 0;
-		browser->ObjectID.sTypeObjectID = "0";
+		//1C does store an identifier and a field reference here; GComp 2.2.15
+		//cleared them, which changed the form on compilation
 	}
 	CMMSAttributes::BeautyString(String, level);
 }
