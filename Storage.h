@@ -6,7 +6,7 @@
 #include "Declarations.h"
 #include "StreamInfo.h"
 
-#import "zlibeng.dll" no_namespace
+#include "ZLibEngine.h"
 
 void SetIOPre(LPCTSTR MsgPrefix, LPCTSTR FileName);
 
