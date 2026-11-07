@@ -15,19 +15,19 @@ template <class TYPE>
 inline void AFXAPI ConstructElements(TYPE *p, int n)
 {
     memset((void *)p, 0, n * sizeof(TYPE));
-    for (; n--; p++) ::new ((void *)p) TYPE;
+    for (int i = 0; i < n; i++) ::new ((void *)(p + i)) TYPE;
 }
 
 template <class TYPE>
 inline void AFXAPI DestructElements(TYPE *p, int n)
 {
-    for (; n--; p++) p->~TYPE();
+    for (int i = 0; i < n; i++) p[i].~TYPE();
 }
 
 template <class TYPE>
 inline void AFXAPI CopyElements(TYPE *dst, const TYPE *src, int n)
 {
-    while (n--) *dst++ = *src++;
+    for (int i = 0; i < n; i++) dst[i] = src[i];
 }
 
 template <class TYPE, class ARG_TYPE>

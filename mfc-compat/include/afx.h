@@ -15,6 +15,10 @@
 #error "mfc-compat supports only ANSI/MBCS builds"
 #endif
 
+#ifndef NOMINMAX
+#define MFC_COMPAT_MINMAX   /* decided before libstdc++ defines NOMINMAX */
+#endif
+
 #include <windows.h>
 #include <tchar.h>
 #include <stdarg.h>
@@ -23,6 +27,19 @@
 #include <string.h>
 #include <time.h>
 #include <new>
+
+/* FIXME: MSVC's <windef.h> defines the min/max macros for C++ as well, and
+   MFC code relies on them. MinGW-w64 defines them only for C, and its
+   libstdc++ (bits/os_defines.h) forces NOMINMAX. Provide them here unless the
+   user defined NOMINMAX, so such code builds unchanged with MinGW GCC. */
+#ifdef MFC_COMPAT_MINMAX
+#ifndef max
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+#endif
 
 #ifndef AFXAPI
 #define AFXAPI
@@ -82,7 +99,7 @@ inline void AFXAPI AfxThrowMemoryException() { throw new CMemoryException; }
 
 struct CStringData
 {
-    long nRefs;        /* always 1 here: copies are not shared */
+    long nRefs;        /* -1 for the empty string, else 1: copies are not shared */
     int nDataLength;   /* without the terminating zero */
     int nAllocLength;  /* without the terminating zero */
     TCHAR *data() { return (TCHAR *)(this + 1); }
@@ -380,9 +397,12 @@ protected:
     }
     static int SafeStrlen(LPCTSTR p) { return p ? (int)strlen(p) : 0; }
     /* The empty string is a per-module static with nRefs == -1 (as in MFC):
-       recognise it by nRefs, not by address, so that strings created in a DLL
-       can be destroyed in the EXE and vice versa. */
-    static void FreeData(CStringData *d) { if (d->nRefs >= 0) free(d); }
+       recognise it by nRefs, not only by address, so that strings created in
+       a DLL can be destroyed in the EXE and vice versa. The extra address
+       checks let GCC see that the module's own empty string is never written
+       or freed (-Wstringop-overflow, -Wfree-nonheap-object). */
+    static bool IsEmptyData(const CStringData *d) { return d == EmptyData() || d->nRefs < 0; }
+    static void FreeData(CStringData *d) { if (!IsEmptyData(d)) free(d); }
     void Release() { FreeData(GetData()); }
     void AllocBuffer(int nLen)
     {
@@ -407,7 +427,7 @@ protected:
     }
     void AssignCopy(int nLen, LPCTSTR src)
     {
-        if (nLen > GetData()->nAllocLength || GetData()->nRefs < 0) {
+        if (IsEmptyData(GetData()) || nLen > GetData()->nAllocLength) {
             CStringData *old = GetData();
             AllocBuffer(nLen);
             if (nLen) memmove(m_pchData, src, nLen);
@@ -431,7 +451,7 @@ protected:
     {
         if (!n) return;
         CStringData *d = GetData();
-        if (d->nRefs < 0 || d->nDataLength + n > d->nAllocLength) {
+        if (IsEmptyData(d) || d->nDataLength + n > d->nAllocLength) {
             CStringData *old = d;
             CString tmp;
             tmp.ConcatCopy(old->nDataLength, m_pchData, n, src);
