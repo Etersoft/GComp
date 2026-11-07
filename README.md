@@ -102,6 +102,32 @@ stop it with the file and line instead of being dropped silently.
 A compiled MD with a changed configuration opens in 1C:Enterprise and
 the Configurator under Wine; the full syntax check passes.
 
+## Description format 3
+
+Most lines of a decompiled form repeat what 1C writes into every form. A
+new tree gets format 3 (`format: 3` in `gcomp.ini`), which leaves out what
+follows from an element's class and position:
+
+- `ДопФлаги` (window styles) usual for the class;
+- `ИдентификаторМетаданных: -1` (no attribute; 0 is written as `0`);
+- `ПорядокОбхода` equal to the previous element's + 1, 4152 for the first;
+- `Слой` of the previous element, the first layer for the first one;
+- the font: 1C's dialog font (MS Sans Serif 8.5, RUSSIAN_CHARSET) when
+  the element has `ШрифтПоУмолчанию`, otherwise the empty font with
+  weight 0 that 1C stores; the font name is not repeated in the block;
+- of the form parameters, the dialog font, `Param24: 6`, `Param25: 25`
+  and `Флаги2` equal to `Флаги`.
+
+`X`, `Y`, `Ширина`, `Высота` become one line, `Положение: X, Y, Ширина,
+Высота`. On the 430 configurations above forms shrink from 6.0 to 3.3
+million lines (the whole tree by 16%), and every MD compiled from a
+format 3 tree is byte-identical to the one compiled from format 2.
+
+A `gcomp.ini` without `format` means format 2, so trees decompiled
+earlier keep their format on compilation and on decompilation into the
+same tree; `--format 2` writes format 2 into a new tree. To convert a
+tree, decompile into an empty directory.
+
 ## Source tree in UTF-8
 
 1C keeps text in CP1251, and so did GComp. With `--utf8` the text files of
