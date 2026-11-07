@@ -257,8 +257,27 @@ bool CUIMenu::ReadFromFile(CLexer& Lexer, CUIMenu* Parent, int level)
 			Lexer.GetRest(Item->Caption);
 			UnquoteEdgeSpaces(Item->Caption);
 			Item->Level = Level + 1;
-			//Command ID on next line
+			//the command in the item's block: { Команда: ... }
 			Lexer.GetLine(token);
+			if( token == "{" )
+			{
+				Lexer.GetLine(token);
+				GCString Key = "Команда:";
+				if( token.Left(Key.GetLength()) != Key )
+				{
+					Msg(0, "ERR: %s: ожидалось 'Команда: ...'", (LPCSTR)Lexer.FilePosInfo());
+					throw NULL;
+				}
+				token = token.Mid(Key.GetLength());
+				token.TrimLeft(" \t");
+				GCString Close;
+				Lexer.GetLine(Close);
+				if( Close != "}" )
+				{
+					Msg(0, "ERR: %s: ожидалась '}'", (LPCSTR)Lexer.FilePosInfo());
+					throw NULL;
+				}
+			}
 			Item->ID = Commands->CommandName2ID(token);
 			if( Item->ID == 0 )
 			{

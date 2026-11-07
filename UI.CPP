@@ -33,7 +33,7 @@ GCString CUICommand::AsString(bool IsChild)
 	{
 		GCString strHotKey;
 		if( HotKey != 0 ) strHotKey.Format("%02x:%04x", HotKeyModifier, HotKey);
-		res.Format("\t%08x:\r\n\t{\r\n", ID);
+		res.Format("\t%08x: \r\n\t{\r\n", ID);
 		res.add_parameter(2, "Парам1", QuoteEdgeSpaces(Param1), NULL);
 		res.add_parameter(2, "Hint", QuoteEdgeSpaces(Hint), NULL);
 		res.add_parameter(2, "HotKey", strHotKey, NULL);
@@ -139,7 +139,7 @@ GCString CUICommands::AsString()
 	res.add_parameter(0, "ОтключитьМенюОперация", NoOperMenuPresent == 0 ? "Нет" : "Да", "Нет");
 	res.add_parameter(0, "ИспользоватьПриОтключеннойАвторизации", IsDefault == 0 ? "Нет" : "Да", "Нет");
 
-	res += "{\r\n";
+	res += "Команды: \r\n{\r\n";
 	for( DWORD i = 0; i < NCommands; i++ )
 	{
 		res += Commands[i].AsString(IsChild);
@@ -274,7 +274,7 @@ GCString CUIMenu::AsString()
 	res += prefix;
 	switch( Type )
 	{
-		case MainMenu   : res += "ГлавноеМеню:";	break;
+		case MainMenu   : res += "ГлавноеМеню: ";	break;
 		case MenuGroup  : res += "Субменю: ";		break;
 		case MenuItem   : res += "Элемент: ";		break;
 		case MenuDividor: res += "Разделитель: ";	break;
@@ -282,7 +282,9 @@ GCString CUIMenu::AsString()
 	res += (Type == MenuItem || Type == MenuGroup) ? QuoteEdgeSpaces(Caption) : Caption;
 	if( Type == MenuItem )
 	{
-		res += "\r\n\t" + prefix + Commands->CommandID2Name(ID, Caption);
+		res += "\r\n" + prefix + "{\r\n";
+		res += prefix + "\tКоманда: " + Commands->CommandID2Name(ID, Caption) + "\r\n";
+		res += prefix + "}";
 	}
 	res += "\r\n";
 
@@ -420,7 +422,7 @@ GCString CUIButton::AsString(bool WithCaption, CUICommands* Commands)
 	GCString res;
 	if( WithCaption )
 	{
-		res.Format("\t%s\r\n\t\t%s\r\n", (LPCSTR)Commands->CommandID2Name(ID, Caption), (LPCSTR)Caption);
+		res.Format("\t%s\r\n\t%s\r\n", (LPCSTR)Commands->CommandID2Name(ID, Caption), (LPCSTR)Caption);
 	}
 	else
 	{

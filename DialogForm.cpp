@@ -183,7 +183,7 @@ bool CFormLayers::SetValue(int MMS_Index, GCString& Value)
 void CFormLayers::BeautyString(CBeautyString& String, int level)
 {
 	String.add_offset(level);
-	String += "Слои\r\n";
+	String += "Слои: \r\n";
 	String.add_brace(level, '{');
 
 	for( int i = 0; i < GetNChildren(); i++ )
