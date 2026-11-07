@@ -102,10 +102,11 @@ class CStoredBool : public CStoredProperty
 {
 private:
 	bool Value;
+	int Raw; //number as stored by 1C: may be other than 0/1 (e.g. 0xCDCDCDCD)
 
 public:
-	CStoredBool() { Value = false; }
-	bool operator=(bool NewVal) { Value = NewVal; return Value; }
+	CStoredBool() { Value = false; Raw = 0; }
+	bool operator=(bool NewVal) { Value = NewVal; Raw = NewVal ? 1 : 0; return Value; }
 	bool operator()() { return Value; }
 	operator bool() {return Value;}
 	

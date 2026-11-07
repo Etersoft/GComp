@@ -404,16 +404,23 @@ void CPropertySet::ToString(CMMSString& String, const void* Object, int i, bool 
 void CStoredBool::SetValue(GCString& NewValue)
 {
 	if( NewValue.IsNumber() )
-		Value = atoi(NewValue) != 0;
+	{
+		Raw = atoi(NewValue);
+		Value = Raw != 0;
+	}
 	else
 	{
 		if( !IsBoolString(NewValue) ) BadValue("логическое значение", NewValue);
 		Value = StrToBool(NewValue) || NewValue.CollateNoCase("Yes") == 0;
+		Raw = Value ? 1 : 0;
 	}
 }
 
+//Values other than 0 and 1 are kept as numbers so that they survive a round trip
 GCString CStoredBool::BeautyString()
 {
+	if( Raw != 0 && Raw != 1 )
+		return GCString(Raw);
 	if( Value )
 		return "Да";
 	else
@@ -422,6 +429,8 @@ GCString CStoredBool::BeautyString()
 
 GCString CStoredBool::MMSString()
 {
+	if( Raw != 0 && Raw != 1 )
+		return GCString(Raw);
 	if( Value )
 		return "1";
 	else

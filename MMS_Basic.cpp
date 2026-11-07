@@ -491,9 +491,7 @@ CMMSObject* CMMSRefers::CreateChild(const char* Name, const char* Value)
 
 void CMMSRefers::BeautyString(CBeautyString& String, int level)
 {
-	if( !TaskParameters.NoDefaults )
-		ID = 0;
-
+	//the ID of the list is kept: 1C stores it in the Main Metadata Stream
 	if( Refers.Refers.GetSize() == 0 && ID == 0 )
 		return;
 
