@@ -1,11 +1,283 @@
 # GComp
 
-GComp decompiles a 1C:Enterprise 7.7 configuration (`1Cv7.MD`) or external
-report (`.ert`) into a tree of text files and compiles it back, so that
-configurations can be kept in a version control system.
+GComp decompiles a 1C:Enterprise 7.7 configuration (`1Cv7.MD`) or an
+external report (`.ert`) into a tree of text files and compiles the tree
+back. A configuration can then be kept in Git, changes reviewed as diffs,
+merged and built from the repository.
 
-This repository is based on GComp 2.2.15 by the Alterplast team
-(https://1c.alterplast.ru/gcomp/), GNU GPL (see `Documentation/txt`).
+This is GComp 3, based on GComp 2.2.15 by the Alterplast team
+(https://1c.alterplast.ru/gcomp/). It builds without Visual C++ 6 and
+Microsoft MFC. Decompiling and compiling back loses nothing, and the
+source tree is YAML and UTF-8 text.
+
+## What is new in 3.0
+
+- **Lossless round trip.** A compiled MD has the same streams as the
+  original: the MMS version and the CRC that 1C 7.7 requires are kept,
+  and so are forms, fonts, rights, work books and spaces at the ends of
+  strings. GComp 2.2.15 dropped or normalised all of these.
+- **YAML descriptions.** Metadata, forms, rights, menus and panels are
+  written as `.yaml` files. A value is its text in any YAML style, so
+  other YAML tools can read and rewrite the files.
+- **UTF-8 and line ends.** Modules and texts are written in UTF-8 with
+  unix line ends by default. `--cp1251` and `--eol windows` keep them as
+  1C stores them.
+- **Short forms.** Lines that 1C writes into every form are left out,
+  and a form takes less than half the lines it took before. Window styles and font
+  fields have their WinAPI names.
+- **Safe compilation.** An unknown property, an invalid value or a broken
+  file stops the compilation with the file and line. The target is
+  replaced only when the compilation succeeds. `.git` and other files
+  starting with a dot are left alone.
+- **Free build.** GComp builds with winegcc or MinGW-w64 and does not need
+  1C's `V77.zlibEngine`.
+
+GComp 3 cannot compile trees decompiled by GComp 2.2.15. To convert such a
+tree, compile it into an MD with the old GComp and decompile the MD with
+this one. See the release notes for the details.
+
+## Usage
+
+`gcomp.exe` needs `GComp.dll` next to it and runs on Windows or under
+Wine:
+
+    gcomp -d -F 1Cv7.MD -D src     # decompile the configuration into src
+    gcomp -c -F 1Cv7.MD -D src     # compile src into the configuration
+    gcomp -d -F report.ert         # an external report, into SRC/report
+    gcomp -h                       # all options
+
+Close the configuration in the Configurator before compiling into it.
+GComp writes `1Cv7.MD.gcomp-tmp` and replaces `1Cv7.MD` only when the
+compilation succeeds. Decompiling into an existing tree updates it and
+removes the files of objects that are no longer in the MD. Files and
+directories whose names start with a dot, such as `.git`, are kept.
+
+Options of the source tree (they are kept in `gcomp.ini`, which takes
+precedence over the command line):
+
+| Option | Meaning |
+| --- | --- |
+| `--cp1251` | text files other than `.yaml` in CP1251, as 1C keeps them (default UTF-8) |
+| `--eol unix\|windows` | line ends of text files (default unix) |
+| `--more-subfolders` | constants, enumerations, registers etc. one object per directory |
+| `--sort-rights`, `--sort-form-controls` | sorted rights objects and form elements |
+| `--filter <path>` | decompile or compile only some objects, e.g. `Справочники/Банки` |
+| `--no-defaults` | write every property, even those equal to the defaults |
+
+## The source tree
+
+```
+src/
+  gcomp.ini                    format, encoding, line ends, options
+  ОписаниеКонфигурации.yaml
+  ГлобальныйМодуль.1s
+  Константы/Константы.yaml
+  Справочники/
+    Банки/
+      Структура.yaml           the catalog: attributes, forms, options
+      Форма.yaml               the element form
+      МодульФормы.1s
+      Основная.fls/            a list form: Форма.yaml, МодульФормы.1s
+  Документы/
+    АвансовыйОтчет/
+      Структура.yaml
+      Форма.yaml
+      МодульПроведения.1s
+      Таблица.mxl              the print form (work book)
+      Описание.txt             the description of the object
+  Права/Администратор.yaml
+  Интерфейсы/Бухгалтер/{Меню,Панели,Команды}.yaml
+```
+
+- `.yaml` holds the descriptions of metadata, forms, rights, menus,
+  commands and panels.
+- `.1s` files are modules and `.txt` files are object descriptions.
+  Work books (`.mxl`) and pictures are copied as they are.
+- `ПорядокОбъектов.ord` keeps the order of objects. A work book with the
+  usual single page has none.
+- `Container.Profile` is written only when it differs from the one that
+  compiling creates. An empty file means that the work book has none.
+
+### Descriptions in YAML
+
+```yaml
+Банки:
+  Длина кода: 9
+  Серии кодов: Во всём справочнике
+  Основное представление: В виде кода
+  Форма для выбора: Справочник.Банки.Form.ДляВыбора
+  Атрибуты:
+    КоррСчет:
+      Синоним: Корреспондентский счет
+      Тип: Строка
+      Длина: 20
+```
+
+- **Values.** A value is its text, whatever the YAML style:
+  `Заголовок: Печать`, `Заголовок: "Печать"` and `Заголовок: 'Печать'`
+  are the same. Whether 1C keeps the text in quotes is known from the
+  type of the property.
+  - Values that YAML would read as other things are written in quotes:
+    numbers like `0050`, `yes`, `-`, or a leading `#` or `&`.
+  - Texts of several lines are block (`|`) or double quoted scalars.
+  - `!u "..."` is the rare value kept exactly as GComp's internal text
+    holds it.
+- **Blocks.** A block is a mapping, or a sequence when its names repeat or
+  it lists values. Form elements, menus and buttons are always sequences.
+- **Blocks with a value.** In a mapping, the value of the block's header
+  goes under `_` (`Шрифт: {_: MS Sans Serif, Жирный: 0}`). A sequence
+  item starts with it (`- BUTTON: OK`) and goes on with the block's
+  lines.
+- **Other YAML programs.** Files written by them are read the same way.
+  `!!null` is an empty value and other `!!` tags are ignored. Anchors,
+  aliases and complex keys are not supported.
+- **Errors.** Error messages give the line of the `.yaml` file.
+- **Object descriptions.** An object's description is a `.txt` file. A
+  description given as `Описание:` in the object's block is read too.
+
+### Forms
+
+```yaml
+Диалог:
+  Параметры формы:
+    Параметры:
+      Ширина: 480
+      Высота: 74
+      Заголовок: Налог на рекламу
+      Слои:
+        Основной: Видимый, Активный
+  Элементы:
+    - STATIC: Текст_точность
+      Заголовок: Точн.
+      ДопФлаги: SS_RIGHT, SS_CENTERIMAGE, WS_VISIBLE, WS_CHILD
+      Положение: 156, 58, 18, 10
+      ОснФлаги: ШрифтПоУмолчанию, ЦветТекстаАвто
+    - BUTTON: OK
+      Заголовок: Закрыть
+      Положение: 6, 17, 54, 13
+      Формула: '#Закрыть'
+```
+
+**Left out.** Most lines of a form repeat what 1C writes into every form,
+so they are not written:
+
+- the usual window styles of the class;
+- `ИдентификаторМетаданных: -1`;
+- a tab order of the previous element's + 1, starting from 4152;
+- the layer of the previous element;
+- the usual font: 1C's dialog font, or the empty font when the element
+  does not use the default one;
+- the usual parameters of the form.
+
+**Written in short.** `Положение` is `X, Y, Ширина, Высота` on one line.
+
+**Window styles.** `ДопФлаги` are the window styles of the element with
+their WinAPI names:
+
+- `WS_` styles for every element;
+- `BS_` for `BUTTON`, `CHECKBOX`, `RADIO`, `1CGROUPBOX` and `PICTURE`;
+- `SS_` for `STATIC`;
+- `ES_` for `1CEDIT` and `BMASKED`;
+- `CBS_`, `LBS_` and `TVS_` for combo boxes, list boxes and trees.
+
+A bit without a name is `FlagN`.
+
+**Fonts.** The font block names the fields of LOGFONT:
+
+- `ШиринаСимвола`, `УголСтроки`, `УголСимвола`;
+- `Жирный`, `Наклон`, `Подчёркивание`, `Зачёркивание`;
+- `НаборСимволов` (204 is RUSSIAN_CHARSET);
+- `ТочностьВывода`, `ТочностьОтсечения`, `Качество`, `ШагИСемейство`.
+
+### Text files
+
+Modules and texts are UTF-8 with unix line ends by default. A BOM is
+skipped and the byte 0x98 maps to U+0098. When compiling, the files are
+converted back:
+
+- **Characters.** A character that CP1251 does not have, or a file that
+  is not valid UTF-8, stops the compilation with the file and line.
+- **Unix line ends.** A file is converted only when all its lines end
+  with CRLF in the MD. A file with CR is taken as it is.
+- **Bare LF.** The rare texts whose lines end with a bare LF are listed
+  in `gcomp.lf`.
+
+`.yaml` files are always UTF-8.
+
+### Format versions
+
+`gcomp.ini` keeps the format of the tree (`format: 6`). Decompiling
+always writes the current format. Compiling stops on a tree of an older
+format and tells how to convert it through the MD.
+
+## What a round trip keeps
+
+The aim is that decompiling and compiling back loses nothing; a
+compiled MD is not a byte copy of the original. GComp 3 keeps:
+
+- the MMS version and the `CRC` record that 1C 7.7 requires for versions
+  above 10010;
+- both account masks, and the IDs of "based on" lists;
+- fonts and types of form elements, the structure of dialog streams, and
+  the references and types stored in forms;
+- `Container.Profile`, the whole work book of common tables, rights
+  values, and spaces at the ends of strings.
+
+What still differs from the original:
+
+- storages and pages that no `Container.Contents` refers to (left-overs of
+  deleted forms and rights) are not decompiled;
+- the order of elements in `Container.Contents` and of the storages of
+  `TypedText` inside the compound file;
+- garbage that 1C leaves after the end of some streams;
+- deflate output: zlib 1.3.1 is used instead of 1C's 1.0.4.
+
+**Testing.** It was checked on 431 configurations and external reports
+and on a production configuration:
+
+- all of them but one encrypted MD decompile and compile;
+- every stream of the compiled MD is the same as the original's, with
+  compressed streams compared after inflating;
+- trees rewritten by PyYAML compile to the same streams, both in
+  PyYAML's own styles and with every scalar double quoted.
+
+A compiled MD with a changed configuration opens in 1C:Enterprise and the
+Configurator under Wine, and the full syntax check passes.
+
+## Building
+
+### MinGW-w64
+
+Needs the i686-w64-mingw32 cross compiler (Fedora: `mingw32-gcc-c++`).
+The modules are linked with `-static` and need only system DLLs. zlib
+1.3.1 is downloaded and checked by SHA256.
+
+    ./build-mingw.sh
+
+The result is `build-mingw/GComp.dll` and `build-mingw/gcomp.exe`.
+
+### winegcc
+
+Needs the Wine development tools: winegcc/wineg++, wrc and i386-windows
+import libraries.
+
+    ./build-winegcc.sh
+
+The result is `build-pe/GComp.dll` and `build-pe/gcomp.exe`. The winegcc
+build has two quirks under Wine:
+
+- Wine's `__iscsym` is ASCII-only, so Cyrillic file names come out as `_`
+  (https://bugs.etersoft.ru/show_bug.cgi?id=19905). The MinGW build is
+  not affected.
+- `wine-pe-atexit.c` works around another Wine bug: the static
+  `atexit()` linked into PE modules uses an uninitialised table
+  (https://bugs.etersoft.ru/show_bug.cgi?id=19907).
+
+The MFC classes come from the bundled `mfc-compat/`, a free replacement
+for the non-GUI core of MFC 4.2 (LGPL-2.1, see its README). The sources
+still compile with MSVC (`gcomp.dsw`). `PORTING.md` lists the
+dependencies and the plan for a native Linux build. The Delphi GUIs
+(`vgcomp/`, `gcomp_vis/`) are not built.
 
 ## License
 
@@ -28,193 +300,5 @@ at build time) — zlib license. Both are compatible with the GPL.
   byte-identical except removed compiled Delphi resources, a 1C spreadsheet
   sample and CVS metadata. Sources keep upstream CP1251/CP866 and CRLF.
 - Later commits make it buildable without Visual C++ 6 and Microsoft MFC
-  while keeping it compilable by MSVC.
-
-## Building a Windows PE with winegcc
-
-Requires Wine development tools (winegcc/wineg++, wrc, i386-windows import
-libraries). MFC classes come from the bundled `mfc-compat/` (free
-replacement for the non-GUI core of MFC 4.2, LGPL-2.1, see its README).
-zlib 1.3.1 is downloaded and checked by SHA256.
-
-    ./build-winegcc.sh
-
-Result: `build-pe/GComp.dll`, `build-pe/gcomp.exe`; run on Windows or with
-Wine:
-
-    wine build-pe/gcomp.exe -d -F 1Cv7.MD -D src    # decompile
-    wine build-pe/gcomp.exe -c -F 1Cv7.MD -D src    # compile
-
-`wine-pe-atexit.c` works around a Wine bug: the static `atexit()` that
-winegcc links into PE modules uses an uninitialised onexit table, and a C++
-DLL with global destructors crashes on Windows with STATUS_HEAP_CORRUPTION
-(https://bugs.etersoft.ru/show_bug.cgi?id=19907).
-
-## Building a Windows PE with MinGW-w64
-
-Requires the i686-w64-mingw32 cross compiler (Fedora: `mingw32-gcc-c++`).
-The modules are linked with `-static` and need only system DLLs.
-
-    ./build-mingw.sh
-
-Result: `build-mingw/GComp.dll`, `build-mingw/gcomp.exe`.
-
-Both builds were checked on Windows 10 against the original GComp 2.2.15
-binary: the decompiled tree is byte-identical and the compiled MD has the
-same streams. Under Wine the winegcc build names Cyrillic files with `_`
-because Wine's `__iscsym` is ASCII-only
-(https://bugs.etersoft.ru/show_bug.cgi?id=19905); the MinGW headers
-implement `__iscsym` as a macro and are not affected.
-
-## Round trip
-
-The goal is that decompiling and compiling back loses nothing; it is not a
-byte copy of the original MD. Checked on 431 1C 7.7 configurations and
-external reports (and a production configuration): 430 decompile and
-compile, and comparing the result stream by stream (compressed streams
-after inflating) shows no lost data. What still differs:
-
-- storages and pages that no Container.Contents refers to (left-overs of
-  deleted forms and rights) are not decompiled;
-- the order of elements in Container.Contents;
-- garbage that 1C leaves after the end of some streams;
-- deflate output (zlib 1.3.1 instead of 1C's 1.0.4).
-
-GComp 2.2.15 "normalized" much on the way; this version keeps:
-
-- the MMS version and the `CRC` record that 1C 7.7 requires for versions
-  above 10010, both account masks (from 10010), IDs of "based on" lists;
-- fonts and types of form elements, the structure of dialog streams,
-  references and types stored in forms, Container.Profile, the whole
-  work book of common tables, rights values, spaces at string ends.
-
-Where the description format had no place for a detail, it gets a
-property that older descriptions simply lack: `ЧислоПолей`,
-`Cnt_Ver: Нет`, `СкобкиКомпактно`, `ПробелыВКонце`, `ОснФлаги: Пусто`;
-values with spaces at the ends are written in quotes; an empty
-`Container.Profile` file means "no profile". Trees decompiled by older
-GComp compile as before (version 10009, no CRC).
-
-Compilation writes `<name>.gcomp-tmp` and replaces the target only on
-success. Unknown properties, invalid values and broken description files
-stop it with the file and line instead of being dropped silently.
-
-A compiled MD with a changed configuration opens in 1C:Enterprise and
-the Configurator under Wine; the full syntax check passes.
-
-## Source tree format
-
-The tree format is kept in `gcomp.ini` (`format: 6`). Decompiling always
-writes the current format; compiling stops on an older tree with a hint:
-such a tree is converted through the MD, compiled with the GComp that
-decompiled it and decompiled with this one.
-
-### Files
-
-- descriptions of metadata, forms, rights, menus, commands and panels are
-  YAML (`.yaml`, see below);
-- modules (`.1s`) and long descriptions (`.txt`) are text as 1C keeps
-  them; work books (`.mxl`) and pictures are copied as they are;
-- `ПорядокОбъектов.ord` keeps the order of objects; a work book with the
-  usual single page (Page.1 "Moxel WorkPlace" in `Таблица.mxl`) has none;
-- `Container.Profile` is written only when it differs from the one that
-  compiling creates; an empty file means that the work book has none.
-
-Text files are UTF-8 (`encoding: UTF-8`; `--cp1251` keeps CP1251 for all
-but YAML) with unix line ends (`eol: unix`; `--eol windows` writes CRLF
-as 1C keeps them). Compilation converts back: a character that CP1251
-does not have or a file that is not valid UTF-8 stops it with the file and
-line, a BOM is skipped, the byte 0x98 maps to U+0098. With unix line ends
-a file is converted only when all its lines end with CRLF in the MD; a
-file with CR is taken as is, and the rare texts whose lines end with a
-bare LF are listed in `gcomp.lf`. As with the other settings, `gcomp.ini`
-takes precedence over the command line. Names starting with a dot
-(`.git`, `.gitignore`) are left alone.
-
-### Descriptions in YAML
-
-GComp keeps parsing its descriptions of `Name: value` lines and `{ }`
-blocks; `.yaml` files are converted on reading and writing:
-
-```yaml
-Валюты:
-  Комментарий: Валюта
-  Длина кода: 3
-  Атрибуты:
-    Курс:
-      Тип: Число
-      Описание: |-
-        Текущий курс
-        валюты
-  Формы списка:
-    ФормаСписка: {}
-```
-
-- A block is a mapping, or a sequence when its names repeat or it lists
-  values (references, buttons); form elements, menus and buttons are
-  always sequences.
-- A block whose header has a value: in a mapping the value goes under `_`
-  (`Шрифт: {_: MS Sans Serif, Жирный: 0}`), in a sequence the item starts
-  with it and goes on with the block's lines (`- BUTTON: Закрыть` and
-  `Заголовок: ...` below); `_:` holds lines that cannot be keys of the
-  item.
-- A value is its text, whatever the YAML style: `Заголовок: Печать`,
-  `Заголовок: "Печать"` and `Заголовок: 'Печать'` are the same. Whether
-  1C keeps the text in quotes is known from the type of the property, so
-  the quoting is not written. Values that YAML would read as other things
-  (numbers like `0050`, `yes`, `-`, a leading `#` or `&`) are written in
-  quotes, texts of several lines as block (`|`) or double quoted scalars.
-  `!u "..."` is the rare value that the description text holds as it is
-  (in quotes that are not GComp's quoting, or with spaces at the ends of a
-  property kept without quotes).
-- A file written by another YAML program is read the same way, whatever
-  styles it chose; `!!null` is an empty value, other `!!` tags are
-  ignored. Anchors, aliases and complex keys are not supported.
-- Errors report the line of the `.yaml` file.
-
-### Forms
-
-Most lines of a decompiled form repeat what 1C writes into every form;
-they are left out:
-
-- `ДопФлаги` (window styles) usual for the class;
-- `ИдентификаторМетаданных: -1` (no attribute; 0 is written as `0`);
-- `ПорядокОбхода` equal to the previous element's + 1, 4152 for the first;
-- `Слой` of the previous element, the first layer for the first one;
-- the font: 1C's dialog font (MS Sans Serif 8.5, RUSSIAN_CHARSET) when
-  the element has `ШрифтПоУмолчанию`, otherwise the empty font with
-  weight 0 that 1C stores; the font name is not repeated in the block;
-- of the form parameters, the dialog font, `Param24: 6`, `Param25: 25`
-  and `Флаги2` equal to `Флаги`.
-
-`X`, `Y`, `Ширина`, `Высота` are one line, `Положение: X, Y, Ширина,
-Высота`.
-
-`ДопФлаги` are the window styles of the element with their WinAPI names:
-`WS_` ones and those of the element's Windows class (`BS_` for `BUTTON`,
-`CHECKBOX`, `RADIO`, `1CGROUPBOX` and `PICTURE`, `SS_` for `STATIC`, `ES_`
-for `1CEDIT` and `BMASKED`, `CBS_`, `LBS_`, `TVS_`), e.g. `ДопФлаги:
-SS_RIGHT, SS_CENTERIMAGE, WS_VISIBLE, WS_CHILD`; a bit without a name is
-`FlagN`. The font block names the fields of LOGFONT: `ШиринаСимвола`,
-`УголСтроки`, `УголСимвола`, `Жирный`, `Наклон`, `Подчёркивание`,
-`Зачёркивание`, `НаборСимволов` (204 is RUSSIAN_CHARSET), `ТочностьВывода`,
-`ТочностьОтсечения`, `Качество`, `ШагИСемейство`.
-
-### Object descriptions
-
-An object's description (UserHelp) of up to 2000 bytes, whose lines end
-with CRLF, is `Описание:` in the object's block of its `.yaml`; longer
-ones stay in `.txt` files.
-
-### On the corpus
-
-On the 430 configurations above the trees hold 70 thousand files (98
-thousand before format 4) and forms take 2.6 million lines instead of 6.0
-(3.3 million in braces, YAML is 23% shorter). Every
-stream of an MD compiled from a format 6 tree is the same as from GComp
-before these formats; the storages of `TypedText` may come in another
-order inside the compound file. Trees rewritten by PyYAML, in its own
-styles or with every scalar double quoted, compile to the same streams.
-
-See `PORTING.md` for dependencies and the plan for a native Linux build.
-The Delphi GUIs (`vgcomp/`, `gcomp_vis/`) are not built.
+  while keeping it compilable by MSVC, make the round trip lossless and
+  introduce the YAML source tree. The upstream history is in `ChangeLog`.
