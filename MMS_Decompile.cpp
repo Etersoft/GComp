@@ -249,19 +249,24 @@ void CMMSObject::ExtractWorkBook(GCString& DestDir, CStorage& Storage, CMMSObjec
 	{
 		ExtractMoxelPages(DestDir, Storage);
 
-		//Container.Profile выгружаем только в том случае, если он содержит полезную информацию
+		//Container.Profile выгружаем только в том случае, если он отличается от
+		//стандартного, который создаётся при компиляции. Если потока нет,
+		//пишем пустой файл: компиляция тогда его не создаёт.
 		GCString ContProfName = "Container.Profile";
-		if( Storage.OpenStream(ContProfName) )
+		GCString FileName = DestDir+"\\"+ContProfName;
+		GCString Default = DefaultContainerProfile;
+		long size = Storage.GetStreamSize(ContProfName);
+		if( size < 0 )
 		{
-			//Если начало потока совпадает с этой строкой, значит в потоке нет полезной информации
-			//Когда там что-то есть, то будет {"MoxelName","ИмяТаблицы",""}
-			GCString EmptyHeader = "{\n{\"MoxelName\",\"\",\"\"},\n{\"MoxelPos\"";
-			if( 0 != Storage.CompareWithString(EmptyHeader) )
+			GCString Empty;
+			Storage.CopyStringToFile(Empty, FileName);
+		}
+		else if( Storage.OpenStream(ContProfName) )
+		{
+			if( size != Default.GetLength() || 0 != Storage.CompareWithString(Default) )
 			{
-				{
-					GCString FileName = DestDir+"\\"+ContProfName;
-					Storage.CopyToFile(FileName);
-				}
+				Storage.Rewind();
+				Storage.CopyToFile(FileName);
 			}
 			Storage.CloseStream();
 		}
@@ -414,12 +419,13 @@ void CMMS::ExtractCommonMXL(GCString& Dir, CStorage& Storage)
 		GCString StorName = nt_rec_gd->StorageName;
 		StorName += "\\";
 		StorName += nt_rec->StorageName;
-		StorName += "\\WorkBook";
 		
+		//the whole work book: GComp 2.2.15 took only the moxel pages and lost
+		//the form, its module and Container.Profile
 		CStorage GDStorage(Storage);
 		if( GDStorage.Open(StorName) )
 		{
-			ExtractMoxelPages(GDDir, GDStorage);
+			ExtractWorkBook(GDDir, GDStorage, NULL);
 		}
 	}
 	MMS_Filter.Up();

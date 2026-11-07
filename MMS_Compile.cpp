@@ -155,6 +155,17 @@ bool CMMSObject::ImportMoxelPages(CStorage& Storage, const GCString& SrcDir, GCS
 	return HavePages;
 }
 
+//The Container.Profile 1C writes for a work book without a named moxel
+const char* DefaultContainerProfile = "{\n\
+{\"MoxelName\",\"\",\"\"},\n\
+{\"MoxelPos\",\"0\",\"\"},\n\
+{\"UUID\",\"D41D8CD98F00B204E9800998ECF8427E\",\"\"},\n\
+{\"Entry\",\"1\",\"\"},\n\
+{\"MoxelNextMode\",\"1\",\"\"}}";
+
+/* Container.Profile: a file is imported as is, except that an empty file
+   means that the work book has no profile; without a file the default
+   profile is created (most work books have it). */
 void CMMSObject::ImportContainerProfile(CStorage& Storage, const GCString& SrcDir)
 {
 	GCString ContProfName = SrcDir + "\\Container.Profile";
@@ -162,19 +173,22 @@ void CMMSObject::ImportContainerProfile(CStorage& Storage, const GCString& SrcDi
 
 	if( FileExist(ContProfName) )
 	{
-		Storage.StreamFromFile(StreamName, ContProfName);
+		FILE* f = fopen(ContProfName, "rb");
+		long size = -1;
+		if( f != NULL )
+		{
+			fseek(f, 0, SEEK_END);
+			size = ftell(f);
+			fclose(f);
+		}
+		if( size != 0 )
+			Storage.StreamFromFile(StreamName, ContProfName);
 		return;
 	}
 
 	if( TaskParameters.NoProfiles ) return;
 
-	GCString CP = "{\n\
-{\"MoxelName\",\"\",\"\"},\n\
-{\"MoxelPos\",\"0\",\"\"},\n\
-{\"UUID\",\"D41D8CD98F00B204E9800998ECF8427E\",\"\"},\n\
-{\"Entry\",\"1\",\"\"},\n\
-{\"MoxelNextMode\",\"1\",\"\"}}";
-
+	GCString CP = DefaultContainerProfile;
 	Storage.StreamFromString(StreamName, CP);
 }
 
