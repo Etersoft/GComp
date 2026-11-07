@@ -157,6 +157,8 @@ bool IsIgnoredFile(LPCSTR FileName)
 	if( 0 == stricmp(FileName, ".svn")		) return true;
 	if( 0 == stricmp(FileName, "ChangeLog") ) return true;
 	if( 0 == stricmp(FileName, "gcomp.ini") ) return true;
+	//.git, .gitignore, .gitattributes and the like of a version control
+	if( FileName[0] == '.' ) return true;
 
 	return IsIgnoredFolder(FileName);
 }
