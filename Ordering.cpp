@@ -106,7 +106,7 @@ char* CObjectOrdering::GetValue(int i)
 	return Values[i];
 }
 
-bool CObjectOrdering::OpenFile(GCString& Dir, MMSObjectType Type)
+bool CObjectOrdering::OpenFile(const GCString& Dir, MMSObjectType Type)
 {
 	CNameTableRecord* nt_rec_ord = NameTable.Find(Type);
 	OrderFile = fopen(nt_rec_ord->PrepareFileName(Dir), "rt");
@@ -117,5 +117,6 @@ bool CObjectOrdering::OpenFile(GCString& Dir, MMSObjectType Type)
 bool CObjectOrdering::WriteFile(CStorage& Storage, GCString& Dir, MMSObjectType Type)
 {
 	CNameTableRecord* nt_rec_ord = NameTable.Find(Type);
-	return Storage.CopyStringToFile(Order, nt_rec_ord->PrepareFileName(Dir));
+	GCString FileName = nt_rec_ord->PrepareFileName(Dir);
+	return Storage.CopyStringToFile(Order, FileName);
 }

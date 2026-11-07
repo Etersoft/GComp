@@ -282,7 +282,7 @@ CNameTableRecord* CNameTable::FindByType1C(GCString& Type1C)
 ////////////////////////////////////////////////////////////////////////////
 //////  class CNameTableRecord  ////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
-GCString CNameTableRecord::PrepareFileName(GCString& BaseDir, CMMSObject* object)
+GCString CNameTableRecord::PrepareFileName(const GCString& BaseDir, CMMSObject* object)
 {
 	GCString FullFName(BaseDir);
 
@@ -309,7 +309,7 @@ GCString CNameTableRecord::PrepareFileName(GCString& BaseDir, CMMSObject* object
 	return FullFName;
 }
 
-GCString CNameTableRecord::PrepareDirName(GCString& BaseDir, CMMSObject* object)
+GCString CNameTableRecord::PrepareDirName(const GCString& BaseDir, CMMSObject* object)
 {
 	if( Dir.IsEmpty() && FileName.IsEmpty() && Ext.IsEmpty() ) return BaseDir;
 

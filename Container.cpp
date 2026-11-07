@@ -51,29 +51,29 @@ CContainer::CContainer()
 
 	if( MapsInitialized ) return;
 
-	DirNameMap.SetAt("Metadata",         "MetaDataContainer");
-	DirNameMap.SetAt("Subconto",         "SubcontoContainer");
-	DirNameMap.SetAt("SubList",          "SublistContainer");
-	DirNameMap.SetAt("SubFolder",        "SubcontoGroupFolder");
-	DirNameMap.SetAt("Document",         "DocumentContainer");
-	DirNameMap.SetAt("Journal",          "JournalContainer");
-	DirNameMap.SetAt("Report",           "ReportContainer");
-	DirNameMap.SetAt("TypedText",        "TypedTextContainer");
-	DirNameMap.SetAt("UserDef",          "UserDefContainer");
-	DirNameMap.SetAt("Picture",          "PictureContainer");
-	DirNameMap.SetAt("CalcJournal",      "CalcJournalContainer");
-	DirNameMap.SetAt("CalcVar",          "CalcVarContainer");
-	DirNameMap.SetAt("AccountChart",     "AccountChartContainer");
-	DirNameMap.SetAt("AccountChartList", "AccountChartListContainer");
-	DirNameMap.SetAt("OperationList",    "OperationListContainer");
-	DirNameMap.SetAt("Operation",        "OperationContainer");
-	DirNameMap.SetAt("GlobalData",       "GlobalDataContainer");
-	DirNameMap.SetAt("ProvList",         "ProvListContainer");
-	DirNameMap.SetAt("WorkBook",         "WorkBookContainer");
+	DirNameMap.SetAt("Metadata",         (void*)"MetaDataContainer");
+	DirNameMap.SetAt("Subconto",         (void*)"SubcontoContainer");
+	DirNameMap.SetAt("SubList",          (void*)"SublistContainer");
+	DirNameMap.SetAt("SubFolder",        (void*)"SubcontoGroupFolder");
+	DirNameMap.SetAt("Document",         (void*)"DocumentContainer");
+	DirNameMap.SetAt("Journal",          (void*)"JournalContainer");
+	DirNameMap.SetAt("Report",           (void*)"ReportContainer");
+	DirNameMap.SetAt("TypedText",        (void*)"TypedTextContainer");
+	DirNameMap.SetAt("UserDef",          (void*)"UserDefContainer");
+	DirNameMap.SetAt("Picture",          (void*)"PictureContainer");
+	DirNameMap.SetAt("CalcJournal",      (void*)"CalcJournalContainer");
+	DirNameMap.SetAt("CalcVar",          (void*)"CalcVarContainer");
+	DirNameMap.SetAt("AccountChart",     (void*)"AccountChartContainer");
+	DirNameMap.SetAt("AccountChartList", (void*)"AccountChartListContainer");
+	DirNameMap.SetAt("OperationList",    (void*)"OperationListContainer");
+	DirNameMap.SetAt("Operation",        (void*)"OperationContainer");
+	DirNameMap.SetAt("GlobalData",       (void*)"GlobalDataContainer");
+	DirNameMap.SetAt("ProvList",         (void*)"ProvListContainer");
+	DirNameMap.SetAt("WorkBook",         (void*)"WorkBookContainer");
 
-	DirNameMap.SetAt("ModuleText_Number", "ModuleContainer");
-	DirNameMap.SetAt("Transact_Number",    "ModuleContainer");
-	DirNameMap.SetAt("UserHelp_Number",    "ModuleContainer");
+	DirNameMap.SetAt("ModuleText_Number", (void*)"ModuleContainer");
+	DirNameMap.SetAt("Transact_Number",    (void*)"ModuleContainer");
+	DirNameMap.SetAt("UserHelp_Number",    (void*)"ModuleContainer");
 
 	int i;
 	for( i = 0; FileInfo[i].FileName != NULL; i++ )
@@ -199,7 +199,8 @@ GCString& CContainer::Create(CStorage& Storage, bool Recursive, CContainerType T
 
 	Content += "}\n";
 
-	if( !Storage.StreamExist(GCString("Container.Contents")) )
+	GCString ContentsName("Container.Contents");
+	if( !Storage.StreamExist(ContentsName) )
 	{
 		Storage.StreamFromString("Container.Contents", Content);
 	}

@@ -6,7 +6,7 @@
 #include "MMS_Basic.h"
 #include "DialogForm.h"
 
-bool CMMSObject::ParseFile(GCString& FileName)
+bool CMMSObject::ParseFile(const GCString& FileName)
 {
 	if( !FileExist(FileName) )
 		return false;

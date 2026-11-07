@@ -7,8 +7,8 @@
 #include "Container.h"
 #include "Ordering.h"
 #include "MMS_Filter.h"
-#include "DLL\GComp.h"
-#include "UI.h"
+#include "DLL/GComp.h"
+#include "UI.H"
 #include "Rights.h"
 #include "DialogForm.h"
 
@@ -55,7 +55,7 @@ void CMMSAttributes_SF::Compile(CStorage& Storage, CStorage& TypedTextStorage, G
 	SendInfoMessage(InfoMsg_Progress, ++TotalObjectsProcessed);
 }
 
-void CMMSObject::ImportDescriptions(CStorage& TypedTextStor, GCString& FNamePrefix, bool StdName)
+void CMMSObject::ImportDescriptions(CStorage& TypedTextStor, const GCString& FNamePrefix, bool StdName)
 {
 	if( MMS_Type == MMS_Property ) return; //Описания бывают только у объектов
 
@@ -101,7 +101,10 @@ void CMMSObject::ImportDescriptions(CStorage& TypedTextStor, GCString& FNamePref
 				if( TypedTextStor.Create(StorName) )
 				{
 					Msg(2, "CPY: '%s'", FName);
-					TypedTextStor.StreamFromFile(nt_rec_file->PrepareStorageName(ID), FName);
+					{
+						GCString StreamName = nt_rec_file->PrepareStorageName(ID);
+						TypedTextStor.StreamFromFile(StreamName, FName);
+					}
 					CContainer CC;
 					CC.CreateInTypedText(TypedTextStor);
 					TypedTextStor.Close();
@@ -120,7 +123,7 @@ void CMMSObject::ImportDescriptions(CStorage& TypedTextStor, GCString& FNamePref
 ///////////////////////////////////////////////////////////////////////
 ///////////  class CMMSObjectWithProps methods  ///////////////////////
 ///////////////////////////////////////////////////////////////////////
-bool CMMSObject::ImportMoxelPages(CStorage& Storage, GCString& SrcDir, GCString& ContCont)
+bool CMMSObject::ImportMoxelPages(CStorage& Storage, const GCString& SrcDir, GCString& ContCont)
 {
 	bool HavePages = false;
 	GCString FName, Page, CC;
@@ -152,7 +155,7 @@ bool CMMSObject::ImportMoxelPages(CStorage& Storage, GCString& SrcDir, GCString&
 	return HavePages;
 }
 
-void CMMSObject::ImportContainerProfile(CStorage& Storage, GCString& SrcDir)
+void CMMSObject::ImportContainerProfile(CStorage& Storage, const GCString& SrcDir)
 {
 	GCString ContProfName = SrcDir + "\\Container.Profile";
 	GCString StreamName = "Container.Profile";
@@ -176,7 +179,7 @@ void CMMSObject::ImportContainerProfile(CStorage& Storage, GCString& SrcDir)
 }
 
 
-bool CMMSObject::ImportStreamByType(CStorage& Storage, MMSObjectType Type, GCString& SrcDir)
+bool CMMSObject::ImportStreamByType(CStorage& Storage, MMSObjectType Type, const GCString& SrcDir)
 {
 	CNameTableRecord* nt_rec = NameTable.Find(Type);
 	GCString FileName = nt_rec->PrepareFileName(SrcDir);
@@ -188,9 +191,10 @@ bool CMMSObject::ImportStreamByType(CStorage& Storage, MMSObjectType Type, GCStr
 		if( !FileExist(FileName) ) return false;
 
 		CStorage SubStorage(Storage);
-		res = SubStorage.StreamFromFile(
-			nt_rec->PrepareStorageName(ID), 
-			FileName);
+		{
+			GCString StreamName = nt_rec->PrepareStorageName(ID);
+			res = SubStorage.StreamFromFile(StreamName, FileName);
+		}
 	}
 	MMS_Filter.Up();
 	
@@ -209,7 +213,7 @@ bool DialogInBeautyFormat(GCString FormFName)
 	return ( _stricoll("Диалог:", hdr) == 0 );
 }
 
-bool CMMSObject::ImportWorkBook(CStorage& Storage, GCString& SrcDir)
+bool CMMSObject::ImportWorkBook(CStorage& Storage, const GCString& SrcDir)
 {
 	CNameTableRecord* nt_rec_wb = NameTable.Find(NT_Workbook);
 	CNameTableRecord* nt_rec;
@@ -271,7 +275,10 @@ bool CMMSObject::ImportWorkBook(CStorage& Storage, GCString& SrcDir)
 		{
 			if( !Storage.StreamFromFile(nt_rec->StorageName, ModuleFName) )
 			{
-				Storage.StreamFromString(nt_rec->StorageName, GCString()); //создаём пустой модуль
+				{
+					GCString EmptyText; //создаём пустой модуль
+					Storage.StreamFromString(nt_rec->StorageName, EmptyText);
+				}
 				StorageNotEmpty = true;
 			}
 			ContCont += ",{\"TextDocument\",\"MD Programm text\",\"Module text\",\"\"}";
@@ -285,7 +292,11 @@ bool CMMSObject::ImportWorkBook(CStorage& Storage, GCString& SrcDir)
 		if( !ImportStreamByType(Storage, NT_ErtUserHelp, SrcDir) )
 		{
 			nt_rec = NameTable.Find(NT_ErtUserHelp);
-			Storage.StreamFromString(nt_rec->PrepareStorageName(), GCString());
+			{
+				GCString StreamName = nt_rec->PrepareStorageName();
+				GCString EmptyText;
+				Storage.StreamFromString(StreamName, EmptyText);
+			}
 			StorageNotEmpty = true;
 		}
 		ContCont += ",{\"MetaDataDescription\",\"Inplace description\",\"Описание\",\"\"}";
@@ -320,7 +331,7 @@ bool CMMSObject::ImportWorkBook(CStorage& Storage, GCString& SrcDir)
 }
 
 bool CMMSObject::ImportListForms(CFormDescrList& Forms, CStorage& Storage, 
-										  GCString& SrcDir, GCString Prefix)
+										  const GCString& SrcDir, GCString Prefix)
 {
 	CNameTableRecord* nt_rec = NameTable.Find(NT_ListForm);
 	GCString StorName;
@@ -384,7 +395,10 @@ void CMMSTaskItem::Compile(CStorage& Storage, CStorage& TypedTextStorage, GCStri
 		if( TypedTextStorage.Create(StorName) )
 		{
 			Msg(2, "CPY: '%s'", FName);
-			TypedTextStorage.StreamFromFile(nt_rec_file->PrepareStorageName(Content.ID), FName);
+			{
+				GCString StreamName = nt_rec_file->PrepareStorageName(Content.ID);
+				TypedTextStorage.StreamFromFile(StreamName, FName);
+			}
 			CContainer CC;
 			CC.CreateInTypedText(TypedTextStorage);
 			TypedTextStorage.Close();

@@ -1,5 +1,5 @@
 
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 #include "Rights.h"
 #include "CommonFunctions.h"
 #include "Strings.h"
@@ -320,7 +320,8 @@ void DecompileUserRights(GCString& Dir, CStorage& Storage)
 		{
 			GCString CSVString;
 			CContainer CC;
-			RtStorage.ParseStream(&CC, GCString("Container.Contents"), false);
+			GCString ContentsName("Container.Contents");
+			RtStorage.ParseStream(&CC, ContentsName, false);
 			CObjectOrdering Ordering(2);
 
 			CreateDirectory(DestDir);

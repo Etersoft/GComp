@@ -5,7 +5,7 @@
 
 #include "Declarations.h"
 #include "CommonFunctions.h"
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 
 bool IsValidFileName(GCString& String)
 {
@@ -58,7 +58,7 @@ void DumbCreateDirectory(char *dir, bool IsUNCPath)
 	throw NULL;
 }
 
-void CreateDirectory(GCString&  DirName)
+void CreateDirectory(const GCString&  DirName)
 {
 	char dir[MAX_PATH];
 	char *pointer;
@@ -100,7 +100,7 @@ void CreateDirectory(GCString&  DirName)
 	} while( pointer != NULL );
 }
 
-CStringArray* SplitPath(GCString& Path)
+CStringArray* SplitPath(const GCString& Path)
 {
 	CStringArray *parts = new CStringArray;
 	int pos = 0, prev_pos = 0;

@@ -248,7 +248,9 @@ void CMMSCaclAlgorithm::Decompile(GCString& Dir, CStorage& Storage, CStorage& Ty
 		{
 			if( TypedTextStorage.Open(nt_rec_stor->PrepareStorageName(ID)) )
 			{
-				TypedTextStorage.CopyToFile((GCString)(nt_rec->StorageName), (GCString)(nt_rec->PrepareFileName(AlgDir)));
+				GCString StreamName = nt_rec->StorageName;
+				GCString FileName = nt_rec->PrepareFileName(AlgDir);
+				TypedTextStorage.CopyToFile(StreamName, FileName);
 				TypedTextStorage.Close();
 			}
 		}

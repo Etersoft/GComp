@@ -1,6 +1,6 @@
 
 #include "Declarations.h"
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 #include "MMS_BasicTypes.h"
 #include "CommonFunctions.h"
 #include "MMS.h"
@@ -222,7 +222,8 @@ void CPropertySet::SetValue(void* Object, int i, GCString& Value, bool Unquote)
 	case CObjectProperty::t_object:
 		{
 			CStoredObject* obj = (CStoredObject*) ((char*)Object + prop.Offset);
-			obj->SetValue(GCString(prop.Name), Value);
+			GCString PropName(prop.Name);
+			obj->SetValue(PropName, Value);
 		}
 		break;
 	case CObjectProperty::t_prop:
@@ -642,7 +643,7 @@ void CMMSTypeLetter::SetValue(GCString& Value)
 
 GCString CMMSTypeLetter::BeautyString()
 {
-	struct TTypeTable* table = type_table;
+	TTypeTable* table = type_table;
 	char letter;
 	if( TypeLetter.IsNumber() )
 		letter = atoi(TypeLetter);
@@ -663,7 +664,7 @@ GCString CMMSTypeLetter::MMSString()
 	if( Numeric )
 		return AsNumber();
 
-	struct TTypeTable* table;
+	TTypeTable* table;
 	for( table = type_table; table->type != NULL; table++ )
 	{
 		if( TypeLetter == table->type )
@@ -676,7 +677,7 @@ GCString CMMSTypeLetter::MMSString()
 
 GCString CMMSTypeLetter::AsNumber()
 {
-	struct TTypeTable* table;
+	TTypeTable* table;
 	for( table = type_table; table->type != NULL; table++ )
 	{
 		if( table->letter > 17 ) continue;

@@ -1,5 +1,5 @@
 
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 #include "Declarations.h"
 #include "CommonFunctions.h"
 #include "MMS.h"

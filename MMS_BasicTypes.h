@@ -204,7 +204,7 @@ private:
 		char letter;
 		char* type;
 	} TTypeTable;
-	static struct TTypeTable type_table[];
+	static TTypeTable type_table[];
 
 public:
 	CMMSTypeLetter() {TypeLetter = 'U'; Numeric = false;}

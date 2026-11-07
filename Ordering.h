@@ -25,7 +25,7 @@ public:
 	~CObjectOrdering();
 
 public:
-	bool OpenFile(GCString& Dir, MMSObjectType Type = NT_ObjectOrdering);
+	bool OpenFile(const GCString& Dir, MMSObjectType Type = NT_ObjectOrdering);
 	bool WriteFile(CStorage& Storage, GCString& Dir, MMSObjectType Type = NT_ObjectOrdering);
 
 	int Add(int ID, ...);

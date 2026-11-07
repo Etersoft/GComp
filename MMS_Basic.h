@@ -70,7 +70,7 @@ public:
 
 	//В случае рекурсивного поиска в pList будет складываться полный путь к объекту
 	virtual CMMSObject* FindChild(int ID, bool recursive = false, CPtrList* pList = NULL);
-	virtual CMMSObject* FindChild(GCString& sID, bool recursive = false);
+	virtual CMMSObject* FindChild(const GCString& sID, bool recursive = false);
 
 	void SortByOrder();
 
@@ -81,7 +81,7 @@ public:
 	virtual void ParseMetadata(CLexer& Lexer);
 	virtual void AssembleMetadata(GCString& Dir);
 	virtual void ParseFile(CLexer& Lexer);
-	bool ParseFile(GCString& FileName);
+	bool ParseFile(const GCString& FileName);
 
 	//===== Методы для чистки ММС от лишних объектов. Для внешних отчетов. =====
 	//void MarkUsed(int ID);
@@ -100,10 +100,10 @@ public:
 	//FNamePrefix - в самом начале это каталог с завершающим '\'
 	//StdName - если true, то для этого объекта имя файла берётся из NameTable а не sID. 
 	//          Описания всех вложенных объектов выгружаются по sID.
-	void ExtractDescriptions(GCString& FNamePrefix, CStorage& TypedTextStor, bool StdName);
-	void ImportDescriptions(CStorage& TypedTextStor, GCString& FNamePrefix, bool StdName);
+	void ExtractDescriptions(const GCString& FNamePrefix, CStorage& TypedTextStor, bool StdName);
+	void ImportDescriptions(CStorage& TypedTextStor, const GCString& FNamePrefix, bool StdName);
 
-	bool ImportStreamByType(CStorage& Storage, MMSObjectType Type, GCString& SrcDir);
+	bool ImportStreamByType(CStorage& Storage, MMSObjectType Type, const GCString& SrcDir);
 	void ExtractStreamByType(CStorage& Storage, MMSObjectType Type, GCString& Dir, bool NotExtractEmpty = false);
 	
 	void ExtractMoxelPages(GCString& DestDir, CStorage& WBStorage);
@@ -111,13 +111,13 @@ public:
 	void ExtractListForms(CFormDescrList& Forms, GCString& Dir, CStorage& Storage, GCString Prefix);
 	void ExtractOrdering(CStorage& Storage, GCString& DestDir);
 
-	bool ImportMoxelPages(CStorage& Storage, GCString& SrcDir, GCString& ContCont);
-	void ImportContainerProfile(CStorage& Storage, GCString& SrcDir);
-	bool ImportWorkBook(CStorage& Storage, GCString& SrcDir);
-	bool ImportListForms(CFormDescrList& Forms, CStorage& Storage, GCString& SrcDir, GCString Prefix);
+	bool ImportMoxelPages(CStorage& Storage, const GCString& SrcDir, GCString& ContCont);
+	void ImportContainerProfile(CStorage& Storage, const GCString& SrcDir);
+	bool ImportWorkBook(CStorage& Storage, const GCString& SrcDir);
+	bool ImportListForms(CFormDescrList& Forms, CStorage& Storage, const GCString& SrcDir, GCString Prefix);
 	void ImportOrdering(GCString& SrcDir);
 
-	void BuildObjNameCache(CObjNameCache& Cache, GCString& NamePrefix, int level = 0);
+	void BuildObjNameCache(CObjNameCache& Cache, const GCString& NamePrefix, int level = 0);
 	GCString GetObjectDir(GCString& ParentDir);
 };
 

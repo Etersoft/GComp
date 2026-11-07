@@ -18,8 +18,8 @@ public:
 	GCString Ext;
 
 public:
-	GCString PrepareFileName(GCString& Dir, CMMSObject* object = NULL);
-	GCString PrepareDirName(GCString& Dir, CMMSObject* object = NULL);
+	GCString PrepareFileName(const GCString& Dir, CMMSObject* object = NULL);
+	GCString PrepareDirName(const GCString& Dir, CMMSObject* object = NULL);
 	GCString PrepareStorageName(int suffix = 0);
 };
 

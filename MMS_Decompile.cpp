@@ -1,11 +1,11 @@
 
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 #include "Storage.h"
 #include "CommonFunctions.h"
 #include "MMS.h"
 #include "Container.h"
 #include "DialogForm.h"
-#include "UI.h"
+#include "UI.H"
 #include "Rights.h"
 #include "NameTable.h"
 #include "Ordering.h"
@@ -17,7 +17,10 @@
 void CMMSObject::ExtractString(CStorage& Storage, GCString& DestDir, GCString& Str, MMSObjectType MMS_Type)
 {
 	CNameTableRecord* nt_rec = NameTable.Find(MMS_Type);
-	Storage.CopyStringToFile(Str, nt_rec->PrepareFileName(DestDir));
+	{
+		GCString FileName = nt_rec->PrepareFileName(DestDir);
+		Storage.CopyStringToFile(Str, FileName);
+	}
 }
 
 bool CMMSObject::ExtractMetadata(GCString& DestDir, MMSObjectType MMS_Type, CStorage& TypedTextStorage)
@@ -52,7 +55,7 @@ void CMMSObject::ExtractMetadata(GCString& DestDir, CStorage& TypedTextStorage)
 	ExtractMetadata(DestDir, NT_MetadataPart, TypedTextStorage);
 }
 
-void CMMSObject::ExtractDescriptions(GCString& FNamePrefix, CStorage& TypedTextStor, bool StdName)
+void CMMSObject::ExtractDescriptions(const GCString& FNamePrefix, CStorage& TypedTextStor, bool StdName)
 {
 	if( MMS_Type == MMS_Property ) return; //Вытаскиваем описания только для объектов
 
@@ -95,7 +98,10 @@ void CMMSObject::ExtractDescriptions(GCString& FNamePrefix, CStorage& TypedTextS
 				FName.Format("%s%s", NewPrefix, nt_rec_file->Ext);
 
 			TypedTextStor.Open(StorName);
-			TypedTextStor.CopyToFile(nt_rec_file->PrepareStorageName(ID), FName);
+			{
+				GCString StreamName = nt_rec_file->PrepareStorageName(ID);
+				TypedTextStor.CopyToFile(StreamName, FName);
+			}
 			TypedTextStor.AddToExtractedList(FName, this);
 			TypedTextStor.Close();
 		}
@@ -180,7 +186,11 @@ void CMMSObject::ExtractMoxelPages(GCString& DestDir, CStorage& WBStorage)
 		}
 
 		if( !DirectoryExist(DestDir) ) CreateDirectory(DestDir);
-		WBStorage.CopyToFile((GCString)(rec->StreamName), (GCString)(DestDir+"\\"+Translit(mxlFName)));
+		{
+			GCString StreamName = rec->StreamName;
+			GCString FileName = DestDir+"\\"+Translit(mxlFName);
+			WBStorage.CopyToFile(StreamName, FileName);
+		}
 		
 		Order.Add(page_suffix, mxlFName, Translit(mxlFName), rec->ObjectName);
 	}
@@ -247,7 +257,10 @@ void CMMSObject::ExtractWorkBook(GCString& DestDir, CStorage& Storage, CMMSObjec
 			GCString EmptyHeader = "{\n{\"MoxelName\",\"\",\"\"},\n{\"MoxelPos\"";
 			if( 0 != Storage.CompareWithString(EmptyHeader) )
 			{
-				Storage.CopyToFile(DestDir+"\\"+ContProfName);
+				{
+					GCString FileName = DestDir+"\\"+ContProfName;
+					Storage.CopyToFile(FileName);
+				}
 			}
 			Storage.CloseStream();
 		}
@@ -295,7 +308,10 @@ void CMMSObject::ExtractStreamByType(CStorage& Storage, MMSObjectType MMS_Type, 
 		{
 			SubStorage.GetCleanStream();
 			if( !NotExtractEmpty || SubStorage.StreamInfo.Size > 0 )
-				SubStorage.CopyToFile(nt_rec->PrepareFileName(Dir));
+				{
+					GCString FileName = nt_rec->PrepareFileName(Dir);
+					SubStorage.CopyToFile(FileName);
+				}
 		}
 	}
 	MMS_Filter.Up();
@@ -478,7 +494,7 @@ void CMMS::BuildObjNameCache()
 		ObjNameCache_compare_id);
 }
 
-void CMMS::BuildObjNameCache(TCompareFunction sort_method, GCString& Dir, CStorage& Storage)
+void CMMS::BuildObjNameCache(TCompareFunction sort_method, const GCString& Dir, CStorage& Storage)
 {
 	//Build names cache 
 	CMMSObject::BuildObjNameCache(ObjNameCache, GCString());

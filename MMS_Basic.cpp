@@ -1,5 +1,5 @@
 
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 #include "CommonFunctions.h"
 #include "Strings.h"
 #include "NameTable.h"
@@ -93,10 +93,11 @@ CMMSObject* CMMSObject::FindChild(int ID, bool recursive, CPtrList* pList)
 	return NULL;
 }
 
-CMMSObject* CMMSObject::FindChild(GCString& sID, bool recursive)
+CMMSObject* CMMSObject::FindChild(const GCString& sID, bool recursive)
 {
 	int n = GetNChildren();
-	for( int i = 0; i < n; i++ )
+	int i;
+	for( i = 0; i < n; i++ )
 	{
 		CMMSObject* obj = GetChild(i);
 		if( obj->MMS_Type != MMS_Property && obj->sID == sID )
@@ -124,7 +125,7 @@ CMMSObject* CMMSObject::FindChild(GCString& sID, bool recursive)
 
 
 static GCString _BuhName("Бухгалтерия");
-void CMMSObject::BuildObjNameCache(CObjNameCache& Cache, GCString& NamePrefix, int level)
+void CMMSObject::BuildObjNameCache(CObjNameCache& Cache, const GCString& NamePrefix, int level)
 {
 	int n = GetNChildren();
 	int i;

@@ -145,7 +145,7 @@ public:
 	void DeleteUnusedObjects(CStorage& Storage);
 
 	void BuildObjNameCache();
-	void BuildObjNameCache(TCompareFunction sort_method, GCString& Dir, CStorage& Storage);
+	void BuildObjNameCache(TCompareFunction sort_method, const GCString& Dir, CStorage& Storage);
 	void ReadObjNameCacheFromDir(GCString& Dir);
 	bool ReadObjNameCache(GCString& FileName);
 

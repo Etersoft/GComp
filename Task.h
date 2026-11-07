@@ -3,7 +3,7 @@
 #define TASK_H
 
 #include <stdio.h>
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 #include "Strings.h"
 #include <afx.h>
 

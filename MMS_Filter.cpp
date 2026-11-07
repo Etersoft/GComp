@@ -51,7 +51,7 @@ bool CMMSFilter::Test(CMMSObject* Object, CNameTableRecord* Record)
 	return false;
 }
 
-bool CMMSFilter::Test(GCString& Name)
+bool CMMSFilter::Test(const GCString& Name)
 {
 	if( Filter == NULL ) return true;
 	if( Filter->GetSize() <= Level ) return true;

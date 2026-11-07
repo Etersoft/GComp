@@ -2,7 +2,7 @@
 #include <io.h>
 #include <locale.h>
 #include <direct.h>
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 #include "Declarations.h"
 #include "CommonFunctions.h"
 #include "Lexer.h"
@@ -169,7 +169,7 @@ void GComp_ReadSettings(CGCompParameters* Parameters)
 }
 
 
-inline char* BoolToYesNo(BOOL value)
+inline const char* BoolToYesNo(BOOL value)
 {
 	return value ? "Yes" : "No";
 }

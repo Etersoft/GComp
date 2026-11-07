@@ -28,7 +28,7 @@ private:
 	static GCString error_string;
 
 public:
-	CLexer(GCString& FileName);
+	CLexer(const GCString& FileName);
 	~CLexer();
 
 	bool IsValid() { return File != NULL; }

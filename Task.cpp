@@ -36,7 +36,8 @@ void CTaskParameters::ParseCommandLine(int argc, TCHAR* argv[])
 		return;
 	}
 
-	for( int i=1; i < argc; i++ )
+	int i;
+	for( i=1; i < argc; i++ )
 	{
 		TCHAR *arg;
 

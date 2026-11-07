@@ -4,7 +4,7 @@
 
 #include <afx.h>
 #include "Strings.h"
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 
 void Msg(int MinimalVerbosityLevel, char *msg, ...);
 void SystemErrorMessage();
@@ -18,9 +18,9 @@ bool DirectoryExist(LPCSTR DirName);
 
 void DumbCreateDirectory(char *dir);
 //Our CreateDirectory will create all parent dirs, if they not exist
-void CreateDirectory(GCString& DirName);
+void CreateDirectory(const GCString& DirName);
 
-CStringArray* SplitPath(GCString& Path);
+CStringArray* SplitPath(const GCString& Path);
 
 void CopyFile(FILE* dest, FILE* src);
 

@@ -1,6 +1,6 @@
 
 #include "Declarations.h"
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 #include "CommonFunctions.h"
 #include "DialogForm.h"
 #include "MMS.h"
@@ -259,7 +259,8 @@ bool CHotKey::SetValue(GCString& Name, GCString& Value)
 		}
 		else
 		{
-			for( int i = 0; virtual_keys[i].code != 0; i++ )
+			int i;
+			for( i = 0; virtual_keys[i].code != 0; i++ )
 			{
 				if( stricmp(virtual_keys[i].name, key) != 0 ) continue;
 				KeyCode = virtual_keys[i].code;
@@ -299,7 +300,8 @@ void CHotKey::BeautyString(CBeautyString& String, int level)
 		str += (char)KeyCode;
 	else
 	{
-		for( int i = 0; virtual_keys[i].code != 0; i++ )
+		int i;
+		for( i = 0; virtual_keys[i].code != 0; i++ )
 		{
 			if( KeyCode != virtual_keys[i].code ) continue;
 			str += virtual_keys[i].name;
@@ -733,7 +735,8 @@ void CDialogForm::ToString(CMMSString& String)
 
 	if( FindChild(Cnt_Ver.sID) == NULL )
 	{
-		Cnt_Ver.SetValue(-1, GCString("10001"));
+		GCString CntVerValue("10001");
+		Cnt_Ver.SetValue(-1, CntVerValue);
 		AddChild(&Cnt_Ver);
 	}
 

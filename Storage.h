@@ -49,21 +49,21 @@ public:
 public:
 	GCString FullPath();
 
-	bool OpenCompound(GCString& CompoundFileName);
+	bool OpenCompound(const GCString& CompoundFileName);
 	bool Open(CStringArray* StorageName);
-	bool Open(GCString& StorageName);
-	bool CreateCompound(GCString& CompoundFileName);
+	bool Open(const GCString& StorageName);
+	bool CreateCompound(const GCString& CompoundFileName);
 	bool Create(CStringArray* StorageName);
-	bool Create(GCString& StorageName);
-	bool Delete(GCString& StorageName);
+	bool Create(const GCString& StorageName);
+	bool Delete(const GCString& StorageName);
 	void Close(bool CloseAll = false);
 
-	bool OpenStream(GCString& StreamName);
-	bool CreateStream(GCString& StreamName);
+	bool OpenStream(const GCString& StreamName);
+	bool CreateStream(const GCString& StreamName);
 	void CloseStream();
 
 	bool StorageExist(GCString& StorageName);
-	bool StreamExist(GCString& StreamName);
+	bool StreamExist(const GCString& StreamName);
 	long GetStreamSize(GCString& StreamName);
 
 	void Rewind();
@@ -79,12 +79,12 @@ public:
 	bool StreamFromString(GCString StreamName, GCString& String);
 
 	unsigned long AppendFile(IStream* pStream, FILE* File);
-	unsigned long AppendFile(IStream* pStream, GCString& FileName);
+	unsigned long AppendFile(IStream* pStream, const GCString& FileName);
 	void AddZeroByte();
 
 	bool FromFile(GCString& FileName);
 	bool FromFile(FILE* File, LPCSTR FileName = NULL);
-	bool StorageFromDir(GCString& StorageName, GCString& SrcDir);
+	bool StorageFromDir(const GCString& StorageName, const GCString& SrcDir);
 
 	//Сравнивает текущий поток с указанным файлом. Сравнение начинается с 
 	//текущей позиции (как в потоке, так и в файле). Если указан bytes_to_compare > 0, 
@@ -98,7 +98,7 @@ public:
 
 	IStorage* GetStorage();
 
-	void ParseStream(CMMSObject* Object, GCString& StreamName, bool ParseWitnNoIDs);
+	void ParseStream(CMMSObject* Object, const GCString& StreamName, bool ParseWitnNoIDs);
 
 	void AddToExtractedList(GCString& FullFName, void* object);
 	bool ObjectExtracted(void* object);
@@ -122,10 +122,10 @@ LPCSTR GetStgErrorString(HRESULT err);
 ULARGE_INTEGER GetStreamSize(IStream* pStream);
 
 IStorage* OpenStorage(IStorage* pParentStorage, wchar_t* wStorName);
-IStorage* OpenStorage(IStorage* pParentStorage, GCString& StorName);
+IStorage* OpenStorage(IStorage* pParentStorage, const GCString& StorName);
 
 IStream* OpenStream(IStorage* pParentStorage, wchar_t* wStreamName);
-IStream* OpenStream(IStorage* pParentStorage, GCString& StreamName);
+IStream* OpenStream(IStorage* pParentStorage, const GCString& StreamName);
 
 bool StringDifferFromFile(GCString& String, GCString& FileName);
 bool CopyStringToFile(GCString& String, GCString& FileName);

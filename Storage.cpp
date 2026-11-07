@@ -3,7 +3,7 @@
 #include <io.h>
 #include <direct.h>
 #include <sys\stat.h>
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 #include "Storage.h"
 #include "CommonFunctions.h"
 #include "StreamInfo.h"
@@ -170,7 +170,7 @@ IStorage* CStorage::GetStorage()
 }
 
 
-bool CStorage::CreateCompound(GCString& CompoundFileName)
+bool CStorage::CreateCompound(const GCString& CompoundFileName)
 {
 	if( !IsRootStorage ) //Создавать compound можно только из корневого объекта
 		return false;
@@ -180,7 +180,7 @@ bool CStorage::CreateCompound(GCString& CompoundFileName)
 	HRESULT hr;
 	wchar_t* wCompoundName = new wchar_t[CompoundFileName.GetLength()+1];
 	
-	swprintf(wCompoundName , L"%S", (LPCSTR)CompoundFileName);
+	_snwprintf(wCompoundName, CompoundFileName.GetLength()+1, L"%S", (LPCSTR)CompoundFileName);
 	hr = StgCreateDocfile(wCompoundName, 
 		STGM_DIRECT | STGM_READWRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE, 0, &pRootStorage);
 	delete[] wCompoundName;
@@ -197,7 +197,7 @@ bool CStorage::CreateCompound(GCString& CompoundFileName)
 	return true;
 }
 
-bool CStorage::OpenCompound(GCString& CompoundFileName)
+bool CStorage::OpenCompound(const GCString& CompoundFileName)
 {
 	if( !IsRootStorage ) //Открывать compound можно только из корневого объекта
 		return false;
@@ -206,7 +206,7 @@ bool CStorage::OpenCompound(GCString& CompoundFileName)
 	IStorage* pRootStorage;
 	wchar_t* wCompoundFileName = new wchar_t[CompoundFileName.GetLength()+1];
 
-	swprintf(wCompoundFileName, L"%S", CompoundFileName);
+	_snwprintf(wCompoundFileName, CompoundFileName.GetLength()+1, L"%S", (LPCSTR)CompoundFileName);
 	HRESULT hr = StgOpenStorage(wCompoundFileName , NULL, 
 		STGM_SHARE_EXCLUSIVE | STGM_DIRECT | STGM_READWRITE
 		//STGM_READ | STGM_SHARE_DENY_WRITE
@@ -239,7 +239,7 @@ bool CStorage::Open(CStringArray* StorageNames)
 	return true;
 }
 
-bool CStorage::Open(GCString& StorageName)
+bool CStorage::Open(const GCString& StorageName)
 {
 	IStorage* Parent = GetStorage();
 	if( Parent == NULL ) return false;
@@ -271,7 +271,7 @@ bool CStorage::Create(CStringArray* StorageNames)
 	return true;
 }
 
-bool CStorage::Create(GCString& StorageName)
+bool CStorage::Create(const GCString& StorageName)
 {
 	IStorage* Parent = GetStorage();
 	if( Parent == NULL ) return false;
@@ -289,7 +289,7 @@ bool CStorage::Create(GCString& StorageName)
 	IStorage* pStorage;
 	HRESULT hr;
 	wchar_t* wStorageName = new wchar_t[StorageName.GetLength()+1];
-	swprintf(wStorageName, L"%S", (LPCSTR)StorageName);
+	_snwprintf(wStorageName, StorageName.GetLength()+1, L"%S", (LPCSTR)StorageName);
 
 	hr = GetStorage()->CreateStorage(wStorageName,
 		STGM_DIRECT | STGM_READWRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE, 0,0, 
@@ -306,7 +306,7 @@ bool CStorage::Create(GCString& StorageName)
 	return true;
 }
 
-bool CStorage::CreateStream(GCString& StreamName)
+bool CStorage::CreateStream(const GCString& StreamName)
 {
 	CloseStream();
 
@@ -325,7 +325,7 @@ bool CStorage::CreateStream(GCString& StreamName)
 
 	HRESULT hr;
 	wchar_t* wStreamName = new wchar_t[this->StreamName.GetLength()+1];
-	swprintf(wStreamName, L"%S", (LPCSTR)(this->StreamName));
+	_snwprintf(wStreamName, this->StreamName.GetLength()+1, L"%S", (LPCSTR)(this->StreamName));
 
 
 	hr = GetStorage()->CreateStream(wStreamName, 
@@ -356,12 +356,12 @@ void CStorage::Close(bool CloseAll)
 	}
 }
 
-bool CStorage::Delete(GCString& StorageName)
+bool CStorage::Delete(const GCString& StorageName)
 {
 	wchar_t* wStorageName = new wchar_t[StorageName.GetLength()+1];
 	HRESULT hr;
 	
-	swprintf(wStorageName, L"%S", (LPCSTR)StorageName);
+	_snwprintf(wStorageName, StorageName.GetLength()+1, L"%S", (LPCSTR)StorageName);
 	hr = GetStorage()->DestroyElement(wStorageName);
 	delete[] wStorageName;
 
@@ -383,7 +383,7 @@ void CStorage::CloseStream()
 	}
 }
 
-bool CStorage::OpenStream(GCString& StreamName)
+bool CStorage::OpenStream(const GCString& StreamName)
 {
 	CloseStream();
 
@@ -425,7 +425,7 @@ bool CStorage::StorageExist(GCString& StorageName)
 	return false;
 }
 
-bool CStorage::StreamExist(GCString& StreamName)
+bool CStorage::StreamExist(const GCString& StreamName)
 {
 	IStream* pStream = ::OpenStream(GetStorage(), StreamName);
 	if( pStream != NULL )
@@ -665,7 +665,7 @@ unsigned long CStorage::AppendFile(IStream* pStream, FILE* File)
 	return TotalBytesRead;
 }
 
-unsigned long CStorage::AppendFile(IStream* pStream, GCString& FileName)
+unsigned long CStorage::AppendFile(IStream* pStream, const GCString& FileName)
 {
 	FILE* File = fopen(FileName, "rb");
 	if( File == NULL ) return 0;
@@ -780,7 +780,7 @@ bool CStorage::StreamFromString(GCString StreamName, GCString& String)
 	return true;
 }
 
-bool CStorage::StorageFromDir(GCString& StorageName, GCString& SrcDir)
+bool CStorage::StorageFromDir(const GCString& StorageName, const GCString& SrcDir)
 {
 	GCString FileName;
 	struct _finddata_t find_data;
@@ -810,7 +810,10 @@ bool CStorage::StorageFromDir(GCString& StorageName, GCString& SrcDir)
 				Close();
 			}
 			else
-				StreamFromFile(GCString(find_data.name), FileName);
+			{
+				GCString StreamName(find_data.name);
+				StreamFromFile(StreamName, FileName);
+			}
 		} while( _findnext(hFind, &find_data) == 0 );
 		_findclose(hFind);
 	}
@@ -1000,7 +1003,7 @@ int CStorage::FullCompare(GCString& FileName)
 	return cmp;
 }
 
-void CStorage::ParseStream(CMMSObject* Object, GCString& StreamName, bool ParseWitnNoIDs)
+void CStorage::ParseStream(CMMSObject* Object, const GCString& StreamName, bool ParseWitnNoIDs)
 {
 	FILE* File;
 
@@ -1160,12 +1163,12 @@ IStorage* OpenStorage(IStorage* pParentStorage, wchar_t* wStorName)
 	return pStorage;
 }
 
-IStorage* OpenStorage(IStorage* pParentStorage, GCString& StorName)
+IStorage* OpenStorage(IStorage* pParentStorage, const GCString& StorName)
 {
 	IStorage* pStorage;
 
 	wchar_t* wStorName = new wchar_t[StorName.GetLength()+1];
-	swprintf(wStorName, L"%S", StorName);
+	_snwprintf(wStorName, StorName.GetLength()+1, L"%S", (LPCSTR)StorName);
 	pStorage = OpenStorage(pParentStorage, wStorName);
 	delete[] wStorName;
 
@@ -1179,12 +1182,12 @@ IStream* OpenStream(IStorage* pParentStorage, wchar_t* wStreamName)
 	return pStream;
 }
 
-IStream* OpenStream(IStorage* pParentStorage, GCString& StreamName)
+IStream* OpenStream(IStorage* pParentStorage, const GCString& StreamName)
 {
 	IStream* pStream;
 	
 	wchar_t* wStreamName = new wchar_t[StreamName.GetLength()+1];
-	swprintf(wStreamName, L"%S", StreamName);
+	_snwprintf(wStreamName, StreamName.GetLength()+1, L"%S", (LPCSTR)StreamName);
 	pStream = OpenStream(pParentStorage, wStreamName);
 	delete[] wStreamName;
 

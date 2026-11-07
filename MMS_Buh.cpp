@@ -1,6 +1,6 @@
 
 #include "Declarations.h"
-#include "DLL\GComp.h"
+#include "DLL/GComp.h"
 #include "CommonFunctions.h"
 #include "Storage.h"
 #include "MMS_Filter.h"
@@ -763,7 +763,8 @@ void CMMSAccount::Decompile(GCString& Dir, CStorage& Storage, CObjectOrdering& O
 	CBeautyString String;
 
 	BeautyString(String, 0);
-	Storage.CopyStringToFile(String, Dir+"\\"+FName);
+	GCString FileName = Dir+"\\"+FName;
+	Storage.CopyStringToFile(String, FileName);
 }
 
 void CMMSAccountPlan::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedTextStorage, CObjectOrdering& Order)

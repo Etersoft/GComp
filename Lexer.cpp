@@ -5,7 +5,7 @@
 
 #define BUFF_SIZE 4096  //этого должно быть достаточно. Наверное. А может и нет.
 
-CLexer::CLexer(GCString& FileName)
+CLexer::CLexer(const GCString& FileName)
 {
 	try {
 	File = fopen(FileName, "rt");

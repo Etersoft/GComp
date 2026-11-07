@@ -188,7 +188,8 @@ void CompileUserRights(CStorage& Storage, GCString& Dir)
 
 			CUserRights Rights;
 			Rights.ReadFromFile(FileName);
-			Rights.Write(RtStorage, GCString(Ordering.GetValue(2)));
+			GCString RightsName(Ordering.GetValue(2));
+			Rights.Write(RtStorage, RightsName);
 
 			CC += ",{\"RightsEditorType\",\"";
 			CC += Ordering.GetValue(2);

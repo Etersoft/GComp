@@ -1,5 +1,5 @@
 
-#include "UI.h"
+#include "UI.H"
 #include "Strings.h"
 #include "CommonFunctions.h"
 #include "NameTable.h"
@@ -409,7 +409,10 @@ void CUIPanels::ExtractBMP(GCString& Dir, CStorage& Storage)
 	GCString StreamName = nt_rec->StorageName;
 	if( !Storage.OpenStream(StreamName) ) return;
 	Storage.pStream->Seek(offset, STREAM_SEEK_SET, NULL);
-	Storage.CopyToFile(nt_rec->PrepareFileName(Dir), true);
+	{
+		GCString FileName = nt_rec->PrepareFileName(Dir);
+		Storage.CopyToFile(FileName, true);
+	}
 }
 
 GCString CUIButton::AsString(bool WithCaption, CUICommands* Commands)
@@ -557,13 +560,25 @@ void CUserInterface::Extract(GCString& Dir, CStorage& Storage, CObjectOrdering& 
 		CreateDirectory(UIDir);
 
 		CNameTableRecord* nt_rec = NameTable.Find(NT_UICommands);
-		Storage.CopyStringToFile(Commands.AsString(), nt_rec->PrepareFileName(UIDir));
+		{
+			GCString Text = Commands.AsString();
+			GCString FileName = nt_rec->PrepareFileName(UIDir);
+			Storage.CopyStringToFile(Text, FileName);
+		}
 		if( !Commands.IsChild )
 		{
 			nt_rec = NameTable.Find(NT_UIMenu);
-			Storage.CopyStringToFile(Menu.AsString(), nt_rec->PrepareFileName(UIDir));
+			{
+				GCString Text = Menu.AsString();
+				GCString FileName = nt_rec->PrepareFileName(UIDir);
+				Storage.CopyStringToFile(Text, FileName);
+			}
 			nt_rec = NameTable.Find(NT_UIPanels);
-			Storage.CopyStringToFile(Panels.AsString(), nt_rec->PrepareFileName(UIDir));
+			{
+				GCString Text = Panels.AsString();
+				GCString FileName = nt_rec->PrepareFileName(UIDir);
+				Storage.CopyStringToFile(Text, FileName);
+			}
 
 			Storage.Open(StorageName);
 			Panels.ExtractBMP(UIDir, Storage);

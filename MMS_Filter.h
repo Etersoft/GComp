@@ -21,7 +21,7 @@ public:
 	int Down() {return ++Level;};
 	int Up()   {return --Level;};
 	bool Test(CMMSObject* Object, CNameTableRecord* Record);
-	bool Test(GCString& Name);
+	bool Test(const GCString& Name);
 };
 
 #endif

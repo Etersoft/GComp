@@ -288,7 +288,9 @@ void CMMSDocument::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedTe
 			CNameTableRecord* nt_rec_stor = NameTable.Find(NT_TransModuleStor);
 			if( TransactStorage.Open(nt_rec_stor->PrepareStorageName(ID)) )
 			{
-				TransactStorage.CopyToFile((GCString)(nt_rec->StorageName), (GCString)(nt_rec->PrepareFileName(DocDir)));
+				GCString StreamName = nt_rec->StorageName;
+				GCString FileName = nt_rec->PrepareFileName(DocDir);
+				TransactStorage.CopyToFile(StreamName, FileName);
 			}
 		}
 		MMS_Filter.Up();
