@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <io.h>
 #include <direct.h>
-#include <sys\stat.h>
+#include <sys/stat.h>
 #include "DLL/GComp.h"
 #include "Storage.h"
 #include "CommonFunctions.h"
