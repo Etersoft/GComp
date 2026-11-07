@@ -19,10 +19,11 @@ This repository is based on GComp 2.2.15 by the Alterplast team
 ## Building a Windows PE with winegcc
 
 Requires Wine development tools (winegcc/wineg++, wrc, i386-windows import
-libraries) and mfc-compat (free MFC 4.2 core headers)
-headers. zlib 1.3.1 is downloaded and checked by SHA256.
+libraries). MFC classes come from the bundled `mfc-compat/` (free
+replacement for the non-GUI core of MFC 4.2, LGPL-2.1, see its README).
+zlib 1.3.1 is downloaded and checked by SHA256.
 
-    MFC_COMPAT=/path/to/mfc-compat/include ./build-winegcc.sh
+    ./build-winegcc.sh
 
 Result: `build-pe/GComp.dll`, `build-pe/gcomp.exe`; run on Windows or with
 Wine:

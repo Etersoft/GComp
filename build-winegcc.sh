@@ -3,14 +3,14 @@
 # no Microsoft MFC). Needs: wine development tools with i386-windows import
 # libraries, mfc-compat headers, network access or a cached zlib tarball.
 #
-#   MFC_COMPAT=/path/to/mfc-compat/include ./build-winegcc.sh
+#   ./build-winegcc.sh   (MFC_COMPAT overrides the bundled mfc-compat/include)
 #
 # Output: $BUILD/GComp.dll, $BUILD/gcomp.exe (default BUILD=./build-pe).
 set -eu
 
 SRC=$(cd "$(dirname "$0")" && pwd)
 BUILD=${BUILD:-$SRC/build-pe}
-MFC_COMPAT=${MFC_COMPAT:?set MFC_COMPAT to mfc-compat/include}
+MFC_COMPAT=${MFC_COMPAT:-$SRC/mfc-compat/include}
 WINEGCC=${WINEGCC:-winegcc}
 WINEGXX=${WINEGXX:-wineg++}
 WRC=${WRC:-wrc}
