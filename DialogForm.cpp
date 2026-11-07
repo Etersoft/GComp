@@ -100,6 +100,19 @@ CFormFont& CFormFont::operator =(CFormFont& src)
 	return *this;
 }
 
+/* A font may be left out of the description only if compiling without it
+   gives the same bytes: an absent font becomes CFormFont() (MS Sans Serif
+   8.5, charset 0, weight 400), whatever the default-font flag says. */
+bool CFormFont::IsDefault()
+{
+	CFormFont def;
+	if( !FontBold.IsNeeded() ) def.FontBold.UnNeeded();
+	CMMSString a, b;
+	ToString(a);
+	def.ToString(b);
+	return a == b;
+}
+
 void CFormFont::BeautyString(CBeautyString& String, int level)
 {
 	if( !FontNeeded )
@@ -394,14 +407,9 @@ bool CFormControl::NeedFont()
 {
 	if( TaskParameters.NoDefaults ) return true;
 
-	if( BasicFlags.BitValue(6) ) //default font
-	{
-		return false;
-		//Font = DefVal->Font;
-	}
-
-	if( stricmp(Class, "STATIC") == 0 ) return true;
-	return false;
+	//the default-font flag (BasicFlags bit 6) does not mean that the stored
+	//font is the one a compilation would write
+	return !Font.IsDefault();
 }
 bool CFormControl::NeedType()
 {
@@ -643,8 +651,8 @@ CMMSObject* CDialogFrameContent::CreateChild(const char* Name, int MMS_Index)
 
 void CDialogFrameContent::BeautyString(CBeautyString& String, int level)
 {
-	if( FontDefault && !TaskParameters.NoDefaults )
-		Font.FontNeeded = false; //Font = DefVal->Font;
+	if( !TaskParameters.NoDefaults && Font.IsDefault() )
+		Font.FontNeeded = false;
 
 	String.add_parameter(level, BeautyName(), "", "", true);
 	String.add_brace(level, '{');

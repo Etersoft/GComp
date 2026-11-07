@@ -122,13 +122,15 @@ class CFontBold : public CStoredProperty
 private:
 	bool Value;
 	bool Needed;
+	int Raw; //lfWeight as stored by 1C when it is not 400 or 700 (e.g. 0), else -1
 
 public:
-	CFontBold() { Value = false; Needed = true; };
-	bool operator=(bool NewVal) { Value = NewVal; return Value; };
+	CFontBold() { Value = false; Needed = true; Raw = -1; };
+	bool operator=(bool NewVal) { Value = NewVal; Raw = -1; return Value; };
 	bool operator()() { return Value; };
 
 	void UnNeeded() { Needed = false; }
+	bool IsNeeded() { return Needed; }
 	
 	virtual void SetValue(GCString& Value);
 	

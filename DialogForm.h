@@ -42,6 +42,7 @@ public:
 	GCString FontName;
 
 	bool FontNeeded; //для тех контролов, где шрифт не нужен
+	bool IsDefault(); //equals the font a compilation uses when none is given
 
 private:
 	static CFormFont* DefVal;

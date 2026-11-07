@@ -442,6 +442,7 @@ GCString CStoredBool::MMSString()
 //===================================================================================
 void CFontBold::SetValue(GCString& NewValue)
 {
+	Raw = -1;
 	if( (NewValue.CollateNoCase("700") == 0) || 
 		(NewValue.CollateNoCase("Да") == 0) || 
 		NewValue.CollateNoCase("Yes") == 0 )
@@ -451,11 +452,16 @@ void CFontBold::SetValue(GCString& NewValue)
 	else
 	{
 		Value = false;
+		if( NewValue.IsNumber() && NewValue.CollateNoCase("400") != 0 )
+			Raw = atoi(NewValue);
 	}
 }
 
+//weights other than 400 and 700 are kept as numbers for an exact round trip
 GCString CFontBold::BeautyString()
 {
+	if( Raw >= 0 )
+		return GCString(Raw);
 	if( Value )
 		return "Да";
 	else
@@ -464,6 +470,8 @@ GCString CFontBold::BeautyString()
 
 GCString CFontBold::MMSString()
 {
+	if( Raw >= 0 )
+		return GCString(Raw);
 	if( !Needed )
 		return "0";
 
