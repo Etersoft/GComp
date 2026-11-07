@@ -49,7 +49,7 @@ void CTask::HelpRu()
 	Msg(0,"\tСправочники\\Контрагенты\\МодульФормы");
 	Msg(0,"\tДокумент\\*\\МодульПроведения");
 	Msg(0,"В качестве разделителей можно использовать символы '\\', '/' и '.'");
-	Msg(0,"  --more-subfolders - объекты, которые по умолчанию выгружаются в виде одного mdp-файла, будут разобраны по каталогам. Это: константы, перечисления, общие поля документов, нумераторы, графы отбора документов, последовательности документов, регистры, группы расчетов, правила перерасчета, календари");
+	Msg(0,"  --more-subfolders - объекты, которые по умолчанию выгружаются в виде одного yaml-файла, будут разобраны по каталогам. Это: константы, перечисления, общие поля документов, нумераторы, графы отбора документов, последовательности документов, регистры, группы расчетов, правила перерасчета, календари");
 	Msg(0,"  --sort-rights - объекты приложения пользовательских прав будут отсортированы по типу объекта (Константа, Справочник, Документ и т.д.) и по идентификатору объекта.");
 	Msg(0,"  --sort-form-controls - сортировать элементы диалоговых форм по идентификатору. Элементы без идентификаторов сортируются по порядку обхода.");
 	Msg(0,"  --no-broken-links - не выгружать объекты прав и интерфейсов, ссылающиеся на отсутствующие метаданные.");
@@ -118,7 +118,7 @@ void CTask::HelpEn()
 	Msg(0,"\tСправочники\\Контрагенты\\МодульФормы");
 	Msg(0,"\tДокумент\\*\\МодульПроведения");
 	Msg(0,"It is possible to use simbols '\\', '/' and '.' as separators");
-	Msg(0,"  --more-subfolders - Objects, decompiled as one mdp-file, will be decompile in folder. This is: constants, enumerators, common document fields, numerators, document fields of selectiopn, document orders, registers, calc groups, calc rules, calendars");
+	Msg(0,"  --more-subfolders - Objects, decompiled as one yaml-file, will be decompile in folder. This is: constants, enumerators, common document fields, numerators, document fields of selectiopn, document orders, registers, calc groups, calc rules, calendars");
 	Msg(0,"  --sort-rights - user rights object willbe sorted by type (Constant, Reference, Document etc) and by object identifier.");
 	Msg(0,"  --sort-form-controls - sort dialog form controls by identifier. Controls without identifier sorted by taborder.");
 	Msg(0,"  --save-all-rights - save all user rights in one csv file (ignored on compile)");
