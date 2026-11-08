@@ -260,7 +260,7 @@ Configurator under Wine, and the full syntax check passes.
 | `gui/` | Delphi GUIs `vgcomp` and `gcomp_vis` (not built) |
 | `mfc-compat/` | free replacement for the non-GUI core of MFC 4.2 |
 | `scripts/` | Perl, Python and VBS tools from GComp 2.2.15 |
-| `Documentation/` | descriptions of the 1C 7.7 stream formats, licenses |
+| `docs/` | descriptions of the 1C 7.7 stream formats (Russian), licenses |
 
 The source files include each other by name, so every directory of `src/`
 is on the include path. The lists of files to compile are the Visual C++ 6
@@ -303,16 +303,17 @@ dependencies and the plan for a native Linux build. The Delphi GUIs
 ## License
 
 GComp is free software under the GNU General Public License. The original
-`Documentation/txt/license.txt` does not state a version; the texts it
+`docs/licenses/license.txt` does not state a version; the texts it
 refers to, `gnugpl.eng.txt` and its Russian translation `gnugpl.rus.txt`,
 are GPL version 2. Under section 9 of GPL v2 a program that specifies no
 version may be used under any version, so GComp with the changes in this
 repository is distributed under GPL-2.0-or-later (`COPYING`, text from
 gnu.org). New files carry `SPDX-License-Identifier: GPL-2.0-or-later`.
 
-The HTML format descriptions in `Documentation/html/`, written for the 1L
-project, are under the GNU Free Documentation License 1.2 or later
-(`Documentation/html/gnu_fdl.html`); see `Documentation/README.md`.
+The descriptions of the moxcel and rights formats (`docs/moxcel.md`,
+`docs/rights.md`), first written in HTML for the 1L project, are under the
+GNU Free Documentation License 1.2 or later (`docs/licenses/gnu_fdl.html`);
+see `docs/README.md`.
 
 Bundled components: `mfc-compat/` — LGPL-2.1-or-later; zlib (downloaded
 at build time) — zlib license. Both are compatible with the GPL.
