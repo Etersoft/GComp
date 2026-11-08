@@ -485,7 +485,6 @@ void CFormControl::Setup()
 	TabOrder = 0;
 	ValueFlags = 0;  //1 - неотрицательный, 2 - разделять триады. Комбинируются по OR.
 	BasicFlags = 0;
-	Param24 = 0;
 	FontColor = -1; //-1 - default. В hex-формате: 0xBBGGRR
 	Param40 = -1;
 	PictureID = 0;

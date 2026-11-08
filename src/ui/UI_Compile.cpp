@@ -108,7 +108,7 @@ bool CUICommands::ReadFromFile(GCString& FileName)
 			}
 			else
 			{
-				if( token.CollateNoCase("Парам1") == 0 ) 
+				if( token.CollateNoCase("Название") == 0 ) 
 				{
 					Lexer.GetRest(Command->Param1);
 					UnquoteEdgeSpaces(Command->Param1);

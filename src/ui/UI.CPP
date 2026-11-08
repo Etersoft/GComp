@@ -34,7 +34,7 @@ GCString CUICommand::AsString(bool IsChild)
 		GCString strHotKey;
 		if( HotKey != 0 ) strHotKey.Format("%02x:%04x", HotKeyModifier, HotKey);
 		res.Format("\t%08x: \r\n\t{\r\n", ID);
-		res.add_parameter(2, "Парам1", QuoteEdgeSpaces(Param1), NULL);
+		res.add_parameter(2, "Название", QuoteEdgeSpaces(Param1), NULL);
 		res.add_parameter(2, "Hint", QuoteEdgeSpaces(Hint), NULL);
 		res.add_parameter(2, "HotKey", strHotKey, NULL);
 		res.add_parameter(2, "Команда", Command, NULL);

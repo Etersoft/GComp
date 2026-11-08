@@ -206,9 +206,17 @@ converted back:
 
 ### Format versions
 
-`gcomp.ini` keeps the format of the tree (`format: 6`). Decompiling
+`gcomp.ini` keeps the format of the tree (`format: 7`). Decompiling
 always writes the current format. Compiling stops on a tree of an older
 format and tells how to convert it through the MD.
+
+Format 7 (after GComp 3.0.0) names properties that format 6 wrote as
+numbers or with typos: the choice form of a form element (`ФормаВыбора`),
+the journals of the configuration (`Журнал подчинённых документов`,
+`Полный журнал документов`), the name of an interface command
+(`Название`), the list forms and the operation document of the accounting
+parameters, and corrects `Автонумерация` and four accounting property
+names. References to objects are written by name.
 
 ## What a round trip keeps
 

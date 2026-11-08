@@ -47,10 +47,10 @@ class CMMSTaskItemContent : public CMMSSynonymedObject
 public:
 	GCString Password;
 	CStoredSet BasicLanguage;
-	GCString Param7;
+	CMMSObjRefRaw SubordinateJournal; //7. журнал подчинённых документов
 	CStoredBool ImmediateDeletion;
 	CStoredSet RoundType;
-	GCString Param10;
+	CMMSObjRefRaw FullJournal; //10. полный журнал документов
 
 private:
 	static CMMSTaskItemContent* DefVal;

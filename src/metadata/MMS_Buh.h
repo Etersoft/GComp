@@ -212,9 +212,10 @@ public:
 class CMMSBuhSbKindReprList : public CMMSAttributes
 {
 public:
-	CMMSBuhSbKindReprList() {}
+	const char* Name;
+	CMMSBuhSbKindReprList() { Name = "Представление субконто"; }
 
-	virtual const char* BeautyName() { return "Представление субконто"; }
+	virtual const char* BeautyName() { return Name; }
 	virtual CMMSObject* CreateChild(const char* Name, int MMS_Index = -1)
 		{return new CMMSBuhSbKindRepr;}
 
@@ -368,7 +369,7 @@ public:
 	CMMSObjRef MainListForm; //7. идентификатор основной формы списка
 	int AccountNameLen; //8. Длина наименования счета
 	int AccountCodeLen; //9. Длина кода счета
-	int MaxSubcontoNum; //10. Максимальное количествово субконто
+	int MaxSubcontoNum; //10. Максимальное количество субконто
 	int OperCommentLen; //11. Длина содержания операции
 	int OperSumLen; //12. Длина суммы операции
 	int OperSumPrec; //13. Точность суммы операции
@@ -378,13 +379,13 @@ public:
 	int EntryCurrencySumPrec; //17. Точность валютной суммы проводки
 	int EntryAmountLen; //18. Длина количества проводки
 	int EntryAmountPrec; //19. Точность количества проводки
-	int Param20;
-	int Param21;
-	int Param22;
-	int Param23;
+	CMMSObjRef UnknownChoosingForm; //20. форма для выбора из списка НеизвестнаяФорма
+	CMMSObjRef UnknownMainForm; //21. основная форма списка НеизвестнаяФорма
+	CMMSObjRef ProvChoosingForm; //22. форма списка проводок для выбора
+	CMMSObjRef ProvMainForm; //23. основная форма списка проводок
 	CMMSObjRef Currency_Subconto; //24. ID справочника валют
 	CMMSObjRef Currency_Rate; //25. ID реквизита "курс"
-	GCString Param26;
+	CMMSObjRefRaw OperationDocument; //26. ID документа "Операция"
 	CStoredBool SelectByOperSum; //27. Отбор по сумме операции
 	CStoredBool SelectByOperComment; //28. Отбор по содержанию операции
 	CStoredSet  CalcOperSum; //29. Расчет суммы операции: 0 - Не рассчитывать; 1 - По всем проводкам; 2 - По всем проводкам в валютной сумме; 3 - По первой проводке; 4 - По первой проводке в валютной сумме
@@ -402,13 +403,13 @@ public:
 	CStoredBool EnableComplexEntries; //41. Сложные проводки
 	CStoredBool ToChooseCalcSumMode; //42. Выбор режима расчета суммы
 	CStoredBool SelectEntryByDebCred; //43. Отбор проводок по Дебету/Кредиту
-	CStoredSet  DocOperEditMode; //44. Редактировать операций документов: 0 - Разрешить; 1 - Запретить; 2 - Выборочно 
+	CStoredSet  DocOperEditMode; //44. Редактирование операций документов: 0 - Разрешить; 1 - Запретить; 2 - Выборочно 
 	CStoredBool SelectByEntryPlan; //45. Отбор по планам счетов проводки
-	CStoredBool AmountOnlyByAnalytics; //46. Количичественный учет только по аналитике
+	CStoredBool AmountOnlyByAnalytics; //46. Количественный учет только по аналитике
 	CMMSObjRef  AccountingDividor; //47. Код реквизита проводки - Разделитель учета
 	CMMSObjRef  MainAccPlan; //48. Код основного плана счетов
 	GCString Param49; //49.
-	CMMSBuhSbKindReprList Param50; //50.	Представление чего-то
+	CMMSBuhSbKindReprList Param50; //50.	Представление проводки
 	int Param51; //51.
 	int Param52; //52.
 	CMMSAccountFieldList AccountFields; //53.

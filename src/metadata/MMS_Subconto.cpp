@@ -40,7 +40,7 @@ CObjectProperty CMMSSbCnt::Props[] = {
 	{"Длина кода",              5, CObjectProperty::t_int,	VAR_OFFSET(DefVal, CodeLength)},
 	{"Серии кодов",             6, CObjectProperty::t_prop,	VAR_OFFSET(DefVal, CodeSeries)},
 	{"Тип кода",                7, CObjectProperty::t_prop,	VAR_OFFSET(DefVal, CodeType)},
-	{"Атонумерация",            8, CObjectProperty::t_prop,	VAR_OFFSET(DefVal, AutoNumeration)},
+	{"Автонумерация",           8, CObjectProperty::t_prop,	VAR_OFFSET(DefVal, AutoNumeration)},
 	{"Длина наименования",      9, CObjectProperty::t_int,	VAR_OFFSET(DefVal, NameLength)},
 	{"Основное представление", 10, CObjectProperty::t_prop,	VAR_OFFSET(DefVal, BasicRepresentation)},
 	{"Способ редактирования",  11, CObjectProperty::t_prop,	VAR_OFFSET(DefVal, EditWay)},

@@ -21,8 +21,8 @@ public:
 	DWORD ID;
 	GCString Param1;
 	GCString Hint;
-	BYTE HotKeyModifier; //Alt - 0x11, Ctrl - 0x09, Shift - 0x05 и их OR комбинации
-	WORD HotKey; //ScanCode клавиши
+	BYTE HotKeyModifier; //ACCEL.fVirt: FVIRTKEY 0x01 | FSHIFT 0x04 | FCONTROL 0x08 | FALT 0x10
+	WORD HotKey; //код виртуальной клавиши (VK_*)
 	GCString Command;
 	GCString CmdParameter;
 	GCString FullCommand;

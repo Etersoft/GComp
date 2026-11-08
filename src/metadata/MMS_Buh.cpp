@@ -372,7 +372,7 @@ CObjectProperty CMMSBuh::Props[] = {
 	{"Основная форма",    6, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, MainListForm)},
 	{"Длина наименования счета", 7, CObjectProperty::t_int,    VAR_OFFSET(DefVal, AccountNameLen)},
 	{"Длина кода счета", 8, CObjectProperty::t_int,    VAR_OFFSET(DefVal, AccountCodeLen)},
-	{"Максимальное количествово субконто", 9, CObjectProperty::t_int,    VAR_OFFSET(DefVal, MaxSubcontoNum)},
+	{"Максимальное количество субконто", 9, CObjectProperty::t_int,    VAR_OFFSET(DefVal, MaxSubcontoNum)},
 	{"Длина содержания операции", 10, CObjectProperty::t_int,    VAR_OFFSET(DefVal, OperCommentLen)},
 	{"Длина суммы операции", 11, CObjectProperty::t_int,    VAR_OFFSET(DefVal, OperSumLen)},
 	{"Точность суммы операции", 12, CObjectProperty::t_int,    VAR_OFFSET(DefVal, OperSumPrec)},
@@ -382,13 +382,13 @@ CObjectProperty CMMSBuh::Props[] = {
 	{"Точность валютной суммы проводки", 16, CObjectProperty::t_int,    VAR_OFFSET(DefVal, EntryCurrencySumPrec)},
 	{"Длина количества проводки", 17, CObjectProperty::t_int,    VAR_OFFSET(DefVal, EntryAmountLen)},
 	{"Точность количества проводки", 18, CObjectProperty::t_int,    VAR_OFFSET(DefVal, EntryAmountPrec)},
-	{"Param20",               19, CObjectProperty::t_int,    VAR_OFFSET(DefVal, Param20)},
-	{"Param21",               20, CObjectProperty::t_int,    VAR_OFFSET(DefVal, Param21)},
-	{"Param22",               21, CObjectProperty::t_int,    VAR_OFFSET(DefVal, Param22)},
-	{"Param23",               22, CObjectProperty::t_int,    VAR_OFFSET(DefVal, Param23)},
+	{"Форма для выбора неизвестного списка", 19, CObjectProperty::t_prop, VAR_OFFSET(DefVal, UnknownChoosingForm)},
+	{"Основная форма неизвестного списка", 20, CObjectProperty::t_prop, VAR_OFFSET(DefVal, UnknownMainForm)},
+	{"Форма для выбора проводок", 21, CObjectProperty::t_prop, VAR_OFFSET(DefVal, ProvChoosingForm)},
+	{"Основная форма проводок", 22, CObjectProperty::t_prop, VAR_OFFSET(DefVal, ProvMainForm)},
 	{"Справочник валют", 23, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, Currency_Subconto)},
 	{"Реквизит курс", 24, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, Currency_Rate)},
-	{"Param26",      25, CObjectProperty::t_string,    VAR_OFFSET(DefVal, Param26)},
+	{"Документ операции", 25, CObjectProperty::t_prop, VAR_OFFSET(DefVal, OperationDocument)},
 	{"Отбор по сумме операции", 26, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, SelectByOperSum)},
 	{"Отбор по содержанию операции", 27, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, SelectByOperComment)},
 	{"Расчет суммы операции", 28, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, CalcOperSum)},
@@ -406,13 +406,13 @@ CObjectProperty CMMSBuh::Props[] = {
 	{"Сложные проводки", 40, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, EnableComplexEntries)},
 	{"Выбор режима расчета суммы", 41, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, ToChooseCalcSumMode)},
 	{"Отбор проводок по Дебету/Кредиту", 42, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, SelectEntryByDebCred)},
-	{"Редактировать операций документов", 43, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, DocOperEditMode)},
+	{"Редактирование операций документов", 43, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, DocOperEditMode)},
 	{"Отбор по планам счетов проводки", 44, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, SelectByEntryPlan)},
-	{"Количичественный учет только по аналитике", 45, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, AmountOnlyByAnalytics)},
+	{"Количественный учет только по аналитике", 45, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, AmountOnlyByAnalytics)},
 	{"Разделитель учета", 46, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, AccountingDividor)},
 	{"Основной план счетов", 47, CObjectProperty::t_prop,    VAR_OFFSET(DefVal, MainAccPlan)},
 	{"Param49", 48, CObjectProperty::t_string,    VAR_OFFSET(DefVal, Param49)},
-	{"Представление чего-то", 49, CObjectProperty::t_object,    VAR_OFFSET(DefVal, Param50)},
+	{"Представление проводки", 49, CObjectProperty::t_object,    VAR_OFFSET(DefVal, Param50)},
 	{"Param51", 50, CObjectProperty::t_int,    VAR_OFFSET(DefVal, Param51)},
 	{"Param52", 51, CObjectProperty::t_int,    VAR_OFFSET(DefVal, Param52)},
 	{"ProvHardFldDefs", 62, CObjectProperty::t_object,    VAR_OFFSET(DefVal, ProvHardFldDefs)},
@@ -458,7 +458,7 @@ CMMSBuh::CMMSBuh()
 	EditWay = 0;
 	AccountNameLen = 0; //8. Длина наименования счета
 	AccountCodeLen = 0; //9. Длина кода счета
-	MaxSubcontoNum = 0; //10. Максимальное количествово субконто
+	MaxSubcontoNum = 0; //10. Максимальное количество субконто
 	OperCommentLen = 0; //11. Длина содержания операции
 	OperSumLen = 0; //12. Длина суммы операции
 	OperSumPrec = 0; //13. Точность суммы операции
@@ -468,10 +468,6 @@ CMMSBuh::CMMSBuh()
 	EntryCurrencySumPrec = 0; //17. Точность валютной суммы проводки
 	EntryAmountLen = 0; //18. Длина количества проводки
 	EntryAmountPrec = 0; //19. Точность количества проводки
-	Param20 = 0;
-	Param21 = 0;
-	Param22 = 0;
-	Param23 = 0;
 	LevelAmountForSelection = 0;
 	Param51 = 0;
 	Param52 = 0;
@@ -482,6 +478,7 @@ CMMSBuh::CMMSBuh()
 
 	ToDestroyChildren = false;
 
+	Param50.Name = "Представление проводки";
 	CMMSObjectAttribute::AddChild(&Param50);
 	CMMSObjectAttribute::AddChild(&AccountFields);
 	CMMSObjectAttribute::AddChild(&AccountPlans);

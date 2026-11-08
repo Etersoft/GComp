@@ -342,7 +342,7 @@ CObjectProperty CFormControl::Props[] = {
 	{"Маска",         20, CObjectProperty::t_string, VAR_OFFSET(DefVal, Mask)},
 	{"Hint",          21, CObjectProperty::t_quotstring, VAR_OFFSET(DefVal, LongHint)},
 	{"ShortHint",     22, CObjectProperty::t_quotstring, VAR_OFFSET(DefVal, ShortHint)},
-	{"Param24",       23, CObjectProperty::t_int, VAR_OFFSET(DefVal, Param24)},
+	{"ФормаВыбора",   23, CObjectProperty::t_prop, VAR_OFFSET(DefVal, ChoiceForm)},
 	{"Шрифт",         24, CObjectProperty::t_subobject, VAR_OFFSET(DefVal, Font)},
 	{"ЦветТекста",    38, CObjectProperty::t_int, VAR_OFFSET(DefVal, FontColor)},
 	{"Param40",       39, CObjectProperty::t_int, VAR_OFFSET(DefVal, Param40)},

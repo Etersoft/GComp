@@ -165,6 +165,23 @@ public:
 	virtual GCString MMSString();
 };
 
+//—сылка на объект метаданных, у которой "0" и пустое значение различаютс€:
+//значение, не €вл€ющеес€ ID, записываетс€ как есть
+class CMMSObjRefRaw : public CMMSObjRef
+{
+public:
+	virtual GCString BeautyString()
+	{
+		if( iTypeObjectID == 0 ) return sTypeObjectID;
+		return CMMSObjRef::BeautyString();
+	}
+	virtual GCString MMSString()
+	{
+		if( sTypeObjectID.Find('.') < 0 ) return sTypeObjectID;
+		return CMMSObjRef::MMSString();
+	}
+};
+
 //—лово с битовыми флагами
 class CStoredBitSet : public CStoredProperty
 {

@@ -180,7 +180,7 @@ public:
 	GCString Mask;    //Для Строки - Маска, Для Справочника - "Связан С".
 	GCString LongHint;
 	GCString ShortHint;
-	int Param24;
+	CMMSObjRef ChoiceForm; //24. форма списка для выбора значения
 	CFormFont Font; //параметры с 25 по 38
 	int FontColor; //-1 - default. В hex-формате: 0xBBGGRR
 	int Param40;

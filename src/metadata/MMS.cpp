@@ -68,10 +68,10 @@ CObjectProperty CMMSTaskItemContent::Props[] = {
 	{"Синоним",       3, CObjectProperty::t_quotstring, VAR_OFFSET(DefVal, Synonym)},
 	{"Пароль",        4, CObjectProperty::t_string, VAR_OFFSET(DefVal, Password)},
 	{"Основной язык", 5, CObjectProperty::t_prop, VAR_OFFSET(DefVal, BasicLanguage)},
-	{"Param7",        6, CObjectProperty::t_string, VAR_OFFSET(DefVal, Param7)},
+	{"Журнал подчинённых документов", 6, CObjectProperty::t_prop, VAR_OFFSET(DefVal, SubordinateJournal)},
 	{"Непосредственное удаление", 7, CObjectProperty::t_prop, VAR_OFFSET(DefVal, ImmediateDeletion)},
 	{"Способ округления", 8, CObjectProperty::t_prop, VAR_OFFSET(DefVal, RoundType)},
-	{"Param10",        9, CObjectProperty::t_string, VAR_OFFSET(DefVal, Param10)},
+	{"Полный журнал документов", 9, CObjectProperty::t_prop, VAR_OFFSET(DefVal, FullJournal)},
 	{NULL, -1, CObjectProperty::t_int}
 };
 CPropertySet CMMSTaskItemContent::PropSet(Props, DefVal);
