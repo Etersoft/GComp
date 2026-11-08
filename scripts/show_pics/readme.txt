@@ -22,3 +22,8 @@ python show_pics.py Alterplast
 При работе с gcomp-2.0.10 необходимо указывать параметр --no-parse-dialogs
 
 Автор - Езеев Ф. А. mailto:fe@alterplast.ru
+
+2026: show_all_pics.py переведён на Python 3 и работает с деревом
+GComp 3: картинки ищутся в свойствах Пиктограмма и ИдентификаторКартинки
+файлов Форма.yaml и сверяются с PictureGallery.
+   python3 show_all_pics.py Src

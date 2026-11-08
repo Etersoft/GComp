@@ -1,148 +1,111 @@
-# vim:fileencoding=cp1251
+#!/usr/bin/python3
+"""Check that the next metadata ID of a decompiled configuration is in the
+range given to the developer.
 
-#==============================================================================================================
-# Скрипт для проверки максимального идентификатора метаданных на предмет попадания в заданный диапазон
-#==============================================================================================================
+Several developers working on one configuration can avoid conflicts of
+internal IDs: the project administrator keeps a file with lines
 
-import sys, os, getopt, fileinput, re, string
+    <user name> <min ID> <max ID>
 
-#default values
-working_dir = r'SRC'
-id_settings_file_name = r'..\id_settings.txt'
-metadata_ids_file = 'ИдентификаторыКонфигурации.mdp'
-warning_threshold = 100
-user_name = ''
+(the last line of a user wins; lines starting with ;, # or // are
+comments). The script reads `Next ID` from РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂС‹РљРѕРЅС„РёРіСѓСЂР°С†РёРё.yaml
+of the tree and fails when it is out of the user's range.
 
-#---------------------------------------------------------------
-def usage():
-	print u"""
-Использование:
-   python check_max_id.py [параметры]
-Параметры могут быть:
-   -h - этот текст
-   -d <dir>, -D <dir> - рабочий каталог. По умолчанию SRC.
-   -t <n>, -w <n> - пороговое значение для предупреждений. По умолчанию 100.
-   -f <file> - имя файла, в котором хранятся диапазоны идентификаторов. Задаётся относительно рабочего каталога. По умолчанию ..\\id_settings.txt
-   -u <user> - имя пользователя в CVS. По умолчанию берётся из файла <working dir>\\CVS\\Root.
+Author: Alexey Dirks <adirks@ngs.ru>; ported to Python 3 and GComp 3 in 2026.
 """
 
-#---------------------------------------------------------------
-def ParseCommandLine():
-	global working_dir, warning_threshold, id_settings_file_name, user_name
-	try:
-		opts, args = getopt.getopt(sys.argv[1:],
-         	'hd:D:t:w:f:u:',
-         	['help',
-				'dir=', 'threshold=', 'range-file=', 'user='])
-	except getopt.GetoptError:
-		usage()
-		sys.exit(2)
+import argparse
+import getpass
+import os
+import re
+import sys
 
-	for opt, arg in opts:
-		if opt in ('-h', '--help'):
-			usage()
-			sys.exit(0)
-		elif opt in ('-d', '-D', '--dir'):
-			working_dir = arg
-		elif opt in ('-t', '-w', '--threshold'):
-			warning_threshold = int(arg)
-		elif opt in ('-f', '--range-file'):
-			id_settings_file_name = arg
-		elif opt in ('-u', '--user'):
-			user_name = arg
-
-#---------------------------------------------------------------
-def GetLoginName():
-	#user_name = os.getlogin()
-	fname = working_dir + r'\CVS\Root'
-	#:protocol:user@host:cvs_repository_path_on_host
-	reName = re.compile(r'.*:(?P<uname>\S+)@(\S+):.*')
-
-	try:
-		for line in fileinput.input(fname):
-			res = reName.search(line)
-			if None != res:
-				user_name = res.group('uname')
-	except IOError, (errno, strerror):
-		print 'Can not open file ' + fname + ': ' + strerror
-		sys.exit(1)
-
-	return user_name
-
-#---------------------------------------------------------------
-#находим диапазон идентификаторов из файла ограничений
-#Формат строки:
-# <user_name> <any spaces> <min ID> <any spaces> <max ID>
-# строк м.б. несколько на одного юзера - берётся всегда самая последн
-def FindCurrentRange(user_name):
-	fname = working_dir + r'\\' + id_settings_file_name
-	reComment = re.compile(r'^\s*([;#])|(//).*$')
-	reRange = re.compile(r'^\s*(?P<uname>\S+)\s+(?P<min_id>\S+)\s+(?P<max_id>\S+)\s*$')
-	min_id = 0
-	max_id = 0
-
-	try:
-		for line in fileinput.input(fname):
-			if reComment.search(line) != None:
-				continue
-			res = reRange.search(line)
-			if (res != None) and (string.upper(res.group('uname')) == string.upper(user_name)) :
-				min_id = int( res.group('min_id') )
-				max_id = int( res.group('max_id') )
-	except IOError, (errno, strerror):
-		print 'Can not open file ' + fname + ': ' + strerror
-		sys.exit(1)
-
-	if (min_id == 0) or (max_id == 0):
-		print "ERROR: ID's range not found for user", user_name
-		sys.exit(1)
-
-	return (min_id, max_id)
-
-#---------------------------------------------------------------
-def GetMaxMetadataID():
-	fname = working_dir + r'\\' + metadata_ids_file
-	#{"MainDataContDef","39494","10009","7120"}
-	reMaxID = re.compile(r'^\s*Next ID\s*:\s*(?P<max_id>\d+)\s*$')
-
-	try:
-		for line in fileinput.input(fname):
-			res = reMaxID.search(line)
-			if None != res:
-				return int( res.group('max_id') )
-	except IOError, (errno, strerror):
-		print 'Can not open file ' + fname + ': ' + strerror
-		sys.exit(1)
-
-	print 'Can not determine max metadata ID. May be file format had changed?'
-	sys.exit(1)
+METADATA_IDS_FILE = 'РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂС‹РљРѕРЅС„РёРіСѓСЂР°С†РёРё.yaml'
 
 
-#########################################
+def fail(message):
+    print(message)
+    sys.exit(1)
+
+
+def read_lines(fname):
+    try:
+        with open(fname, encoding='utf-8', errors='replace') as f:
+            return f.read().splitlines()
+    except OSError as e:
+        fail('Can not open file %s: %s' % (fname, e.strerror))
+
+
+def get_login_name(working_dir):
+    """The user of the CVS checkout, or the login name."""
+    fname = os.path.join(working_dir, 'CVS', 'Root')
+    if not os.path.exists(fname):
+        return getpass.getuser()
+    # :protocol:user@host:cvs_repository_path_on_host
+    re_name = re.compile(r'.*:(?P<uname>\S+)@(\S+):.*')
+    user_name = ''
+    for line in read_lines(fname):
+        res = re_name.search(line)
+        if res:
+            user_name = res.group('uname')
+    return user_name or getpass.getuser()
+
+
+def find_current_range(fname, user_name):
+    re_comment = re.compile(r'^\s*([;#]|//)')
+    re_range = re.compile(r'^\s*(?P<uname>\S+)\s+(?P<min_id>\d+)\s+(?P<max_id>\d+)\s*$')
+    min_id = max_id = 0
+    for line in read_lines(fname):
+        if re_comment.search(line):
+            continue
+        res = re_range.search(line)
+        if res and res.group('uname').upper() == user_name.upper():
+            min_id = int(res.group('min_id'))
+            max_id = int(res.group('max_id'))
+    if not min_id or not max_id:
+        fail("ERROR: ID's range not found for user %s" % user_name)
+    return min_id, max_id
+
+
+def get_next_metadata_id(working_dir):
+    fname = os.path.join(working_dir, METADATA_IDS_FILE)
+    re_next_id = re.compile(r'^\s*Next ID\s*:\s*(?P<id>\d+)\s*$')
+    for line in read_lines(fname):
+        res = re_next_id.search(line)
+        if res:
+            return int(res.group('id'))
+    fail('Can not determine max metadata ID. May be file format had changed?')
+
+
 def main():
-	global working_dir, warning_threshold, id_settings_file_name, user_name
+    parser = argparse.ArgumentParser(
+        description='Check the next metadata ID against the range of the user')
+    parser.add_argument('-d', '-D', '--dir', default='SRC',
+                        help='decompiled tree (default SRC)')
+    parser.add_argument('-t', '-w', '--threshold', type=int, default=100,
+                        help='warn when this many IDs are left (default 100)')
+    parser.add_argument('-f', '--range-file', default=os.path.join('..', 'id_settings.txt'),
+                        help='file with the ranges, relative to the tree (default ../id_settings.txt)')
+    parser.add_argument('-u', '--user',
+                        help='user name (default: the user of <dir>/CVS/Root, else the login name)')
+    args = parser.parse_args()
 
-	ParseCommandLine()
-	if not user_name:
-		user_name = GetLoginName()
-	(min_id, max_id) = FindCurrentRange(user_name)
-	max_metadata_id = GetMaxMetadataID()
+    user_name = args.user or get_login_name(args.dir)
+    min_id, max_id = find_current_range(os.path.join(args.dir, args.range_file), user_name)
+    next_id = get_next_metadata_id(args.dir)
 
-	print '%s: %i, %i; max MD ID = %i' % (user_name, min_id, max_id, max_metadata_id)
+    print('%s: %i, %i; max MD ID = %i' % (user_name, min_id, max_id, next_id))
+    if next_id < min_id:
+        print('ERROR: Current metadata ID is out of range! Commit impossible!')
+        fail('\tID = %i < min ID = %i' % (next_id, min_id))
+    if next_id >= max_id:
+        print('ERROR: Current metadata ID is out of range! Commit impossible!')
+        fail('\tID = %i >= max ID = %i' % (next_id, max_id))
+    if next_id + args.threshold >= max_id:
+        print("WARNING: Current metadata ID is near the top! "
+              "You need to get new ID's range from project administrator!")
+        print('\tID = %i; max ID = %i' % (next_id, max_id))
 
-	if max_metadata_id < min_id :
-		print "ERROR: Current metadata ID is out of range! Commit impossible!"
-		print "\tID = %i < min ID = %i" % (max_metadata_id, min_id)
-		sys.exit(1)
-	if max_metadata_id >= max_id :
-		print "ERROR: Current metadata ID is out of range! Commit impossible!"
-		print "\tID = %i >= max ID = %i" % (max_metadata_id, max_id)
-		sys.exit(1)
-	if (max_metadata_id + warning_threshold) >= max_id :
-		print "WARNING: Current metadata ID is near the top! You need to get new ID's range from project administrator!"
-		print "\tID = %i; max ID = %i" % (max_metadata_id, max_id)
 
-###################################################################################
 if __name__ == '__main__':
-   main()
-
+    main()

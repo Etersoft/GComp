@@ -10,3 +10,7 @@ Main Metadata Stream
 и быстрого парсинга MMS-подобных конструкций.
 
 Автор: Федор Езеев, mailto:fe@alterplast.ru
+
+2026: mms.view.py переведён на Python 3. Имя файла можно передать
+аргументом; длина в начале потока пропускается. Поток читается в CP1251.
+   python3 mms.view.py Main.MetaData.Stream

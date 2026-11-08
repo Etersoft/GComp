@@ -1,121 +1,124 @@
-# vim:fileencoding=cp1251
+#!/usr/bin/python3
+"""Add new files to and remove deleted files from a repository after
+decompiling with GComp.
 
-#==============================================================================================================
-# Скрипт для анализа информации, выдаваемой gcomp -d -v, и автоматического добавления/удалени
-# файлов в/из репозитарий.
-#==============================================================================================================
-# Скрипт получает в stdin log от gcomp -v, и если там есть новые файлы (префикс 'NEW:'),
-# то для них выполняется команда cvs add. Для удалённых файлов (префикс 'DEL:') выполняется 
-# cvs remove.
-# Информация о добавленных и удалённых файлах выводятся в stdout.
-#
-# Команда cvs commit скриптом не выполняется - её нужно выполнить вручную.
-#==============================================================================================================
+    gcomp -d -v | auto_add.py [--filter REGEXP] [--vcs cvs|git] [--encoding ENC] >>log
 
-import sys, os, os.path, time, getopt, re, string, array
-working_dir = 'Src'
-filter_expr = ''
+The script reads the log of `gcomp -d -v` from stdin. For each new file
+(prefix 'NEW:') it runs `cvs add` (or `git add`), adding the parent
+directories first for CVS; for each deleted file (prefix 'DEL:') it runs
+`cvs remove` (or `git rm`). Other lines are copied to stdout. Commit is
+left to the user.
 
-session_splitter = "-------------------------------------------------------------------------------------------------"
+Author: Alexey Dirks <adirks@ngs.ru>; ported to Python 3 in 2026.
+"""
 
-def Analyze():
-	reSplitPath = re.compile(r'^(.*)\+(.*)$')
-	time_printed = 0
-	for line in sys.stdin.readlines():
-		line = string.strip(line, '\r\n')
-		line = unicode(line, 'cp866').encode('cp1251')
-		(command, msg, fname) = ParseLine(line)
-		if command:
-			if filter_expr:
-				res = reFilter.search(fname)
-				if res != None:
-					print "File '" + fname + "' skipped by filter"
-					continue
+import argparse
+import os
+import re
+import subprocess
+import sys
+import time
 
-			time_printed = SessionStart(time_printed)
-			print '%s %s' % (msg, fname)
-			cwd = os.getcwd()
-			(working_dir, fname) = AddParentDirs(fname)
-			DoCommand(working_dir, 'cvs ' + command + ' ' + fname)
-			os.chdir(cwd)
-		else :
-			print line
-	SessionEnd(time_printed)
+SESSION_SPLITTER = "-" * 97
 
-def AddParentDirs(path):
-	dir_list = []
-	while path != '':
-		(path, dir) = os.path.split(path)
-		dir_list.append(dir)
+RE_NEW = re.compile(r"^NEW:\s*'*(.+?)'*\s*$", re.I)
+RE_DEL = re.compile(r"^DEL:\s*'*(.+?)'*\s*$", re.I)
 
-	working_dir = dir_list.pop()
-	os.chdir(working_dir)
-	print os.getcwd()
 
-	path = ''
-	while len(dir_list) > 1:
-		dir = dir_list.pop()
-		path = os.path.join(path, dir)
-		print 'ADD Dir: %s' % (path)
-		print >> sys.stderr,  "ADD Dir: %s" % (unicode(path, 'cp1251').encode('cp866'))
-		DoCommand(working_dir, 'cvs add ' + path)
-			
-	path = os.path.join(path, dir_list.pop()) #file name for addition/deletion, without working dir
-	return (working_dir, path)
+def parse_line(line):
+    res = RE_NEW.search(line)
+    if res:
+        return ('add', 'ADD', res.group(1))
+    res = RE_DEL.search(line)
+    if res:
+        return ('remove', 'DEL', res.group(1))
+    return ('', '', '')
 
-def ParseLine(line):
-	reNew = re.compile(r"^NEW:\s*'*(.+)'*\s*$", re.I)
-	reDel = re.compile(r"^DEL:\s*'*(.+)'*\s*$", re.I)
 
-	res = reNew.search(line)
-	if res != None:
-		return ('add', 'ADD', res.group(1))
+def do_command(working_dir, args):
+    print('\\%s>%s' % (working_dir, ' '.join(args)))
+    res = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         universal_newlines=True, errors='replace')
+    for line in res.stdout.splitlines():
+        print('\t%s' % line)
 
-	res = reDel.search(line)
-	if res != None:
-		return ('remove', 'DEL', res.group(1))
 
-	return ('', '', '')
+def split_path(path):
+    parts = []
+    while path:
+        path, part = os.path.split(path)
+        if part:
+            parts.append(part)
+        elif path:
+            parts.append(path)
+            break
+    parts.reverse()
+    return parts
 
-def DoCommand(working_dir, command):
-	command = string.replace(command, '\\', '/')
-	print '\\%s>%s' % (working_dir, command)
-	(child_stdin, child_stdout) = os.popen2(command + ' 2>&1')
-	for line in child_stdout.readlines():
-		line = string.strip(line, '\r\n')
-		print '\t%s' % (line)
 
-def SessionStart(time_printed):
-	if not time_printed:
-		tm = time.localtime()
-		print '%04i.%02i.%02i %02i:%02i:%02i' % (tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec)
-		print session_splitter;
-	return 1
+def vcs_command(vcs, command):
+    if vcs == 'git':
+        return ['git', 'add'] if command == 'add' else ['git', 'rm', '--quiet']
+    return ['cvs', command]
 
-def SessionEnd(time_printed):
-	if time_printed:			
-		print session_splitter
 
-def usage():
-	print "Usage:"
-	print "\tpython auto_add.py [--filter <RegExp>]"
-#==============================================================================
+def process(fname, command, vcs):
+    """Run the command in the first directory of the path (the tree), adding
+    the directories between it and the file for CVS."""
+    parts = split_path(fname.replace('\\', '/'))
+    working_dir = parts[0]
+    cwd = os.getcwd()
+    os.chdir(working_dir)
+    try:
+        print(os.getcwd())
+        path = ''
+        if vcs == 'cvs' and command == 'add':
+            for part in parts[1:-1]:
+                path = os.path.join(path, part)
+                print('ADD Dir: %s' % path)
+                print('ADD Dir: %s' % path, file=sys.stderr)
+                do_command(working_dir, ['cvs', 'add', path])
+        do_command(working_dir, vcs_command(vcs, command) + [os.path.join(*parts[1:])])
+    finally:
+        os.chdir(cwd)
+
+
+def analyze(stream, re_filter, vcs):
+    session = False
+    for line in stream:
+        line = line.rstrip('\r\n')
+        command, msg, fname = parse_line(line)
+        if not command:
+            print(line)
+            continue
+        if re_filter and re_filter.search(fname):
+            print("File '%s' skipped by filter" % fname)
+            continue
+        if not session:
+            print(time.strftime('%Y.%m.%d %H:%M:%S'))
+            print(SESSION_SPLITTER)
+            session = True
+        print('%s %s' % (msg, fname))
+        process(fname, command, vcs)
+    if session:
+        print(SESSION_SPLITTER)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Add new and remove deleted files after gcomp -d -v')
+    parser.add_argument('-f', '--filter', help='skip the files matching this regular expression')
+    parser.add_argument('--vcs', choices=('cvs', 'git'), default='cvs',
+                        help='version control system (default cvs)')
+    parser.add_argument('--encoding', default='cp866',
+                        help='encoding of the gcomp log (default cp866, as the Windows console)')
+    args = parser.parse_args()
+
+    re_filter = re.compile(args.filter, re.I) if args.filter else None
+    stream = open(sys.stdin.fileno(), encoding=args.encoding, errors='replace', closefd=False)
+    analyze(stream, re_filter, args.vcs)
+
+
 if __name__ == '__main__':
-	try:
-		opts, args = getopt.getopt(sys.argv[1:],
-         	'hf:',
-         	['help', 'filter='])
-	except getopt.GetoptError:
-		usage()
-		sys.exit(2)
-
-	for opt, arg in opts:
-		if opt in ('-h', '--help'):
-			usage()
-			sys.exit(0)
-		elif opt in ('-f', '--filter'):
-			filter_expr = arg
-			reFilter = re.compile(filter_expr, re.I)
-
-	time_printed = False
-	Analyze()
+    main()

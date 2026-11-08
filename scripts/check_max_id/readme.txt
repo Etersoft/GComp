@@ -17,3 +17,8 @@
 
 
 Автор - Диркс Алексей mailto:adirks@ngs.ru
+
+2026: check_max_id.py переведён на Python 3 и читает Next ID из
+ИдентификаторыКонфигурации.yaml дерева GComp 3. Если у дерева нет
+CVS/Root, имя пользователя берётся из системы (или ключом -u).
+   python3 check_max_id.py -h

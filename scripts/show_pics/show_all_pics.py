@@ -1,201 +1,108 @@
+#!/usr/bin/python3
+"""Show which pictures of the gallery the forms of a configuration use.
+
+    show_all_pics.py SRC
+
+SRC is a configuration decompiled by GComp 3. 1C does not keep the
+referential integrity of its picture gallery, so the script lists every
+form with pictures and the pictures it uses, then the used, unused and
+lost pictures (referred to by a form but missing from PictureGallery).
+
+The form element property Пиктограмма and the form property
+ИдентификаторКартинки hold the picture ID; the gallery files are named
+__Picture.<ID in hex>.<ext>.
+
+Author: Fedor Ezeev <fe@alterplast.ru>, for the brace dialogs of GComp
+2.0.9; rewritten for the YAML forms of GComp 3 and Python 3 in 2026.
+"""
+
 import os
+import re
 import sys
-import string
 
-def TotalReplace(Str):
-	Str = string.replace(Str, ',\"{', ',{')
-	Str = string.replace(Str, '}\"}', '}}')
-
-	Str = string.replace(Str, '\r', '')
-	Str = string.replace(Str, '\n', '')
-	Str = string.replace(Str, '\t', '')
-	Str = string.replace(Str, '\"\"', '')
-
-	Str = string.replace(Str, '[', '')
-	Str = string.replace(Str, ']', '')
-
-	Str = string.replace(Str, '{', '[')
-	Str = string.replace(Str, '}', ']')
-
-	Str = string.replace(Str, '\\', '\\\\')
-	Str = string.replace(Str, '\'', '\\\'')
-
-	Str = string.replace(Str, '[\"', '[\'')
-	Str = string.replace(Str, ',\"', ',\'')
-	Str = string.replace(Str, '\"]', '\']')
-	Str = string.replace(Str, '\",', '\',')
-
-	Str = string.replace(Str, '[', '\n[')
-
-	Str = string.replace(Str, '[,', '[0,')
-
-	Str = string.replace(Str, ',,', ',0,')
-	Str = string.replace(Str, ',,', ',0,')
-	Str = string.replace(Str, ',,', ',0,')
-
-	return Str
-
-def OneDigit(Digit):
-	if 10 == Digit:
-		return 'a'
-	elif 11 == Digit:
-		return 'b'
-	elif 12 == Digit:
-		return 'c'
-	elif 13 == Digit:
-		return 'd'
-	elif 14 == Digit:
-		return 'e'
-	elif 15 == Digit:
-		return 'f'
-	elif 0 == Digit:
-		return '0'
-	elif 1 == Digit:
-		return '1'
-	elif 2 == Digit:
-		return '2'
-	elif 3 == Digit:
-		return '3'
-	elif 4 == Digit:
-		return '4'
-	elif 5 == Digit:
-		return '5'
-	elif 6 == Digit:
-		return '6'
-	elif 7 == Digit:
-		return '7'
-	elif 8 == Digit:
-		return '8'
-	elif 9 == Digit:
-		return '9'
-	else:
-		return Digit
+RE_ITEM = re.compile(r'^\s*- (?P<cls>[0-9A-Za-z]+):\s*(?P<ident>.*)$')
+RE_PICTURE = re.compile(r"^\s*(?P<key>Пиктограмма|ИдентификаторКартинки):\s*'?(?P<id>[0-9A-Fa-fx]+)'?\s*$")
+RE_CAPTION = re.compile(r'^\s*Заголовок:\s*(?P<text>.*)$')
 
 
-def dec2hex(DecInput):
-	LastDigits = ''
-	while (DecInput > 15):
-		LastDigits = OneDigit(DecInput % 16) + LastDigits
-		DecInput = DecInput / 16
+def picture_id(value):
+    return int(value, 0)
 
-	return OneDigit(DecInput) + LastDigits
 
-def Show(List, Note):
-	print '=============================='
-	if 0 == len(List):
-		print 'List of ' + Note + ' pics is empty'
-	else:
-		LenList = len(List)
-		print 'List of %(Note)s pics: %(LenList)3i items' % vars()
-	for ID in List:
-		print ID
+def collect_gallery(src):
+    result = set()
+    gallery = os.path.join(src, 'PictureGallery')
+    if os.path.isdir(gallery):
+        for name in os.listdir(gallery):
+            m = re.match(r'__Picture\.([0-9A-Fa-f]+)', name)
+            if m:
+                result.add(int(m.group(1), 16))
+    return result
 
-def SmartAppendRemove(Item):
-	IsLost = ''
 
-	if Item not in UsedPics:
-		UsedPics.append(Item)
+def parse_form(fname):
+    """Yield (where, picture ID) for the pictures of a form."""
+    item = None
+    caption = ''
+    for line in open(fname, encoding='utf-8', errors='replace'):
+        line = line.rstrip('\n')
+        m = RE_ITEM.match(line)
+        if m:
+            item = (m.group('cls'), m.group('ident').strip())
+            caption = ''
+            continue
+        m = RE_CAPTION.match(line)
+        if m and item:
+            caption = m.group('text').strip()
+            continue
+        m = RE_PICTURE.match(line)
+        if m:
+            value = picture_id(m.group('id'))
+            if not value:
+                continue
+            if m.group('key') == 'ИдентификаторКартинки' or not item:
+                yield 'Форма', value
+            else:
+                yield '%s (%s, %s)' % (item[0], caption or '""', item[1] or '""'), value
 
-	if Item in UnUsedPics:
-		Pos = UnUsedPics.index(Item)
-		del UnUsedPics[Pos]
 
-	if Item not in AllPics:
-		if Item not in LostPics:
-			LostPics.append(Item)
-		IsLost = '  ---  !!! LOST !!!'
-	return IsLost
+def show(ids, note):
+    print('==============================')
+    if not ids:
+        print('List of %s pics is empty' % note)
+    else:
+        print('List of %s pics: %3i items' % (note, len(ids)))
+    for i in sorted(ids):
+        print('%08x' % i)
 
-def CollectAllPics():
-	Result = []
-	PictureList = os.listdir(sys.argv[1]+'\\picturegallery')
-	for PicName in PictureList:
-		if '__Picture.' == PicName[:10]:
-			Result.append(PicName[10:18])
-	return Result
 
-def EmptyIfZero(Param):
-	if 0 == Param:
-		return '\"\"'
-	else:
-		return Param
+def main():
+    if len(sys.argv) != 2 or sys.argv[1].startswith('-'):
+        print(__doc__.strip(), file=sys.stderr)
+        return 2
+    src = sys.argv[1]
+    gallery = collect_gallery(src)
+    used = set()
+    for dirpath, dirnames, filenames in os.walk(src):
+        dirnames.sort()
+        for name in sorted(filenames):
+            if not name.endswith('.yaml'):
+                continue
+            fname = os.path.join(dirpath, name)
+            pictures = list(parse_form(fname))
+            if not pictures:
+                continue
+            print(os.path.relpath(fname, src))
+            for where, value in pictures:
+                used.add(value)
+                lost = '' if value in gallery else '  ---  !!! LOST !!!'
+                print('\t%s: %08x%s' % (where, value, lost))
+            print()
+    show(used, 'used')
+    show(gallery - used, 'unused')
+    show(used - gallery, 'lost')
+    return 0
 
-def SmartPrint(Flag, Message):
-	if 0 == Flag:
-		print Message
-	return 1
-	
 
-def ParseForm(FormName):
-
-	f=open(FormName, 'r')
-	Str = f.read()
-	f.close()
-
-	Str = TotalReplace(Str)
-
-	Tree = eval(Str)
-
-	FNameIsPrinted = 0
-	ControlsIsPrinted = 0
-
-	for Brunch in Tree:
-		if 'Controls' == Brunch[0]:
-			for Control in Brunch[1:]:
-				if len(Control) < 2:
-					continue
-				if Control[1] in ('PICTURE', 'BUTTON', 'TABLE'):
-					if Control[40] != "0":
-						IsLost = SmartAppendRemove(dec2hex(int(Control[40])))
-						FNameIsPrinted = SmartPrint(FNameIsPrinted, FormName)
-						ControlsIsPrinted = SmartPrint(ControlsIsPrinted, '\tControls')
-						print '\t\t', Control[1], '(' + EmptyIfZero(Control[0]) + ',', EmptyIfZero(Control[12]) + '):',  dec2hex(int(Control[40])), IsLost
-		elif 'Browser' == Brunch[0]:
-			MultiColumn = Brunch[3]
-			Brouser = MultiColumn[1]
-			if Brouser[40] != "0":
-				IsLost = SmartAppendRemove(dec2hex(int(Brouser[40])))
-				FNameIsPrinted = SmartPrint(FNameIsPrinted, FormName)
-				print '\tMulticolumn'
-				print '\t\t', dec2hex(int(Brouser[40])), IsLost
-		elif 'Frame' == Brunch[0]:
-			Frame = Brunch[1]
-			if Frame[26] != "0":
-				IsLost = SmartAppendRemove(dec2hex(int(Frame[26])))
-				FNameIsPrinted = SmartPrint(FNameIsPrinted, FormName)
-				print '\tFrame'
-				print '\t\t', dec2hex(int(Frame[26])), IsLost
-
-	if 1 == FNameIsPrinted:
-		print
-
-def IsDir(DirName):
-	if 16895 == os.stat(DirName)[0]:
-		return 1
-	else:
-		return 0
-
-def LookIn(Dir):
-	SubDirList = os.listdir(Dir)
-	for SubDir in SubDirList:
-		FullName = Dir + '\\' + SubDir
-		if 1 == IsDir(FullName):
-			LookIn(FullName)
-		elif '.frm' == FullName[-4:]:
-			ParseForm(FullName)
-			
-
-LostPics = []
-UsedPics = []
-AllPics = CollectAllPics()
-UnUsedPics = CollectAllPics()
-
-LookIn(sys.argv[1])
-
-UsedPics.sort()
-UnUsedPics.sort()
-LostPics.sort()
-
-Show(UsedPics, 'used')
-Show(UnUsedPics, 'unused')
-Show(LostPics, 'lost')
+if __name__ == '__main__':
+    sys.exit(main())

@@ -16,3 +16,8 @@
 
 
 Автор - Диркс Алексей mailto:adirks@ngs.ru
+
+2026: auto_add.py переведён на Python 3 и умеет git: ключ --vcs git
+выполняет git add и git rm вместо cvs add и cvs remove. Кодировка протокола
+gcomp задаётся ключом --encoding (по умолчанию cp866, как в консоли Windows).
+   gcomp -d -v | python3 auto_add.py --vcs git >>log
