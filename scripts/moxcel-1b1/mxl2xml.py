@@ -308,4 +308,5 @@ def __names(fi, xml):
             xml.endElement("name")
         xml.endElement("names")
         
-mxl2xml("Page.mxl")
+import sys
+mxl2xml(len(sys.argv) > 1 and sys.argv[1] or "Page.mxl")
