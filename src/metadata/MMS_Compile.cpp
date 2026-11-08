@@ -506,9 +506,8 @@ void CMMS::ImportGlobalModule(CStorage& Storage, GCString& Dir)
 }
 
 
-/* Checksum of the Main Metadata Stream as computed by 1C 7.7
-   (BkEnd.dll, called from CMetaDataCont::LoadFromList and SaveToList):
-   over the root list without the CRC record, serialised without line
+/* Checksum of the Main Metadata Stream as computed by 1C 7.7: over the
+   root list without the CRC record, serialised without line
    breaks, i.e. CR/LF outside quoted strings are skipped. */
 unsigned int CMMS::CalcCRC(const char* Text, int Len)
 {

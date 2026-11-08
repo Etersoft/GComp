@@ -265,7 +265,7 @@ the journals of the configuration (`Журнал подчинённых доку
 parameters, and corrects `Автонумерация` and four accounting property
 names. References to objects are written by name.
 
-Format 8 names rights and form flags by the code of 1C: the rights of
+Format 8 corrects the names of rights and form flags: the rights of
 calculation documents (0x15–0x18), `Монопольный режим` and `Сохранение/Выгрузка
 данных` swapped back (format 7 had them crossed), `НеСохранятьНастройки` is
 form flag 24 (not 20), and flags 17–19 are the frame of the form picture.
