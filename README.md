@@ -10,6 +10,25 @@ This is GComp 3, based on GComp 2.2.15 by the Alterplast team
 Microsoft MFC. Decompiling and compiling back loses nothing, and the
 source tree is YAML and UTF-8 text.
 
+## What is new in 3.1
+
+- **Views for review.** `--mxl-text` writes every table also as Markdown
+  (`.mxl.md`): the cell texts as tables by sections, the formatting by the
+  names of the 1C language. `GUIDData.txt`, `TagStream.txt` and the logo and
+  splash pictures show the service streams; TagStream is decrypted.
+- **External reports.** `--ert` writes every report and data processor of a
+  configuration also as an external report `.ert`, as the Configurator saves
+  it.
+- **More names.** Formats 7–9 name what format 6 wrote as numbers: the
+  choice form of a form element, journals of the configuration, interface
+  command names, accounting forms, the rights of calculation documents,
+  form flags and the client area offsets of a form; `Монопольный режим` and
+  `Сохранение/Выгрузка данных` are no longer swapped. Trees of format 6 are
+  converted through the MD.
+- **Documentation** in Markdown in `docs/`, with the MD file, external
+  reports, TagStream and the 1C names of table formatting; the scripts are
+  ported to Python 3.
+
 ## What is new in 3.0
 
 - **Lossless round trip.** A compiled MD has the same streams as the

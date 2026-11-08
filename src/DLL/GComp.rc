@@ -58,8 +58,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,3,0,0
- PRODUCTVERSION 0,3,0,0
+ FILEVERSION 0,3,1,0
+ PRODUCTVERSION 0,3,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x21L
@@ -77,14 +77,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "GComp community\0"
             VALUE "FileDescription", "GComp\0"
-            VALUE "FileVersion", "0, 3, 0, 0\0"
+            VALUE "FileVersion", "0, 3, 1, 0\0"
             VALUE "InternalName", "GComp\0"
             VALUE "LegalCopyright", "\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "GComp.dll\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "  GComp\0"
-            VALUE "ProductVersion", "0, 3, 0, 0\0"
+            VALUE "ProductVersion", "0, 3, 1, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
