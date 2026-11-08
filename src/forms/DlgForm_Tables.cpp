@@ -416,14 +416,14 @@ char* CDialogFrameContent::FlagList[] = {
 	"FormFlag14",				//14
 	"FormFlag15",				//15
 	"FormFlag16",				//16
-	"FormFlag17",				//17
-	"FormFlag18",				//18
-	"FormFlag19",				//19
-	"НеСохранятьНастройки",		//20
+	"РамкаКартинкиПростая",		//17
+	"РамкаКартинкиВыпуклая",	//18
+	"РамкаКартинкиВдавленная",	//19
+	"FormFlag20",				//20
 	"FormFlag21",				//21
 	"FormFlag22",				//22
 	"FormFlag23",				//23
-	"FormFlag24",				//24
+	"НеСохранятьНастройки",		//24
 	"FormFlag25",				//25
 	"FormFlag26",				//26
 	"FormFlag27",				//27
