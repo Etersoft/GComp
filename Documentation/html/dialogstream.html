@@ -13,7 +13,7 @@
 <body>
 <h1><a name="Title" id="Title"></a>Dialog Stream (версия 1.6 бета
 от 22.05.2004 г.)</h1>
-Данный документ доступент по следующим адрессам:<br>
+Данный документ доступен по следующим адресам:<br>
 <a href=
 "http://sourceforge.net/projects/lproject">http://sourceforge.net/projects/lproject</a><br>
 
@@ -34,7 +34,7 @@ Documentation License, версией 1.2 или любой более позд�
 помещаемого на первой странице обложки, и текста, помещаемого на
 последней странице обложки.<br>
 <p>Копия GNU Free Documentation License помещена в файл под
-названием "<a href="GNU_FDL.html">GNU_FDL.html</a>".</p>
+названием "<a href="gnu_fdl.html">gnu_fdl.html</a>".</p>
 <hr width="100%" size="2">
 <h2><a name="Contents" id="Contents"></a>Содержание</h2>
 <ol>
@@ -42,7 +42,7 @@ Documentation License, версией 1.2 или любой более позд�
 <li><a href="#History">История</a></li>
 <li><a href="#Thanks">Благодарности</a><br></li>
 <li><a href="#Introduction">Введение</a></li>
-<li><a href="#GeneralStructure">Общай структура</a></li>
+<li><a href="#GeneralStructure">Общая структура</a></li>
 <li><a href="#Parameters">Описание параметров</a></li>
 <li><a href="#TableColons">Колонки многострочной части</a></li>
 <li><a href="#Controls">Контролы</a></li>
@@ -53,8 +53,8 @@ Documentation License, версией 1.2 или любой более позд�
 </ol>
 <hr width="100%" size="2">
 <h2><a name="History" id="History"></a>История</h2>
-Предедущее название документа - отсутствовало.<br>
-Предедущая версия документа доступка по адресу - <a href=
+Предыдущее название документа - отсутствовало.<br>
+Предыдущая версия документа доступна по адресу - <a href=
 "http://1c.alterplast.ru/gcomp/">http://1c.alterplast.ru/gcomp/</a>.<br>
 
 На данный момент документ, так же будет поддерживаться проектом
@@ -62,7 +62,7 @@ Documentation License, версией 1.2 или любой более позд�
 "http://sourceforge.net/projects/lproject">sf.net</a>.<br>
 <br>
 Copyright © 2004 Дмитрий Павлюк &lt;dmp@realbox.com&gt; -
-Оформление даного документа, в виде HTML файла. И подддержка в
+Оформление данного документа, в виде HTML файла. И поддержка в
 проекте <a href="http://1l.w4b.ru/">1L</a>.<br>
 Copyright © 2004 Александр Гордиенко - Таблица с примерами диалогов
 с пограничными значениями длин.<br>
@@ -126,7 +126,7 @@ Main Metadata Stream)<br>
 <tr>
 <td>Размер формы</td>
 <td>Размер потока</td>
-<td>Загловок (байт)</td>
+<td>Заголовок (байт)</td>
 <td>Начало потока (*)</td>
 </tr>
 <tr>
@@ -203,7 +203,7 @@ Main Metadata Stream)<br>
 просьба сообщать по<br>
 почте мне Дмитрию Павлюку &lt;dmp@myrealbox.com&gt;.
 <hr width="100%" size="2">
-<h2><a name="GeneralStructure" id="GeneralStructure"></a>Общай
+<h2><a name="GeneralStructure" id="GeneralStructure"></a>Общая
 структура</h2>
 <tt>{"Dialogs",<br>
 {"Frame",<br>
@@ -219,7 +219,7 @@ Main Metadata Stream)<br>
     }<br>
 },<br>
 {"Browser",<br>
-    "1-й Параметр Browser'а", "1-й Параметр Browser'а",<br>
+    "1-й Параметр Browser'а", "2-й Параметр Browser'а",<br>
     {"Multicolumn",<br>
         {"Параметр многостр. части 1" , "Параметр многостр. части
 2",..."Параметр многостр. части 43" },<br>
@@ -255,60 +255,59 @@ Main Metadata Stream)<br>
 </tr>
 <tr>
 <td>1</td>
-<td>Размер шрифта в непонятном формате. Алгоритм перевода в пиксели
-в модуле обработки.</td>
+<td>Шрифт: Высота шрифта в логических единицах; отрицательная — высота символа без межстрочного промежутка (поле <code>lfHeight</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>2</td>
-<td><br></td>
+<td>Шрифт: Средняя ширина символа, 0 — по высоте (поле <code>lfWidth</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>3</td>
-<td><br></td>
+<td>Шрифт: Угол наклона строки, в десятых долях градуса (поле <code>lfEscapement</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>4</td>
-<td><br></td>
+<td>Шрифт: Угол наклона символа, в десятых долях градуса (поле <code>lfOrientation</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>5</td>
-<td><br></td>
+<td>Шрифт: Жирность (400 — обычный, 700 — жирный) (поле <code>lfWeight</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>6</td>
-<td><br></td>
+<td>Шрифт: Курсив (1 — наклонный, 0 — нет) (поле <code>lfItalic</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>7</td>
-<td><br></td>
+<td>Шрифт: Подчёркивание (1 — подчёркнутый, 0 — нет) (поле <code>lfUnderline</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>8</td>
-<td><br></td>
+<td>Шрифт: Зачёркивание (1 — зачёркнутый, 0 — нет) (поле <code>lfStrikeOut</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>9<br></td>
-<td><br></td>
+<td>Шрифт: Набор символов (204 — RUSSIAN_CHARSET, 1 — DEFAULT_CHARSET) (поле <code>lfCharSet</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>10</td>
-<td><br></td>
+<td>Шрифт: Точность вывода (поле <code>lfOutPrecision</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>11</td>
-<td><br></td>
+<td>Шрифт: Точность отсечения (поле <code>lfClipPrecision</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>12</td>
-<td><br></td>
+<td>Шрифт: Качество вывода (поле <code>lfQuality</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>13</td>
-<td>Жирность шрифта  (700 - жирный)</td>
+<td>Шрифт: Шаг и семейство шрифта (поле <code>lfPitchAndFamily</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>14</td>
-<td>Имя шрифта</td>
+<td>Шрифт: Имя шрифта (поле <code>lfFaceName</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>15<br></td>
@@ -377,6 +376,7 @@ Main Metadata Stream)<br>
 </tr>
 </tbody>
 </table>
+<p>Примечание (2026). Параметры шрифта — это поля структуры Windows LOGFONT в порядке их объявления. GComp 3 выгружает их как свойства объекта «Шрифт»: Размер (lfHeight), ШиринаСимвола (lfWidth), УголСтроки (lfEscapement), УголСимвола (lfOrientation), Жирный (lfWeight), Наклон (lfItalic), Подчёркивание (lfUnderline), Зачёркивание (lfStrikeOut), НаборСимволов (lfCharSet), ТочностьВывода (lfOutPrecision), ТочностьОтсечения (lfClipPrecision), Качество (lfQuality), ШагИСемейство (lfPitchAndFamily), Шрифт (lfFaceName).</p>
 * Параметров 29 и 30 не было в 7.5<br>
 <hr width="100%" size="2">
 <h2><a name="TableColons" id="TableColons"></a>Колонки
@@ -436,7 +436,7 @@ STATIC - для текстовых колонок;<br>
 <tr>
 <td>10</td>
 <td>ТипЗначения - идентификатор типа значения, состоит из одного
-символа. Соотвествие видно из функции в модуле обработки
+символа. Соответствие видно из функции в модуле обработки
 "ПолучитьПредставление типа"</td>
 </tr>
 <tr>
@@ -445,7 +445,7 @@ STATIC - для текстовых колонок;<br>
 </tr>
 <tr>
 <td>12</td>
-<td>Точнось значения</td>
+<td>Точность значения</td>
 </tr>
 <tr>
 <td>13</td>
@@ -570,7 +570,7 @@ STATIC - для текстовых колонок;<br>
 <tr>
 <td>15<br></td>
 <td>ТипЗначения - идентификатор типа значения, состоит из одного
-символа. Соотвествие видно из функции в модуле обработки
+символа. Соответствие видно из функции в модуле обработки
 "ПолучитьПредставление типа"</td>
 </tr>
 <tr>
@@ -611,64 +611,63 @@ STATIC - для текстовых колонок;<br>
 </tr>
 <tr>
 <td>24<br></td>
-<td>Размер шрифта  внепонятном формате. Алгоритм перевода в пиксели
-- в модуле обработки</td>
+<td>Не сохранять при сохранении настроек</td>
 </tr>
 <tr>
 <td>25<br></td>
-<td><br></td>
+<td>Шрифт: Высота шрифта в логических единицах; отрицательная — высота символа без межстрочного промежутка (поле <code>lfHeight</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>26<br></td>
-<td><br></td>
+<td>Шрифт: Средняя ширина символа, 0 — по высоте (поле <code>lfWidth</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>27<br></td>
-<td><br></td>
+<td>Шрифт: Угол наклона строки, в десятых долях градуса (поле <code>lfEscapement</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>28<br></td>
-<td><br></td>
+<td>Шрифт: Угол наклона символа, в десятых долях градуса (поле <code>lfOrientation</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>29<br></td>
-<td>Шрифт жирный (700 - если жирный)</td>
+<td>Шрифт: Жирность (400 — обычный, 700 — жирный) (поле <code>lfWeight</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>30<br></td>
-<td>Шрифт наклонный(1 - наклонный, 0 - Нет)</td>
+<td>Шрифт: Курсив (1 — наклонный, 0 — нет) (поле <code>lfItalic</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>31<br></td>
-<td>Шрифт подчеркнутый (1 - подчеркнутый, 0 - Нет)</td>
+<td>Шрифт: Подчёркивание (1 — подчёркнутый, 0 — нет) (поле <code>lfUnderline</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>32<br></td>
-<td><br></td>
+<td>Шрифт: Зачёркивание (1 — зачёркнутый, 0 — нет) (поле <code>lfStrikeOut</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>33<br></td>
-<td><br></td>
+<td>Шрифт: Набор символов (204 — RUSSIAN_CHARSET, 1 — DEFAULT_CHARSET) (поле <code>lfCharSet</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>34<br></td>
-<td><br></td>
+<td>Шрифт: Точность вывода (поле <code>lfOutPrecision</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>35<br></td>
-<td><br></td>
+<td>Шрифт: Точность отсечения (поле <code>lfClipPrecision</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>36<br></td>
-<td><br></td>
+<td>Шрифт: Качество вывода (поле <code>lfQuality</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>37<br></td>
-<td><br></td>
+<td>Шрифт: Шаг и семейство шрифта (поле <code>lfPitchAndFamily</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>38<br></td>
-<td>Имя шрифта</td>
+<td>Шрифт: Имя шрифта (поле <code>lfFaceName</code> структуры LOGFONT)</td>
 </tr>
 <tr>
 <td>39<br></td>
@@ -844,6 +843,21 @@ CHECKBOX<br>
 101 0000 1000 0000 0000 0000 0000 0000<br>
 101 0000 1000 0000 0000 0000 0010 0000 - для ввода пароля 
 (Интересно, что мешало взять другой бит?)<br>
+<p>Общие значения доп. флагов, которые в редакторе форм 1С поставить нельзя, но можно поставить вручную:</p>
+<ul>
+<li>бит 0 (ES_CENTER): для 1CEDIT — центрирование текста по горизонтали, но только если поле многострочное.</li>
+<li>бит 12 (BS_PUSHLIKE): нажат.</li>
+<li>бит 13 (BS_MULTILINE): Wrap — переносить по словам, только для CHECKBOX и RADIOBUTTON. Для 1CEDIT (ES_NUMBER) можно вводить только цифры.</li>
+<li>бит 15 (BS_FLAT): мягкий стиль, работает только в CHECKBOX и RADIOBUTTON.</li>
+<li>бит 18 (WS_THICKFRAME): размер объекта можно изменять.</li>
+<li>бит 19 (WS_SYSMENU): работает только с WS_DLGFRAME, выводит кнопки управления окном.</li>
+<li>бит 20 (WS_HSCROLL): горизонтальная полоса прокрутки.</li>
+<li>бит 21 (WS_VSCROLL): вертикальная полоса прокрутки.</li>
+<li>бит 22 (WS_DLGFRAME): рамка, как у стандартного окна Windows.</li>
+<li>бит 23 (WS_BORDER): обведён рамкой.</li>
+<li>Для надписей: биты 4 (SS_ETCHEDHORZ) — горизонтальная линия, 0 и 4 (SS_ETCHEDVERT) — вертикальная линия, 1 и 4 (SS_ETCHEDFRAME) — рамка без текста.</li>
+</ul>
+<p>Примечание (2026). Дополнительные флажки — это стиль окна Windows (dwStyle) элемента. Старшие биты общие для всех окон: 0x50000000 = WS_CHILD | WS_VISIBLE, 0x00010000 = WS_TABSTOP, 0x00020000 = WS_GROUP («первый в группе»), 0x00800000 = WS_BORDER, 0x08000000 = WS_DISABLED. Младшие 16 бит — стили класса: BS_ для кнопок, флажков, переключателей, рамок группы и картинок (BS_AUTOCHECKBOX = 3, BS_AUTORADIOBUTTON = 9, BS_OWNERDRAW = 0xB, BS_LEFTTEXT = 0x20), SS_ для надписей (SS_ETCHEDHORZ = 0x10, SS_ETCHEDVERT = 0x11, SS_ETCHEDFRAME = 0x12), ES_ для полей ввода (ES_PASSWORD = 0x20, ES_CENTER = 1, ES_NUMBER = 0x2000), CBS_ для полей со списком, LBS_ для списков, TVS_ для деревьев. GComp 3 выгружает их в свойство ДопФлаги именами WinAPI, например SS_RIGHT, WS_VISIBLE, WS_CHILD.</p>
 <hr width="100%" size="2">
 <h2><a name="HotKeys" id="HotKeys"></a>Клавиши быстрого вызова</h2>
 Формат: "{""&lt;Модификатор&gt;"",""&lt;Скан-код&gt;""}"<br>
@@ -870,7 +884,8 @@ CHECKBOX<br>
 Иногда встречается модификатор со значением 0x03 (в комплексной
 7.70.451). Зачем это нужно - непонятно.<br>
 1С воспринимает это как отсутствие модификаторов.<br>
- - Скан-код: - он и есть скан-код.<br>
+ - Скан-код: - он и есть скан-код.<br>
+<p>Примечание (2026). Модификатор — поле fVirt структуры Windows ACCEL: FVIRTKEY = 0x01, FNOINVERT = 0x02, FSHIFT = 0x04, FCONTROL = 0x08, FALT = 0x10. Поэтому 0x03 — клавиша без модификаторов. Второе число — не скан-код, а код виртуальной клавиши (VK_*), так как установлен FVIRTKEY.</p>
 <hr width="100%" size="2">
 <h2><a name="IDPicture" id="IDPicture"></a>Идентификатор
 картинки</h2>
