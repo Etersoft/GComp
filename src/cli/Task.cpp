@@ -118,6 +118,10 @@ void CTaskParameters::ParseCommandLine(int argc, TCHAR* argv[])
 		{
 			MxlText = true;
 		}
+		else if( 0 == strcmp("--ert", arg) )
+		{
+			ExportERT = true;
+		}
 		else if( 0 == strcmp("--truncate-mms", arg) )
 		{
 			TruncateMMS = true;

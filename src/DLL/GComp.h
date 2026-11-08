@@ -135,6 +135,11 @@ struct CGCompParameters
 
 	//Takes the place of Reserved4 in vgcomp/GComp.pas
 	TGComp_Eol Eol;
+
+	//write every report and data processor of a configuration also as an
+	//external report <object dir>\<name>.ert; added after the fields of the
+	//Delphi declaration (vgcomp/GComp.pas), which has to get it too
+	BOOL ExportERT;
 };
 
 extern "C" {

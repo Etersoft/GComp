@@ -9,6 +9,7 @@
 #include "MMS.h"
 #include "Storage.h"
 #include "NameTable.h"
+#include "ExportERT.h"
 #include "Ordering.h"
 #include "MMS_Filter.h"
 #include "DialogForm.h"
@@ -74,6 +75,7 @@ void GComp_SetDefaults(CGCompParameters* Parameters)
 	Parameters->MetadataBySubfolders = FALSE;
 	Parameters->MetadataPath = NULL;
 	Parameters->MxlText = FALSE;
+	Parameters->ExportERT = FALSE;
 	Parameters->SortUserRightsObjects = FALSE;
 	Parameters->SortFormControls = FALSE;
 	Parameters->hwndInfoReceiver = NULL;
@@ -164,6 +166,8 @@ void GComp_ReadSettings(CGCompParameters* Parameters)
 
 		else if( stricmp(token, "mxl-text") == 0 )
 			Parameters->MxlText = YesNoToBool(token, value);
+		else if( stricmp(token, "ert") == 0 )
+			Parameters->ExportERT = YesNoToBool(token, value);
 		
 		else if( stricmp(token, "no-defaults") == 0 )
 			Parameters->NoDefaults = YesNoToBool(token, value);
@@ -258,6 +262,7 @@ void GComp_SaveSettings(CGCompParameters* Parameters)
 	str.add_parameter(0, "no-profiles", BoolToYesNo(Parameters->NoProfiles), "", true);
 	str.add_parameter(0, "no-empty-mxl", BoolToYesNo(Parameters->NoEmptyMxl), "", true);
 	str.add_parameter(0, "mxl-text", BoolToYesNo(Parameters->MxlText), "", true);
+	str.add_parameter(0, "ert", BoolToYesNo(Parameters->ExportERT), "", true);
 	str.add_parameter(0, "no-ordering", BoolToYesNo(Parameters->NoOrdering), "", true);
 	str.add_parameter(0, "no-empty-folders", BoolToYesNo(Parameters->NoEmptyFolders), "", true);
 	str.add_parameter(0, "sort-rights-objects", BoolToYesNo(Parameters->SortUserRightsObjects), "", true);
@@ -339,6 +344,8 @@ BOOL GComp_Decompile(CGCompParameters* Parameters)
 
 		ClearLfFiles();
 		MainMetadataStream->Decompile(csDirectoryName, Storage, TypedTextStorage);
+		if( TaskParameters.ExportERT && TaskParameters.CompoundType != external_report )
+			ExportERTs(*MainMetadataStream, csDirectoryName, Storage, TypedTextStorage);
 
 		if( MMS_Filter.IsEmpty() )
 			Storage.PruneDirectory(csDirectoryName, TaskParameters.NoEmptyFolders);

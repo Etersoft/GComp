@@ -77,6 +77,15 @@ public:
 
 	bool StreamFromFile(GCString& StreamName, GCString& FileName);
 	bool StreamFromString(GCString StreamName, GCString& String);
+	//the open stream from the current position to the end
+	bool ReadAll(GCString& Data);
+	//a stream of the current storage with these bytes, nothing added
+	bool WriteRaw(const GCString& StreamName, const GCString& Data);
+	//the names of the streams of the current storage
+	void StreamNames(CStringArray& Names);
+	//packing as 1C packs streams (raw deflate)
+	static void Deflate(const GCString& In, GCString& Out);
+	static void Inflate(const GCString& In, GCString& Out);
 
 	unsigned long AppendFile(IStream* pStream, FILE* File);
 	unsigned long AppendFile(IStream* pStream, const GCString& FileName);

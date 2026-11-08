@@ -246,6 +246,14 @@ SOURCE=..\metadata\MMS_Decompile.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\metadata\ExportERT.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\metadata\ExportERT.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\metadata\MMS_Document.cpp
 # End Source File
 # Begin Source File

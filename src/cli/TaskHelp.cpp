@@ -33,6 +33,7 @@ void CTask::HelpRu()
 	Msg(0,"  --no-profiles - Пропустить при работе файлы (потоки), с именем Container.Profile");
 	Msg(0,"  --no-empty-mxl - Пропускать при работе пустые шаблоны печатных форм");
 	Msg(0,"  --mxl-text - рядом с каждой таблицей .mxl писать её вид в Markdown .mxl.md для просмотра изменений (при сборке не читается). Сохраняется в gcomp.ini (mxl-text).");
+	Msg(0,"  --ert - каждый отчёт и обработку конфигурации записать и внешним отчётом <имя>.ert в его каталоге, как Конфигуратор сохраняет внешний отчёт (при сборке не читается). Сохраняется в gcomp.ini (ert).");
 	Msg(0,"  --truncate-mms - При сборке внешних отчетов gcomp заменит поток 'Main MetaData Stream' на пустой");
 	Msg(0,"  --eng - GComp попытается создать папки и файлы с английскими именами (данная опция находится в состоянии beta)");
 	Msg(0,"  --translit - GComp попытается создать папки и файлы с транслитерованными именами (данная опция находится в состоянии beta)");
@@ -105,6 +106,7 @@ void CTask::HelpEn()
 	Msg(0,"  --no-profiles - gcomp will skip files (streams), named Container.Profile");
 	Msg(0,"  --no-empty-mxl - gcomp will throw away empty mxl patterns");
 	Msg(0,"  --mxl-text - write a Markdown view .mxl.md next to every .mxl table for reviewing changes (not read when compiling). Kept in gcomp.ini (mxl-text).");
+	Msg(0,"  --ert - write every report and data processor of a configuration also as an external report <name>.ert in its directory, as the Configurator saves it (not read when compiling). Kept in gcomp.ini (ert).");
 	Msg(0,"  --truncate-mms - when compiling external reports gcomp will repalce original 'Main MetaData Stream' with empty copy");
 	Msg(0,"  --eng - GComp will be try to create folders and files with english names (beta state)");
 	Msg(0,"  --translit - GComp will be try to create folders and files with translit names (beta state)");

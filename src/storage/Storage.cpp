@@ -801,6 +801,91 @@ bool CStorage::StreamFromString(GCString StreamName, GCString& String)
 	return true;
 }
 
+bool CStorage::ReadAll(GCString& Data)
+{
+	Data.Empty();
+	if( pStream == NULL ) return false;
+	char buf[65536];
+	ULONG got = 0;
+	do
+	{
+		if( FAILED(pStream->Read(buf, sizeof(buf), &got)) ) return false;
+		if( got ) Data += GCString(buf, (int)got);
+	} while( got == sizeof(buf) );
+	return true;
+}
+
+bool CStorage::WriteRaw(const GCString& StreamName, const GCString& Data)
+{
+	if( !CreateStream(StreamName) ) return false;
+	bool ok = Data.IsEmpty() || SUCCEEDED(pStream->Write((LPCSTR)Data, Data.GetLength(), NULL));
+	CloseStream();
+	return ok;
+}
+
+void CStorage::StreamNames(CStringArray& Names)
+{
+	IStorage* pStorage = GetStorage();
+	IEnumSTATSTG* pEnum = NULL;
+	if( pStorage == NULL || FAILED(pStorage->EnumElements(0, NULL, 0, &pEnum)) ) return;
+	STATSTG stat;
+	while( pEnum->Next(1, &stat, NULL) == S_OK )
+	{
+		if( stat.type == STGTY_STREAM )
+		{
+			GCString name;
+			name.Format("%S", stat.pwcsName);
+			Names.Add(name);
+		}
+		CoTaskMemFree(stat.pwcsName);
+	}
+	pEnum->Release();
+}
+
+static GCString HGlobalToString(IStream* pStream)
+{
+	GCString r;
+	LARGE_INTEGER Zero = {0, 0};
+	pStream->Seek(Zero, STREAM_SEEK_SET, NULL);
+	char buf[65536];
+	ULONG got = 0;
+	do
+	{
+		got = 0;
+		pStream->Read(buf, sizeof(buf), &got);
+		if( got ) r += GCString(buf, (int)got);
+	} while( got == sizeof(buf) );
+	return r;
+}
+
+void CStorage::Deflate(const GCString& In, GCString& Out)
+{
+	IStream *pIn, *pOut;
+	CreateStreamOnHGlobal(NULL, TRUE, &pIn);
+	CreateStreamOnHGlobal(NULL, TRUE, &pOut);
+	pIn->Write((LPCSTR)In, In.GetLength(), NULL);
+	LARGE_INTEGER Zero = {0, 0};
+	pIn->Seek(Zero, STREAM_SEEK_SET, NULL);
+	iLibEngine->pkCompress(pIn, pOut);
+	Out = HGlobalToString(pOut);
+	pIn->Release();
+	pOut->Release();
+}
+
+void CStorage::Inflate(const GCString& In, GCString& Out)
+{
+	IStream *pIn, *pOut;
+	CreateStreamOnHGlobal(NULL, TRUE, &pIn);
+	CreateStreamOnHGlobal(NULL, TRUE, &pOut);
+	pIn->Write((LPCSTR)In, In.GetLength(), NULL);
+	LARGE_INTEGER Zero = {0, 0};
+	pIn->Seek(Zero, STREAM_SEEK_SET, NULL);
+	iLibEngine->pkDecompress(pIn, pOut);
+	Out = HGlobalToString(pOut);
+	pIn->Release();
+	pOut->Release();
+}
+
 bool CStorage::StorageFromDir(const GCString& StorageName, const GCString& SrcDir)
 {
 	GCString FileName;
