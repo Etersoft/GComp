@@ -120,11 +120,11 @@ struct CGCompParameters
 
 	BOOL MakeUserRightsInOneFile; // Создавать единый csv файл со всеми правами сразу (при компиляции игнорируется)
 
-	//Takes the place of Reserved2 of the Delphi declaration (vgcomp/GComp.pas),
-	//so the size of the structure is the same
+	//Takes the place of Reserved2 of GComp 2.2.15, so the fields before it
+	//stay where they were
 	TGComp_Encoding Encoding;
 
-	//Format of the source tree, from gcomp.ini (Reserved3 in vgcomp/GComp.pas):
+	//Format of the source tree, from gcomp.ini (Reserved3 of GComp 2.2.15):
 	//2 - GComp 2.2.15 (a gcomp.ini without "format"); 3 - forms with
 	//defaults by element class and position; 4 - without the usual
 	//ПорядокОбъектов.ord and Container.Profile of a work book, one-line
@@ -133,12 +133,11 @@ struct CGCompParameters
 	//and newer.
 	int FormatVersion;
 
-	//Takes the place of Reserved4 in vgcomp/GComp.pas
+	//Takes the place of Reserved4 of GComp 2.2.15
 	TGComp_Eol Eol;
 
 	//write every report and data processor of a configuration also as an
-	//external report <object dir>\<name>.ert; added after the fields of the
-	//Delphi declaration (vgcomp/GComp.pas), which has to get it too
+	//external report <object dir>\<name>.ert
 	BOOL ExportERT;
 };
 

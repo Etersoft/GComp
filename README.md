@@ -354,7 +354,6 @@ Configurator under Wine, and the full syntax check passes.
 | `src/ui/` | user interfaces: menus, commands, panels, rights |
 | `src/DLL/` | `GComp.dll`: exported functions, version resource |
 | `src/cli/` | `gcomp.exe`: command line and help |
-| `gui/` | Delphi GUIs `vgcomp` and `gcomp_vis` (not built) |
 | `mfc-compat/` | free replacement for the non-GUI core of MFC 4.2 |
 | `scripts/` | Perl, Python and VBS tools from GComp 2.2.15 |
 | `docs/` | descriptions of the 1C 7.7 stream formats (Russian), licenses |
@@ -394,8 +393,9 @@ build has two quirks under Wine:
 The MFC classes come from the bundled `mfc-compat/`, a free replacement
 for the non-GUI core of MFC 4.2 (LGPL-2.1, see its README). The sources
 still compile with MSVC (`src/gcomp.dsw`). `PORTING.md` lists the
-dependencies and the plan for a native Linux build. The Delphi GUIs
-(`gui/`) are not built.
+dependencies and the plan for a native Linux build. The Delphi GUIs of
+GComp 2 (`vgcomp`, `gcomp_vis`) are removed: GComp 3 is used from the
+command line.
 
 ## License
 

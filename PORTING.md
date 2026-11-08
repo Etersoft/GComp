@@ -12,8 +12,6 @@
 - `src/cli/`: консольный `gcomp`.
 - `src/DLL/`: та же логика как `GComp.dll` с экспортами `GComp_Decompile`,
   `GComp_Compile`, настройками; ресурс версии `GComp.rc`.
-- `gui/vgcomp/`, `gui/gcomp_vis/`: GUI-оболочки на Delphi над DLL; для Linux-сборки
-  не нужны. Их скомпилированные `.res` в репозиторий не взяты.
 - `scripts/`: Perl/Python/VBS-утилиты вокруг разобранных файлов.
 
 ## MFC: используется только не-GUI часть
