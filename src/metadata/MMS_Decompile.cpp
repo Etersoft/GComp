@@ -11,6 +11,7 @@
 #include "Ordering.h"
 #include "MMS_Filter.h"
 #include "MoxelText.h"
+#include "ServiceText.h"
 
 ///////////////////////////////////////////////////////////////////////
 ///////////  class CMMSObject methods  ////////////////////////////////
@@ -150,13 +151,10 @@ void CMMSObject::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedText
 	SendInfoMessage(InfoMsg_Progress, ++TotalObjectsProcessed);
 }
 
-/* --mxl-text: the Markdown view of a table, written next to it as .mxl.md;
-   a table without content gets none, one that cannot be read a warning. */
-static void WriteMoxelText(CStorage& Storage, GCString& FileName)
+static bool ReadWholeFile(const GCString& FileName, GCString& Data)
 {
-	GCString Data;
 	FILE* f = fopen(FileName, "rb");
-	if( f == NULL ) return;
+	if( f == NULL ) return false;
 	fseek(f, 0, SEEK_END);
 	long size = ftell(f);
 	rewind(f);
@@ -167,6 +165,17 @@ static void WriteMoxelText(CStorage& Storage, GCString& FileName)
 		Data.ReleaseBuffer((int)got);
 	}
 	fclose(f);
+	return true;
+}
+
+static void WriteServiceViews(GCString& Dir, CStorage& Storage);
+
+/* --mxl-text: the Markdown view of a table, written next to it as .mxl.md;
+   a table without content gets none, one that cannot be read a warning. */
+static void WriteMoxelText(CStorage& Storage, GCString& FileName)
+{
+	GCString Data;
+	if( !ReadWholeFile(FileName, Data) ) return;
 
 	GCString Text, Error;
 	int res = MoxelToText(Data, Text, Error);
@@ -684,11 +693,46 @@ void CMMS::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedTextStorag
 	//Служебные потоки
 	ExtractStreamByType(Storage, NT_GUIDData, Dir);
 	ExtractStreamByType(Storage, NT_TagStream, Dir);
+	WriteServiceViews(Dir, Storage);
 
 	//Описания
 	CNameTableRecord* nt_rec_descr = NameTable.Find(NT_UserHelpStor);
 	GCString DescrDir = nt_rec_descr->PrepareDirName(Dir);
 	ExtractDescriptions(DescrDir+"\\", TypedTextStorage, false);
+}
+
+/* Views of GUIDData and TagStream next to them: GUIDData.txt, TagStream.txt
+   and the pictures TagStream.Логотип.bmp and TagStream.Заставка.bmp; never
+   read back, compiling takes the streams. */
+static void WriteServiceViews(GCString& Dir, CStorage& Storage)
+{
+	GCString Data, Text, Error;
+	GCString Name = NameTable.Find(NT_GUIDData)->PrepareFileName(Dir);
+	if( ReadWholeFile(Name, Data) )
+	{
+		if( GuidDataToText(Data, Text, Error) > 0 )
+		{
+			GCString TextName = Name + ".txt";
+			Storage.CopyStringToFile(Text, TextName);
+		}
+		else
+			Msg(0, "WARN: %s: вид потока не записан: %s", (LPCSTR)Name, (LPCSTR)Error);
+	}
+	Name = NameTable.Find(NT_TagStream)->PrepareFileName(Dir);
+	Data.Empty();
+	if( ReadWholeFile(Name, Data) )
+	{
+		GCString Logo, Splash;
+		if( TagStreamToText(Data, Text, Logo, Splash, Error) > 0 )
+		{
+			GCString TextName = Name + ".txt";
+			Storage.CopyStringToFile(Text, TextName);
+			if( !Logo.IsEmpty() ) { GCString n = Name + ".Логотип.bmp"; Storage.CopyStringToFile(Logo, n); }
+			if( !Splash.IsEmpty() ) { GCString n = Name + ".Заставка.bmp"; Storage.CopyStringToFile(Splash, n); }
+		}
+		else
+			Msg(0, "WARN: %s: вид потока не записан: %s", (LPCSTR)Name, (LPCSTR)Error);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////

@@ -88,6 +88,8 @@ src/
       Описание.txt             the description of the object
   Права/Администратор.yaml
   Интерфейсы/Бухгалтер/{Меню,Панели,Команды}.yaml
+  GUIDData, TagStream          service streams, copied as they are
+  GUIDData.txt, TagStream.txt  their views, see below
 ```
 
 - `.yaml` holds the descriptions of metadata, forms, rights, menus,
@@ -98,6 +100,12 @@ src/
   usual single page has none.
 - `Container.Profile` is written only when it differs from the one that
   compiling creates. An empty file means that the work book has none.
+- `GUIDData` (the history of saves) and `TagStream` (the "Автор" and
+  "Заставка" pages of the configuration properties, encrypted by 1C) are
+  copied as they are and compiled from. Next to them decompiling writes
+  views that are never read back: `GUIDData.txt` with a GUID a line,
+  `TagStream.txt` with the author information, and the logo and the splash
+  as `TagStream.Логотип.bmp` and `TagStream.Заставка.bmp`.
 
 ### Descriptions in YAML
 
