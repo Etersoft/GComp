@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-/* A text view of a moxcel table (.mxl) for reviewing changes: the texts,
-   details and values of the cells by rows, the formatting of cells, rows and
-   columns, sections, named areas, joins and objects. It is written next to
-   the table with --mxl-text and never read back: compiling takes the .mxl.
+/* A Markdown view of a moxcel table (.mxl) for reviewing changes: the texts
+   of the cells as tables by row sections, then the formatting of columns,
+   rows and cells with the details and values of the cells, joins, objects,
+   sections, page breaks and named areas as lists. It is written next to the
+   table with --mxl-text and never read back: compiling takes the .mxl.
 
    The layout follows docs/moxcel.md and its "Уточнения формата (2026)":
    MFC CArchive data, CString lengths, WORD counts (FFFF + DWORD), 30-byte
    format records (32 in version 7, 28 in versions 1 and 2). */
 
 #include <string.h>
+#include <vector>
 #include "Declarations.h"
 #include "MoxelText.h"
 
@@ -192,7 +194,7 @@ public:
 		return s;
 	}
 
-	//Formatting set in a record; Kind: 0 cell, 1 row, 2 column
+	//Formatting set in a record as a list; Kind: 0 cell, 1 row, 2 column
 	GCString Format(const CFormat& f, int Kind)
 	{
 		if( f.Rec == NULL ) return "";
@@ -296,7 +298,7 @@ public:
 		}
 		if( f2 & 0x10 ) ADD(p[0x1c] ? "Защита Нет" : "Защита Да");
 		#undef ADD
-		return r.IsEmpty() ? r : " {" + r + "}";
+		return r;
 	}
 
 	//The value block of a cell of a dialog table: type, length and precision,
@@ -355,14 +357,78 @@ public:
 		return s;
 	}
 
-	//Lines of a cell: text with its formatting, details, value
-	void CellLines(const GCString& Indent, const GCString& Ref, const CFormat& f)
+	//A text for Markdown: punctuation that would mark it up is escaped, line
+	//breaks become <br>, control characters \xNN
+	static GCString Md(const GCString& s)
 	{
-		Out += Indent + Ref + ":";
-		if( f.HasText ) Out += " " + Escape(f.Text);
-		Out += Format(f, 0) + "\r\n";
-		if( f.HasDesc ) Out += Indent + Ref + " расшифровка: " + Escape(f.Desc) + "\r\n";
-		if( f.Value ) Out += Indent + Ref + " значение: " + Value(f) + "\r\n";
+		GCString r;
+		for( int i = 0; i < s.GetLength(); i++ )
+		{
+			unsigned char c = (unsigned char)s[i];
+			if( c == '\r' && i + 1 < s.GetLength() && s[i+1] == '\n' ) { r += "<br>"; i++; }
+			else if( c == '\n' ) r += "<br>";
+			else if( c == '&' ) r += "&amp;";
+			else if( strchr("\\`*_[]<>|~#", c) ) { r += '\\'; r += (char)c; }
+			else if( c == '\t' ) r += "\\t";
+			else if( c < 0x20 ) { GCString x; x.Format("\\x%02x", c); r += x; }
+			else r += (char)c;
+		}
+		return r;
+	}
+
+	struct CCellInfo
+	{
+		unsigned long Row, Col;
+		GCString Text, Fmt, Desc, Value;
+		bool HasDesc, HasValue;
+	};
+	struct CRowInfo
+	{
+		unsigned long Row;
+		GCString Fmt;
+		int First, Last; //its cells in Cells
+	};
+	struct CSection
+	{
+		GCString Name;
+		unsigned long Beg, End;
+		unsigned Parent;
+	};
+
+	std::vector<CCellInfo> Cells;
+	std::vector<CRowInfo> Rows;
+	std::vector<CSection> RowSect, ColSect;
+
+	CCellInfo Info(unsigned long row, unsigned long col, const CFormat& f)
+	{
+		CCellInfo c;
+		c.Row = row;
+		c.Col = col;
+		if( f.HasText ) c.Text = f.Text;
+		c.Fmt = Format(f, 0);
+		c.HasDesc = f.HasDesc;
+		if( f.HasDesc ) c.Desc = f.Desc;
+		c.HasValue = f.Value != NULL;
+		if( c.HasValue ) c.Value = Value(f);
+		return c;
+	}
+
+	//List items of a cell: formatting, details, value; the text too when
+	//WithText (cells outside the grid)
+	static void CellItems(GCString& Out, const GCString& Indent, const GCString& Ref,
+		const CCellInfo& c, bool WithText)
+	{
+		GCString line;
+		if( WithText && !c.Text.IsEmpty() ) line = " " + Md(c.Text);
+		if( !c.Fmt.IsEmpty() ) line += (line.IsEmpty() ? " " : " — ") + c.Fmt;
+		if( !line.IsEmpty() ) Out += Indent + "- " + Ref + ":" + line + "\r\n";
+		if( c.HasDesc ) Out += Indent + "- " + Ref + " расшифровка: " + Md(c.Desc) + "\r\n";
+		if( c.HasValue ) Out += Indent + "- " + Ref + " значение: " + Md(c.Value) + "\r\n";
+	}
+
+	static bool HasItems(const CCellInfo& c)
+	{
+		return !c.Fmt.IsEmpty() || c.HasDesc || c.HasValue;
 	}
 
 	void Numbers(CArray<unsigned long, unsigned long>& n)
@@ -382,39 +448,110 @@ public:
 		}
 	}
 
-	void Sections(LPCSTR Title, bool Rows, GCString& Lines)
+	void Sections(std::vector<CSection>& v)
 	{
 		unsigned long c = R.Count();
-		GCString s;
 		for( unsigned long i = 0; i < c; i++ )
 		{
 			const unsigned char* b = R.Take(12);
-			unsigned long beg = b[0] | (b[1] << 8) | ((unsigned long)b[2] << 16) | ((unsigned long)b[3] << 24);
-			unsigned long end = b[4] | (b[5] << 8) | ((unsigned long)b[6] << 16) | ((unsigned long)b[7] << 24);
-			unsigned parent = W16(b + 8);
-			GCString name = R.CStr();
-			if( beg == end ) s.Format("\t%s: %c%lu", (LPCSTR)Escape(name), Rows ? 'R' : 'C', beg + 1);
-			else s.Format("\t%s: %c%lu-%c%lu", (LPCSTR)Escape(name), Rows ? 'R' : 'C', beg + 1, Rows ? 'R' : 'C', end + 1);
-			Lines += s;
-			if( parent ) { s.Format(" (вложена в %u)", parent); Lines += s; }
-			Lines += "\r\n";
+			CSection s;
+			s.Beg = b[0] | (b[1] << 8) | ((unsigned long)b[2] << 16) | ((unsigned long)b[3] << 24);
+			s.End = b[4] | (b[5] << 8) | ((unsigned long)b[6] << 16) | ((unsigned long)b[7] << 24);
+			s.Parent = W16(b + 8);
+			s.Name = R.CStr();
+			v.push_back(s);
 		}
-		if( c ) Lines = GCString(Title) + ":\r\n" + Lines;
 	}
 
-	void Breaks(LPCSTR Title, char Letter, GCString& Lines)
+	static GCString Range(char Letter, unsigned long beg, unsigned long end)
+	{
+		GCString s;
+		if( beg == end ) s.Format("%c%lu", Letter, beg + 1);
+		else s.Format("%c%lu–%c%lu", Letter, beg + 1, Letter, end + 1);
+		return s;
+	}
+
+	static void SectionItems(GCString& Out, LPCSTR Title, char Letter, const std::vector<CSection>& v)
+	{
+		if( v.empty() ) return;
+		Out += GCString("\r\n## ") + Title + "\r\n\r\n";
+		for( size_t i = 0; i < v.size(); i++ )
+		{
+			Out += "- " + Md(v[i].Name) + ": " + Range(Letter, v[i].Beg, v[i].End);
+			if( v[i].Parent )
+			{
+				GCString s;
+				s.Format(" (вложена в %u)", v[i].Parent);
+				Out += s;
+			}
+			Out += "\r\n";
+		}
+	}
+
+	GCString Breaks(char Letter)
 	{
 		CArray<unsigned long, unsigned long> n;
 		Numbers(n);
-		if( n.GetSize() == 0 ) return;
-		Lines = GCString(Title) + ":";
-		GCString s;
+		GCString r, s;
 		for( int i = 0; i < n.GetSize(); i++ )
 		{
 			s.Format(" %c%lu", Letter, n[i] + 1);
-			Lines += s;
+			r += s;
 		}
-		Lines += "\r\n";
+		return r;
+	}
+
+	//The section of the top level a row belongs to, -1 for none
+	int SectionOf(unsigned long row)
+	{
+		for( size_t i = 0; i < RowSect.size(); i++ )
+			if( RowSect[i].Parent == 0 && RowSect[i].Beg <= row && row <= RowSect[i].End )
+				return (int)i;
+		return -1;
+	}
+
+	//The texts of rows [b, e) of Rows as a Markdown table with the columns
+	//that have text
+	GCString Grid(size_t b, size_t e)
+	{
+		std::vector<unsigned long> cols;
+		for( size_t i = b; i < e; i++ )
+			for( int j = Rows[i].First; j < Rows[i].Last; j++ )
+				if( !Cells[j].Text.IsEmpty() )
+				{
+					size_t k = 0;
+					while( k < cols.size() && cols[k] < Cells[j].Col ) k++;
+					if( k == cols.size() || cols[k] != Cells[j].Col )
+						cols.insert(cols.begin() + k, Cells[j].Col);
+				}
+		GCString r = "|  |", s;
+		for( size_t k = 0; k < cols.size(); k++ ) { s.Format(" C%lu |", cols[k] + 1); r += s; }
+		r += "\r\n|---|";
+		for( size_t k = 0; k < cols.size(); k++ ) r += "---|";
+		r += "\r\n";
+		for( size_t i = b; i < e; i++ )
+		{
+			s.Format("| R%lu |", Rows[i].Row + 1);
+			r += s;
+			int j = Rows[i].First;
+			for( size_t k = 0; k < cols.size(); k++ )
+			{
+				while( j < Rows[i].Last && Cells[j].Col < cols[k] ) j++;
+				if( j < Rows[i].Last && Cells[j].Col == cols[k] && !Cells[j].Text.IsEmpty() )
+					r += " " + Md(Cells[j].Text) + " |";
+				else
+					r += " |";
+			}
+			r += "\r\n";
+		}
+		return r;
+	}
+
+	static bool RowHasText(const CRowInfo& row, const std::vector<CCellInfo>& cells)
+	{
+		for( int j = row.First; j < row.Last; j++ )
+			if( !cells[j].Text.IsEmpty() ) return true;
+		return false;
 	}
 
 	bool Run()
@@ -426,15 +563,15 @@ public:
 		unsigned long cols = R.U32(), rows = R.U32();
 		R.U32(); //objects
 
-		GCString s;
-		s.Format("Версия: %d\r\nРазмер: %lu колонок, %lu строк\r\n", Version, cols, rows);
-		GCString Head = s;
+		GCString s, Head;
 		bool Content = false;
+		s.Format("- Версия %d; колонок %lu, строк %lu\r\n", Version, cols, rows);
+		Head = s;
 
 		CFormat tab;
 		Prop(tab);
 		GCString tf = Format(tab, 0);
-		if( !tf.IsEmpty() ) { Head += "Таблица:" + tf + "\r\n"; Content = true; }
+		if( !tf.IsEmpty() ) { Head += "- Таблица: " + tf + "\r\n"; Content = true; }
 
 		//fonts
 		CArray<unsigned long, unsigned long> ids;
@@ -450,10 +587,10 @@ public:
 		}
 		if( ids.GetSize() )
 		{
-			Head += "Шрифты:";
+			Head += "- Шрифты:";
 			for( int i = 0; i < ids.GetSize(); i++ )
 			{
-				s.Format(" %lu «%s»", ids[i], (LPCSTR)FontNames[i]);
+				s.Format(" %lu «%s»", ids[i], (LPCSTR)Md(GCString(FontNames[i])));
 				Head += s;
 			}
 			Head += "\r\n";
@@ -463,9 +600,9 @@ public:
 		CFormat hdr, ftr;
 		Ext(hdr);
 		Ext(ftr);
-		if( hdr.HasText || hdr.HasDesc || !Format(hdr, 0).IsEmpty() ) { CellLines("", "ВерхнийКолонтитул", hdr); Content = true; }
-		if( ftr.HasText || ftr.HasDesc || !Format(ftr, 0).IsEmpty() ) { CellLines("", "НижнийКолонтитул", ftr); Content = true; }
-		Out = Head + Out;
+		CCellInfo hi = Info(0, 0, hdr), fi = Info(0, 0, ftr);
+		if( !hi.Text.IsEmpty() || HasItems(hi) ) { CellItems(Head, "", "ВерхнийКолонтитул", hi, true); Content = true; }
+		if( !fi.Text.IsEmpty() || HasItems(fi) ) { CellItems(Head, "", "НижнийКолонтитул", fi, true); Content = true; }
 
 		//columns
 		CArray<unsigned long, unsigned long> cn;
@@ -477,40 +614,33 @@ public:
 			CFormat f;
 			Prop(f);
 			GCString cf = Format(f, 2);
-			if( !cf.IsEmpty() ) { s.Format("\tC%lu", cn[i] + 1); ColLines += s + cf + "\r\n"; }
+			if( !cf.IsEmpty() ) { s.Format("- C%lu: ", cn[i] + 1); ColLines += s + cf + "\r\n"; }
 		}
-		if( !ColLines.IsEmpty() ) { Out += "Колонки:\r\n" + ColLines; Content = true; }
 
 		//rows and cells
 		CArray<unsigned long, unsigned long> rn;
 		Numbers(rn);
 		ItemCount(rn);
-		GCString RowLines;
 		for( int i = 0; i < rn.GetSize(); i++ )
 		{
 			CFormat f;
 			Prop(f);
-			GCString rf = Format(f, 1);
+			CRowInfo row;
+			row.Row = rn[i];
+			row.Fmt = Format(f, 1);
 			CArray<unsigned long, unsigned long> ccn;
 			Numbers(ccn);
 			ItemCount(ccn);
-			GCString Saved = Out;
-			Out = "";
+			row.First = (int)Cells.size();
 			for( int j = 0; j < ccn.GetSize(); j++ )
 			{
 				CFormat c;
 				Ext(c);
-				CellLines("\t\t", Cell(rn[i], ccn[j]), c);
+				Cells.push_back(Info(rn[i], ccn[j], c));
 			}
-			GCString Cells = Out;
-			Out = Saved;
-			if( !rf.IsEmpty() || !Cells.IsEmpty() )
-			{
-				s.Format("\tR%lu", rn[i] + 1);
-				RowLines += s + rf + "\r\n" + Cells;
-			}
+			row.Last = (int)Cells.size();
+			Rows.push_back(row);
 		}
-		if( !RowLines.IsEmpty() ) { Out += "Строки:\r\n" + RowLines; Content = true; }
 
 		//objects
 		unsigned long no = R.Count();
@@ -549,15 +679,12 @@ public:
 				R.Take(18);
 				R.Take((long)R.U32());
 			}
-			s.Format("\t%lu %s %s:%s, уровень %ld", i + 1, (LPCSTR)kind,
+			s.Format("%lu %s %s:%s, уровень %ld", i + 1, (LPCSTR)kind,
 				(LPCSTR)Cell(v[2], v[1]), (LPCSTR)Cell(v[6], v[5]), v[9]);
-			GCString Saved = Out;
-			Out = "";
-			CellLines("", s, f);
-			ObjLines += Out;
-			Out = Saved;
+			CCellInfo oi = Info(0, 0, f);
+			if( oi.Text.IsEmpty() && !HasItems(oi) ) ObjLines += "- " + s + "\r\n";
+			else CellItems(ObjLines, "", s, oi, true);
 		}
-		if( !ObjLines.IsEmpty() ) { Out += "Объекты:\r\n" + ObjLines; Content = true; }
 
 		if( Version == 1 || Version == 2 ) R.U16();
 
@@ -567,35 +694,89 @@ public:
 		for( unsigned long i = 0; i < nj; i++ )
 		{
 			unsigned long c0 = R.U32(), r0 = R.U32(), c1 = R.U32(), r1 = R.U32();
-			JoinLines += "\t" + Cell(r0, c0) + ":" + Cell(r1, c1) + "\r\n";
+			JoinLines += "- " + Cell(r0, c0) + ":" + Cell(r1, c1) + "\r\n";
 		}
-		if( !JoinLines.IsEmpty() ) { Out += "Объединения:\r\n" + JoinLines; Content = true; }
 
-		GCString ColSect, RowSect, ColBreaks, RowBreaks;
-		Sections("Секции колонок", false, ColSect);
-		Sections("Секции строк", true, RowSect);
-		Breaks("Разрывы страниц после колонок", 'C', ColBreaks);
-		Breaks("Разрывы страниц после строк", 'R', RowBreaks);
-		GCString Rest = RowSect + ColSect + RowBreaks + ColBreaks;
+		Sections(ColSect);
+		Sections(RowSect);
+		GCString ColBreaks = Breaks('C'), RowBreaks = Breaks('R');
 
+		GCString NameLines;
 		if( Version != 1 && Version != 2 )
 		{
 			unsigned long nn = R.U32();
-			GCString NameLines;
 			for( unsigned long i = 0; i < nn; i++ )
 			{
 				GCString name = R.CStr();
 				R.Take(12);
 				unsigned long c0 = R.U32(), r0 = R.U32(), c1 = R.U32(), r1 = R.U32();
-				NameLines += "\t" + Escape(name) + ": " + Cell(r0, c0) + ":" + Cell(r1, c1) + "\r\n";
+				NameLines += "- " + Md(name) + ": " + Cell(r0, c0) + ":" + Cell(r1, c1) + "\r\n";
 			}
-			if( !NameLines.IsEmpty() ) Rest += "Именованные области:\r\n" + NameLines;
 		}
+
+		//the texts by row sections of the top level; rows without text are
+		//left out, and the rows outside sections go by runs
+		Out = Head;
+		size_t i = 0;
+		while( i < Rows.size() )
+		{
+			if( !RowHasText(Rows[i], Cells) ) { i++; continue; }
+			int sect = SectionOf(Rows[i].Row);
+			size_t e = i + 1, last = i;
+			while( e < Rows.size() && SectionOf(Rows[e].Row) == sect )
+			{
+				if( RowHasText(Rows[e], Cells) ) last = e;
+				e++;
+			}
+			std::vector<CRowInfo> keep;
+			for( size_t k = i; k <= last; k++ )
+				if( RowHasText(Rows[k], Cells) ) keep.push_back(Rows[k]);
+			if( sect >= 0 )
+				Out += "\r\n## " + Md(RowSect[sect].Name) + " (" +
+					Range('R', RowSect[sect].Beg, RowSect[sect].End) + ")\r\n\r\n";
+			else
+				Out += "\r\n## " + Range('R', Rows[i].Row, Rows[last].Row) + "\r\n\r\n";
+			std::vector<CRowInfo> all;
+			all.swap(Rows);
+			Rows = keep;
+			Out += Grid(0, Rows.size());
+			Rows.swap(all);
+			Content = true;
+			i = e;
+		}
+
+		GCString Fmt;
+		if( !ColLines.IsEmpty() ) Fmt += "\r\n### Колонки\r\n\r\n" + ColLines;
+		GCString RowLines;
+		for( size_t k = 0; k < Rows.size(); k++ )
+		{
+			GCString items;
+			for( int j = Rows[k].First; j < Rows[k].Last; j++ )
+				CellItems(items, "  ", Cell(Cells[j].Row, Cells[j].Col), Cells[j], false);
+			if( Rows[k].Fmt.IsEmpty() && items.IsEmpty() ) continue;
+			s.Format("- R%lu", Rows[k].Row + 1);
+			RowLines += s + (Rows[k].Fmt.IsEmpty() ? GCString("") : ": " + Rows[k].Fmt) + "\r\n" + items;
+		}
+		if( !RowLines.IsEmpty() ) Fmt += "\r\n### Строки и ячейки\r\n\r\n" + RowLines;
+		if( !Fmt.IsEmpty() ) { Out += "\r\n## Оформление\r\n" + Fmt; Content = true; }
+
+		if( !JoinLines.IsEmpty() ) { Out += "\r\n## Объединения\r\n\r\n" + JoinLines; Content = true; }
+		if( !ObjLines.IsEmpty() ) { Out += "\r\n## Объекты\r\n\r\n" + ObjLines; Content = true; }
+		GCString Rest;
+		SectionItems(Rest, "Секции строк", 'R', RowSect);
+		SectionItems(Rest, "Секции колонок", 'C', ColSect);
+		if( !RowBreaks.IsEmpty() || !ColBreaks.IsEmpty() )
+		{
+			Rest += "\r\n## Разрывы страниц\r\n\r\n";
+			if( !RowBreaks.IsEmpty() ) Rest += "- После строк:" + RowBreaks + "\r\n";
+			if( !ColBreaks.IsEmpty() ) Rest += "- После колонок:" + ColBreaks + "\r\n";
+		}
+		if( !NameLines.IsEmpty() ) Rest += "\r\n## Именованные области\r\n\r\n" + NameLines;
 		if( !Rest.IsEmpty() ) { Out += Rest; Content = true; }
 
 		if( R.p < R.n )
 		{
-			s.Format("После таблицы: %ld байт\r\n", R.n - R.p);
+			s.Format("\r\nПосле таблицы: %ld байт\r\n", R.n - R.p);
 			Out += s;
 		}
 		return Content;
@@ -610,8 +791,8 @@ int MoxelToText(const GCString& Data, GCString& Text, GCString& Error)
 	try
 	{
 		bool content = m.Run();
-		Text = "// Текстовый вид таблицы для просмотра изменений; GComp пишет его с ключом\r\n"
-			"// --mxl-text и при сборке не читает: таблица собирается из .mxl.\r\n" + m.Out;
+		Text = "<!-- Вид таблицы для просмотра изменений; GComp пишет его с ключом --mxl-text\r\n"
+			"     и при сборке не читает: таблица собирается из .mxl. -->\r\n\r\n" + m.Out;
 		return content ? 1 : 0;
 	}
 	catch( CMoxelError& e )

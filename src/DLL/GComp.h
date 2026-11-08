@@ -104,7 +104,7 @@ struct CGCompParameters
 	//   Справочник\*\МодульФормы
 	char* MetadataPath;
 
-	BOOL MxlText; //write a text view .mxl.txt next to every table (was the unused SaveWholeMMS)
+	BOOL MxlText; //write a Markdown view .mxl.md next to every table (was the unused SaveWholeMMS)
 	BOOL SortUserRightsObjects;
 	BOOL SortFormControls;
 

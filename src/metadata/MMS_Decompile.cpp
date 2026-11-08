@@ -150,7 +150,7 @@ void CMMSObject::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedText
 	SendInfoMessage(InfoMsg_Progress, ++TotalObjectsProcessed);
 }
 
-/* --mxl-text: the text view of a table, written next to it as .mxl.txt;
+/* --mxl-text: the Markdown view of a table, written next to it as .mxl.md;
    a table without content gets none, one that cannot be read a warning. */
 static void WriteMoxelText(CStorage& Storage, GCString& FileName)
 {
@@ -172,11 +172,11 @@ static void WriteMoxelText(CStorage& Storage, GCString& FileName)
 	int res = MoxelToText(Data, Text, Error);
 	if( res < 0 )
 	{
-		Msg(0, "WARN: %s: текстовый вид таблицы не записан: %s", (LPCSTR)FileName, (LPCSTR)Error);
+		Msg(0, "WARN: %s: вид таблицы .mxl.md не записан: %s", (LPCSTR)FileName, (LPCSTR)Error);
 		return;
 	}
 	if( res == 0 ) return;
-	GCString TextName = FileName + ".txt";
+	GCString TextName = FileName + ".md";
 	Storage.CopyStringToFile(Text, TextName);
 }
 

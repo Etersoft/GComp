@@ -1312,7 +1312,7 @@ bool CStorage::CopyStringToFile(GCString& Source, GCString& FileName)
 bool IsTextFileName(LPCSTR FileName)
 {
 	static const char* const TextExt[] = {
-		"1s", "txt", "yaml", "ord", "acc", "Profile", "ini", NULL
+		"1s", "txt", "yaml", "md", "ord", "acc", "Profile", "ini", NULL
 	};
 	const char* dot = strrchr(FileName, '.');
 	if( dot == NULL || strchr(dot, '\\') != NULL || strchr(dot, '/') != NULL )
@@ -1335,10 +1335,12 @@ bool IsYamlFile(LPCSTR FileName)
 	return HasExt(FileName, "yaml");
 }
 
-//YAML is UTF-8 whatever the encoding of the other files
+//YAML and the Markdown views of tables are UTF-8 whatever the encoding of
+//the other files
 bool IsUtf8File(LPCSTR FileName)
 {
-	return IsTextFileName(FileName) && (TaskParameters.Encoding == enc_UTF8 || IsYamlFile(FileName));
+	return IsTextFileName(FileName) && (TaskParameters.Encoding == enc_UTF8 ||
+		IsYamlFile(FileName) || HasExt(FileName, "md"));
 }
 
 //Container.Profile keeps its bytes: 1C writes it with bare LF

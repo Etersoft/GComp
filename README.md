@@ -63,7 +63,7 @@ precedence over the command line):
 | `--sort-rights`, `--sort-form-controls` | sorted rights objects and form elements |
 | `--filter <path>` | decompile or compile only some objects, e.g. `Справочники/Банки` |
 | `--no-defaults` | write every property, even those equal to the defaults |
-| `--mxl-text` | write a text view `.mxl.txt` next to every table, see below |
+| `--mxl-text` | write a Markdown view `.mxl.md` next to every table, see below |
 
 ## The source tree
 
@@ -208,26 +208,35 @@ converted back:
 ### Tables
 
 Tables (`.mxl`) stay binary: they are the `Page.N` streams as they are, and
-compiling takes them. With `--mxl-text` decompiling also writes a text view
-`<table>.mxl.txt` next to each table, for reviewing changes in git; it is
-never read back, so editing it changes nothing. A table without content
-gets no view, and one that cannot be read gets a warning instead.
+compiling takes them. With `--mxl-text` decompiling also writes a Markdown
+view `<table>.mxl.md` (always UTF-8) next to each table, for reviewing
+changes in git and on GitHub or GitLab; it is never read back, so editing
+it changes nothing. A table without content gets no view, and one that
+cannot be read gets a warning instead.
 
-The view lists the size of the table, its fonts, column widths, header and
-footer, then the rows with every cell that has text or formatting, one cell
-per line: the text (line breaks as `\n`) and the formatting set for it in
-braces; the details and the value of a dialog table cell follow on their
-own lines. Then come objects, joins, sections, page breaks and named areas.
-Rows and columns are numbered from 1 as in 1C, e.g. `R5C2`.
+The view starts with the size of the table, its fonts and its header and
+footer. The texts of the cells follow as Markdown tables, one for each row
+section of the top level (and one for each run of rows outside sections),
+with only the rows and columns that have text; line breaks are `<br>`.
+Then come lists: the formatting of columns, rows and cells (borders and
+colours by name), the details and the value of dialog table cells, joins,
+objects, sections, page breaks and named areas. Rows and columns are
+numbered from 1 as in 1C, e.g. `R5C2`.
 
 ```
-Строки:
-	R5 {Размер 9, НеЖирный, Высота 40}
-		R5C2: СокрЛП(Фирма.ЮрЛицо.ПолнНаименование) {Тип Выражение}
-		R5C67: 0317022 {Размер 9, НеЖирный, Рамка Л3 В3 П3, ПоГоризонтали Центр, ПоВертикали Центр}
-Секции строк:
-	Шапка: R46-R48
-	Строка: R50
+## Шапка (R1–R5)
+
+|  | C2 | C67 |
+|---|---|---|
+| R5 | СокрЛП(Фирма.ЮрЛицо.ПолнНаименование) | 0317022 |
+
+## Оформление
+
+### Строки и ячейки
+
+- R5: Размер 9, НеЖирный, Высота 40
+  - R5C2: Тип Выражение
+  - R5C67: Рамка Тонкая, ПоГоризонтали Центр, ПоВертикали Центр
 ```
 
 The layout of the tables is described in `docs/moxcel.md`.
