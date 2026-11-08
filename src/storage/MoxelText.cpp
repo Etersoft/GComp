@@ -153,6 +153,45 @@ public:
 		return s;
 	}
 
+	//Border styles, by the picture of the style list in docs/moxcel.md
+	static GCString Border(unsigned v)
+	{
+		static const char* names[] = {"Нет", "Точечная", "Тонкая", "Толстая",
+			"ОченьТолстая", "Двойная", "РедкийПунктир", "Пунктир", "СераяТочечная",
+			"ТолстыйПунктир"};
+		if( v < 10 ) return names[v];
+		GCString s;
+		s.Format("%u", v);
+		return s;
+	}
+
+	//Colours of the 56-colour palette (docs/moxcel.md, "Таблица цветов"):
+	//the basic ones by name, the rest as #rrggbb
+	static GCString Colour(unsigned v)
+	{
+		static const unsigned long palette[56] = {
+			0x000000, 0xffffff, 0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff,
+			0x800000, 0x008000, 0x808000, 0x000080, 0x800080, 0x008080, 0x808080, 0xc0c0c0,
+			0x8080ff, 0x802060, 0xffffc0, 0xa0e0e0, 0x600080, 0xff8080, 0x0080c0, 0xc0c0ff,
+			0x00cfff, 0x69ffff, 0xe0ffe0, 0xdd9cb3, 0xb38fee, 0x2a6ff9, 0x3fb8cd, 0x488436,
+			0x958c41, 0x8e5e42, 0xa0627a, 0x624fac, 0x1d2fbe, 0x286676, 0x004500, 0x453e01,
+			0x6a2813, 0x85396a, 0x4a3285, 0xc0dcc0, 0xa6caf0, 0x800000, 0x008000, 0x000080,
+			0x808000, 0x800080, 0x008080, 0x808080, 0xfffbf0, 0xa0a0a4, 0x313900, 0xd9853e};
+		static const struct { unsigned long rgb; const char* name; } names[] = {
+			{0x000000, "Черный"}, {0xffffff, "Белый"}, {0xff0000, "Красный"},
+			{0x00ff00, "Зеленый"}, {0x0000ff, "Синий"}, {0xffff00, "Желтый"},
+			{0xff00ff, "Пурпурный"}, {0x00ffff, "Голубой"}, {0x800000, "ТемноКрасный"},
+			{0x008000, "ТемноЗеленый"}, {0x808000, "Оливковый"}, {0x000080, "ТемноСиний"},
+			{0x800080, "Фиолетовый"}, {0x008080, "СинеЗеленый"}, {0x808080, "Серый"},
+			{0xc0c0c0, "СветлоСерый"}, {0, NULL}};
+		GCString s;
+		if( v >= 56 ) { s.Format("%u", v); return s; }
+		for( int i = 0; names[i].name; i++ )
+			if( names[i].rgb == palette[v] ) return names[i].name;
+		s.Format("#%06lx", palette[v]);
+		return s;
+	}
+
 	//Formatting set in a record; Kind: 0 cell, 1 row, 2 column
 	GCString Format(const CFormat& f, int Kind)
 	{
@@ -179,14 +218,27 @@ public:
 		if( f0 & 0x10 ) ADD(p[0x0e] ? "Подчёркнутый" : "НеПодчёркнутый");
 		if( (f0 & 0xE0) || (f1 & 0x01) )
 		{
-			GCString fr = "Рамка";
-			if( f0 & 0x20 ) { s.Format(" Л%u", p[0x12]); fr += s; }
-			if( f0 & 0x40 ) { s.Format(" В%u", p[0x13]); fr += s; }
-			if( f0 & 0x80 ) { s.Format(" П%u", p[0x14]); fr += s; }
-			if( f1 & 0x01 ) { s.Format(" Н%u", p[0x15]); fr += s; }
-			ADD(fr);
+			bool set[4] = {(f0 & 0x20) != 0, (f0 & 0x40) != 0, (f0 & 0x80) != 0, (f1 & 0x01) != 0};
+			unsigned val[4] = {p[0x12], p[0x13], p[0x14], p[0x15]};
+			static const char* side[4] = {"слева", "сверху", "справа", "снизу"};
+			if( set[0] && set[1] && set[2] && set[3] &&
+				val[0] == val[1] && val[1] == val[2] && val[2] == val[3] )
+				ADD("Рамка " + Border(val[0]));
+			else
+			{
+				GCString fr = "Рамка";
+				bool first = true;
+				for( int i = 0; i < 4; i++ )
+				{
+					if( !set[i] ) continue;
+					fr += first ? " " : ", ";
+					fr += GCString(side[i]) + " " + Border(val[i]);
+					first = false;
+				}
+				ADD(fr);
+			}
 		}
-		if( f1 & 0x02 ) { s.Format("ЦветРамки %u", p[0x17]); ADD(s); }
+		if( f1 & 0x02 ) ADD("ЦветРамки " + Colour(p[0x17]));
 		if( f1 & 0x04 )
 		{
 			if( Kind == 1 ) s.Format("Высота %u", W16(p + 0x04));
@@ -224,10 +276,10 @@ public:
 			}
 			ADD(s);
 		}
-		if( f1 & 0x40 ) { s.Format("ЦветШрифта %u", p[0x18]); ADD(s); }
-		if( f1 & 0x80 ) { s.Format("Фон %u", p[0x19]); ADD(s); }
+		if( f1 & 0x40 ) ADD("ЦветШрифта " + Colour(p[0x18]));
+		if( f1 & 0x80 ) ADD("Фон " + Colour(p[0x19]));
 		if( f2 & 0x01 ) { s.Format("Узор %u", p[0x11]); ADD(s); }
-		if( f2 & 0x02 ) { s.Format("ЦветУзора %u", p[0x16]); ADD(s); }
+		if( f2 & 0x02 ) ADD("ЦветУзора " + Colour(p[0x16]));
 		if( f2 & 0x04 )
 		{
 			static const char* ctl[] = {"Авто", "Обрезать", "Забивать", "Переносить", "Красный", "ЗабиватьКрасный"};
