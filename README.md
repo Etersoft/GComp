@@ -64,6 +64,7 @@ precedence over the command line):
 | `--filter <path>` | decompile or compile only some objects, e.g. `Справочники/Банки` |
 | `--no-defaults` | write every property, even those equal to the defaults |
 | `--mxl-text` | write a Markdown view `.mxl.md` next to every table, see below |
+| `--ert` | write every report and data processor of a configuration also as an external report `.ert`, see below |
 
 ## The source tree
 
@@ -250,6 +251,20 @@ numbered from 1 as in 1C, e.g. `R5C2`.
 ```
 
 The layout of the tables is described in `docs/moxcel.md`.
+
+### Reports as external reports
+
+With `--ert` decompiling a configuration also writes every report and data
+processor as an external report `<name>.ert` in its directory, the way the
+Configurator saves it with «Сохранить как внешний отчет (обработку)»: the
+metadata of the configuration cut down as the Configurator cuts it, the
+form, module, description and tables of the object, and the pictures of the
+form in a gallery of their own. Compiling does not read these files. Checked
+against files saved by the Configurator 7.70.027: the metadata, module,
+description and pictures are byte for byte the same; the form and tables
+differ only where the Configurator saves them again on its own computer, and
+the thumbnails of the gallery come from the configuration instead of being
+drawn again. The Configurator opens the files.
 
 ### Format versions
 
