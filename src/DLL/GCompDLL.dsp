@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GCOMPDLL_EXPORTS" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I ".." /I "DLL" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GCOMPDLL_EXPORTS" /D "_WINDLL" /D "_AFXDLL" /FR /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I ".." /I "..\common" /I "..\storage" /I "..\metadata" /I "..\forms" /I "..\ui" /I "..\DLL" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GCOMPDLL_EXPORTS" /D "_WINDLL" /D "_AFXDLL" /FR /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "NDEBUG"
@@ -70,7 +70,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GCOMPDLL_EXPORTS" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I ".." /I "DLL" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GCOMPDLL_EXPORTS" /D "_WINDLL" /D "_AFXDLL" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I ".." /I "..\common" /I "..\storage" /I "..\metadata" /I "..\forms" /I "..\ui" /I "..\DLL" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "GCOMPDLL_EXPORTS" /D "_WINDLL" /D "_AFXDLL" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x419 /d "_DEBUG"
@@ -110,55 +110,55 @@ SOURCE=.\GComp.rc
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\CommonFunctions.cpp
+SOURCE=..\common\CommonFunctions.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\CommonFunctions.h
+SOURCE=..\common\CommonFunctions.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Declarations.h
+SOURCE=..\common\Declarations.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Lexer.cpp
+SOURCE=..\common\Lexer.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\Lexer.h
+SOURCE=..\common\Lexer.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Storage.cpp
+SOURCE=..\storage\Storage.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\Storage.h
+SOURCE=..\storage\Storage.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\StreamInfo.cpp
+SOURCE=..\storage\StreamInfo.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\StreamInfo.h
+SOURCE=..\storage\StreamInfo.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Strings.cpp
+SOURCE=..\common\Strings.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\Strings.h
+SOURCE=..\common\Strings.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Yaml.cpp
+SOURCE=..\common\Yaml.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\Yaml.h
+SOURCE=..\common\Yaml.h
 # End Source File
 # End Group
 # Begin Group "MMS"
@@ -166,115 +166,115 @@ SOURCE=..\Yaml.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\Container.cpp
+SOURCE=..\storage\Container.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\Container.h
+SOURCE=..\storage\Container.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\FileParser.cpp
+SOURCE=..\metadata\FileParser.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS.cpp
+SOURCE=..\metadata\MMS.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS.h
+SOURCE=..\metadata\MMS.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Assemble.cpp
+SOURCE=..\metadata\MMS_Assemble.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Basic.cpp
+SOURCE=..\metadata\MMS_Basic.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Basic.h
+SOURCE=..\metadata\MMS_Basic.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_BasicTypes.cpp
+SOURCE=..\metadata\MMS_BasicTypes.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_BasicTypes.h
+SOURCE=..\metadata\MMS_BasicTypes.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Buh.cpp
+SOURCE=..\metadata\MMS_Buh.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Buh.h
+SOURCE=..\metadata\MMS_Buh.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Calculation.cpp
+SOURCE=..\metadata\MMS_Calculation.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Calculation.h
+SOURCE=..\metadata\MMS_Calculation.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Compile.cpp
+SOURCE=..\metadata\MMS_Compile.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Decompile.cpp
+SOURCE=..\metadata\MMS_Decompile.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Document.cpp
+SOURCE=..\metadata\MMS_Document.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Document.h
+SOURCE=..\metadata\MMS_Document.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Filter.cpp
+SOURCE=..\metadata\MMS_Filter.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Filter.h
+SOURCE=..\metadata\MMS_Filter.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Parser.cpp
+SOURCE=..\metadata\MMS_Parser.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Subconto.cpp
+SOURCE=..\metadata\MMS_Subconto.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\MMS_Subconto.h
+SOURCE=..\metadata\MMS_Subconto.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\NameTable.cpp
+SOURCE=..\metadata\NameTable.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\NameTable.h
+SOURCE=..\metadata\NameTable.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Ordering.cpp
+SOURCE=..\storage\Ordering.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\Ordering.h
+SOURCE=..\storage\Ordering.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\PictureGallery.cpp
+SOURCE=..\storage\PictureGallery.cpp
 # End Source File
 # End Group
 # Begin Group "Dialogs"
@@ -282,15 +282,15 @@ SOURCE=..\PictureGallery.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\DialogForm.cpp
+SOURCE=..\forms\DialogForm.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\DialogForm.h
+SOURCE=..\forms\DialogForm.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\DlgForm_Tables.cpp
+SOURCE=..\forms\DlgForm_Tables.cpp
 # End Source File
 # End Group
 # Begin Group "UserInterfaces"
@@ -298,15 +298,15 @@ SOURCE=..\DlgForm_Tables.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\UI.CPP
+SOURCE=..\ui\UI.CPP
 # End Source File
 # Begin Source File
 
-SOURCE=..\UI.H
+SOURCE=..\ui\UI.H
 # End Source File
 # Begin Source File
 
-SOURCE=..\UI_Compile.cpp
+SOURCE=..\ui\UI_Compile.cpp
 # End Source File
 # End Group
 # Begin Group "UserRights"
@@ -314,20 +314,20 @@ SOURCE=..\UI_Compile.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\Rights.cpp
+SOURCE=..\ui\Rights.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\Rights.h
+SOURCE=..\ui\Rights.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\Rights_Compile.cpp
+SOURCE=..\ui\Rights_Compile.cpp
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=..\1CVS_Tables.cpp
+SOURCE=..\metadata\1CVS_Tables.cpp
 # End Source File
 # End Target
 # End Project

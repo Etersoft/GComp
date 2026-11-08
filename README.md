@@ -246,6 +246,27 @@ Configurator under Wine, and the full syntax check passes.
 
 ## Building
 
+### Source layout
+
+| Directory | Contents |
+| --- | --- |
+| `src/common/` | strings, messages, the lexer, YAML, the Wine `atexit` fix |
+| `src/storage/` | compound files, streams, containers, order of objects, pictures |
+| `src/metadata/` | metadata objects (MMS), their types and name tables, description files |
+| `src/forms/` | dialog forms and their property tables |
+| `src/ui/` | user interfaces: menus, commands, panels, rights |
+| `src/DLL/` | `GComp.dll`: exported functions, version resource |
+| `src/cli/` | `gcomp.exe`: command line and help |
+| `gui/` | Delphi GUIs `vgcomp` and `gcomp_vis` (not built) |
+| `mfc-compat/` | free replacement for the non-GUI core of MFC 4.2 |
+| `scripts/` | Perl, Python and VBS tools from GComp 2.2.15 |
+| `Documentation/` | GComp 2.2.15 documentation |
+
+The source files include each other by name, so every directory of `src/`
+is on the include path. The lists of files to compile are the Visual C++ 6
+projects `src/DLL/GCompDLL.dsp` and `src/cli/gcomp.dsp`; the build scripts
+read them.
+
 ### MinGW-w64
 
 Needs the i686-w64-mingw32 cross compiler (Fedora: `mingw32-gcc-c++`).
@@ -269,15 +290,15 @@ build has two quirks under Wine:
 - Wine's `__iscsym` is ASCII-only, so Cyrillic file names come out as `_`
   (https://bugs.etersoft.ru/show_bug.cgi?id=19905). The MinGW build is
   not affected.
-- `wine-pe-atexit.c` works around another Wine bug: the static
+- `src/common/wine-pe-atexit.c` works around another Wine bug: the static
   `atexit()` linked into PE modules uses an uninitialised table
   (https://bugs.etersoft.ru/show_bug.cgi?id=19907).
 
 The MFC classes come from the bundled `mfc-compat/`, a free replacement
 for the non-GUI core of MFC 4.2 (LGPL-2.1, see its README). The sources
-still compile with MSVC (`gcomp.dsw`). `PORTING.md` lists the
+still compile with MSVC (`src/gcomp.dsw`). `PORTING.md` lists the
 dependencies and the plan for a native Linux build. The Delphi GUIs
-(`vgcomp/`, `gcomp_vis/`) are not built.
+(`gui/`) are not built.
 
 ## License
 

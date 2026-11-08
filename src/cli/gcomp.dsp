@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Ob2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "_AFXDLL" /FR /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Ob2 /I ".." /I "..\common" /I "..\storage" /I "..\metadata" /I "..\forms" /I "..\ui" /I "..\DLL" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /D "_AFXDLL" /FR /FD /c
 # SUBTRACT CPP /Gy
 # ADD BASE RSC /l 0x419 /d "NDEBUG" /d "_AFXDLL"
 # ADD RSC /l 0x419 /d "NDEBUG" /d "_AFXDLL"
@@ -51,7 +51,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 DLL\Release\GComp.lib /nologo /subsystem:console /machine:I386
+# ADD LINK32 ..\DLL\Release\GComp.lib /nologo /subsystem:console /machine:I386
 # SUBTRACT LINK32 /debug
 
 !ELSEIF  "$(CFG)" == "gcomp - Win32 Debug"
@@ -68,7 +68,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "_AFXDLL" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "_AFXDLL" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /GX /ZI /Od /I ".." /I "..\common" /I "..\storage" /I "..\metadata" /I "..\forms" /I "..\ui" /I "..\DLL" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /D "_AFXDLL" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x419 /d "_DEBUG" /d "_AFXDLL"
 # ADD RSC /l 0x419 /d "_DEBUG" /d "_AFXDLL"
 BSC32=bscmake.exe
@@ -76,7 +76,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 DLL\Debug\GComp.lib /nologo /subsystem:console /profile /debug /machine:I386
+# ADD LINK32 ..\DLL\Debug\GComp.lib /nologo /subsystem:console /profile /debug /machine:I386
 
 !ENDIF 
 
@@ -110,7 +110,7 @@ SOURCE=.\license.txt
 # End Group
 # Begin Source File
 
-SOURCE=.\CommonFunctions.cpp
+SOURCE=..\common\CommonFunctions.cpp
 # End Source File
 # Begin Source File
 

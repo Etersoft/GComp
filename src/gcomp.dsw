@@ -15,7 +15,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "gcomp"=.\gcomp.dsp - Package Owner=<4>
+Project: "gcomp"=.\cli\gcomp.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
