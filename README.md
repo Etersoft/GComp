@@ -253,7 +253,7 @@ The layout of the tables is described in `docs/moxcel.md`.
 
 ### Format versions
 
-`gcomp.ini` keeps the format of the tree (`format: 8`). Decompiling
+`gcomp.ini` keeps the format of the tree (`format: 9`). Decompiling
 always writes the current format. Compiling stops on a tree of an older
 format and tells how to convert it through the MD.
 
@@ -269,6 +269,9 @@ Format 8 corrects the names of rights and form flags: the rights of
 calculation documents (0x15–0x18), `Монопольный режим` and `Сохранение/Выгрузка
 данных` swapped back (format 7 had them crossed), `НеСохранятьНастройки` is
 form flag 24 (not 20), and flags 17–19 are the frame of the form picture.
+Format 9 names form parameters 24 and 25 `ОтступКлиентскойОбластиСлева` and
+`ОтступКлиентскойОбластиСверху`: the offset of the client area of the
+window, in pixels, on the computer that saved the form.
 
 ## What a round trip keeps
 

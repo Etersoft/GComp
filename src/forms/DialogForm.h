@@ -376,8 +376,11 @@ public:
 	GCString Param21;
 	bool FontDefault; //1 - default; 0 - user defined
 	bool AutoTabOrder;
-	GCString Param24;
-	GCString Param25;
+	//the offset of the client area in the window, in pixels, on the computer
+	//that saved the form; on opening 1C moves the elements by the difference
+	//from its own offset and writes its own
+	GCString Param24; //ќтступ лиентскойќбласти—лева
+	GCString Param25; //ќтступ лиентскойќбласти—верху
 	int BackgroundColor; //-1 - default. ¬ hex-формате: 0xBBGGRR
 	unsigned int PictureID;
 	CStoredBitSet Flags2; //дублирует Flags1
