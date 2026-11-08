@@ -104,7 +104,7 @@ struct CGCompParameters
 	//   Справочник\*\МодульФормы
 	char* MetadataPath;
 
-	BOOL SaveWholeMMS; //Параметр больше не используется. Оставлен для совместимости
+	BOOL MxlText; //write a text view .mxl.txt next to every table (was the unused SaveWholeMMS)
 	BOOL SortUserRightsObjects;
 	BOOL SortFormControls;
 

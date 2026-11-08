@@ -10,6 +10,7 @@
 #include "NameTable.h"
 #include "Ordering.h"
 #include "MMS_Filter.h"
+#include "MoxelText.h"
 
 ///////////////////////////////////////////////////////////////////////
 ///////////  class CMMSObject methods  ////////////////////////////////
@@ -149,6 +150,36 @@ void CMMSObject::Decompile(GCString& Dir, CStorage& Storage, CStorage& TypedText
 	SendInfoMessage(InfoMsg_Progress, ++TotalObjectsProcessed);
 }
 
+/* --mxl-text: the text view of a table, written next to it as .mxl.txt;
+   a table without content gets none, one that cannot be read a warning. */
+static void WriteMoxelText(CStorage& Storage, GCString& FileName)
+{
+	GCString Data;
+	FILE* f = fopen(FileName, "rb");
+	if( f == NULL ) return;
+	fseek(f, 0, SEEK_END);
+	long size = ftell(f);
+	rewind(f);
+	if( size > 0 )
+	{
+		char* buf = Data.GetBufferSetLength(size);
+		size_t got = fread(buf, 1, size, f);
+		Data.ReleaseBuffer((int)got);
+	}
+	fclose(f);
+
+	GCString Text, Error;
+	int res = MoxelToText(Data, Text, Error);
+	if( res < 0 )
+	{
+		Msg(0, "WARN: %s: текстовый вид таблицы не записан: %s", (LPCSTR)FileName, (LPCSTR)Error);
+		return;
+	}
+	if( res == 0 ) return;
+	GCString TextName = FileName + ".txt";
+	Storage.CopyStringToFile(Text, TextName);
+}
+
 void CMMSObject::ExtractMoxelPages(GCString& DestDir, CStorage& WBStorage)
 {
 	CNameTableRecord* nt_rec_mxl = NameTable.Find(NT_MoxelSheet);
@@ -191,6 +222,8 @@ void CMMSObject::ExtractMoxelPages(GCString& DestDir, CStorage& WBStorage)
 			GCString StreamName = rec->StreamName;
 			GCString FileName = DestDir+"\\"+Translit(mxlFName);
 			WBStorage.CopyToFile(StreamName, FileName);
+			if( TaskParameters.MxlText )
+				WriteMoxelText(WBStorage, FileName);
 		}
 		
 		Order.Add(page_suffix, (LPCSTR)mxlFName, (LPCSTR)Translit(mxlFName), (LPCSTR)rec->ObjectName);

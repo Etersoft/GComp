@@ -114,6 +114,10 @@ void CTaskParameters::ParseCommandLine(int argc, TCHAR* argv[])
 		{
 			NoEmptyMxl = true;
 		}
+		else if( 0 == strcmp("--mxl-text", arg) )
+		{
+			MxlText = true;
+		}
 		else if( 0 == strcmp("--truncate-mms", arg) )
 		{
 			TruncateMMS = true;

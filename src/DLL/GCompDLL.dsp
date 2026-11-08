@@ -142,6 +142,14 @@ SOURCE=..\storage\StreamInfo.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\storage\MoxelText.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\storage\MoxelText.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\storage\StreamInfo.h
 # End Source File
 # Begin Source File

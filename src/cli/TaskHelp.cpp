@@ -32,6 +32,7 @@ void CTask::HelpRu()
 	Msg(0,"  --no-order - не сохранять порядок объектов в конфигурации. Опция работает только при декомпиляции. При компиляции объекты будут располагаться в том порядке, как операционная система выдаст каталоги.");
 	Msg(0,"  --no-profiles - Пропустить при работе файлы (потоки), с именем Container.Profile");
 	Msg(0,"  --no-empty-mxl - Пропускать при работе пустые шаблоны печатных форм");
+	Msg(0,"  --mxl-text - рядом с каждой таблицей .mxl писать её текстовый вид .mxl.txt для просмотра изменений (при сборке не читается). Сохраняется в gcomp.ini (mxl-text).");
 	Msg(0,"  --truncate-mms - При сборке внешних отчетов gcomp заменит поток 'Main MetaData Stream' на пустой");
 	Msg(0,"  --eng - GComp попытается создать папки и файлы с английскими именами (данная опция находится в состоянии beta)");
 	Msg(0,"  --translit - GComp попытается создать папки и файлы с транслитерованными именами (данная опция находится в состоянии beta)");
@@ -103,6 +104,7 @@ void CTask::HelpEn()
 	Msg(0,"  --meta-data - tell to gcomp, that the file is metadata (1cv7.md style)");
 	Msg(0,"  --no-profiles - gcomp will skip files (streams), named Container.Profile");
 	Msg(0,"  --no-empty-mxl - gcomp will throw away empty mxl patterns");
+	Msg(0,"  --mxl-text - write a text view .mxl.txt next to every .mxl table for reviewing changes (not read when compiling). Kept in gcomp.ini (mxl-text).");
 	Msg(0,"  --truncate-mms - when compiling external reports gcomp will repalce original 'Main MetaData Stream' with empty copy");
 	Msg(0,"  --eng - GComp will be try to create folders and files with english names (beta state)");
 	Msg(0,"  --translit - GComp will be try to create folders and files with translit names (beta state)");

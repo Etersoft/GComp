@@ -73,7 +73,7 @@ void GComp_SetDefaults(CGCompParameters* Parameters)
 	Parameters->NoEmptyFolders = FALSE;
 	Parameters->MetadataBySubfolders = FALSE;
 	Parameters->MetadataPath = NULL;
-	Parameters->SaveWholeMMS = TRUE;
+	Parameters->MxlText = FALSE;
 	Parameters->SortUserRightsObjects = FALSE;
 	Parameters->SortFormControls = FALSE;
 	Parameters->hwndInfoReceiver = NULL;
@@ -161,6 +161,9 @@ void GComp_ReadSettings(CGCompParameters* Parameters)
 		
 		else if( stricmp(token, "no-empty-mxl") == 0 )
 			Parameters->NoEmptyMxl = YesNoToBool(token, value);
+
+		else if( stricmp(token, "mxl-text") == 0 )
+			Parameters->MxlText = YesNoToBool(token, value);
 		
 		else if( stricmp(token, "no-defaults") == 0 )
 			Parameters->NoDefaults = YesNoToBool(token, value);
@@ -254,6 +257,7 @@ void GComp_SaveSettings(CGCompParameters* Parameters)
 	str.add_parameter(0, "more-subfolders", BoolToYesNo(Parameters->MetadataBySubfolders), "", true);
 	str.add_parameter(0, "no-profiles", BoolToYesNo(Parameters->NoProfiles), "", true);
 	str.add_parameter(0, "no-empty-mxl", BoolToYesNo(Parameters->NoEmptyMxl), "", true);
+	str.add_parameter(0, "mxl-text", BoolToYesNo(Parameters->MxlText), "", true);
 	str.add_parameter(0, "no-ordering", BoolToYesNo(Parameters->NoOrdering), "", true);
 	str.add_parameter(0, "no-empty-folders", BoolToYesNo(Parameters->NoEmptyFolders), "", true);
 	str.add_parameter(0, "sort-rights-objects", BoolToYesNo(Parameters->SortUserRightsObjects), "", true);
