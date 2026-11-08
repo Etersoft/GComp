@@ -217,9 +217,11 @@ cannot be read gets a warning instead.
 The view starts with the size of the table, its fonts and its header and
 footer. The texts of the cells follow as Markdown tables, one for each row
 section of the top level (and one for each run of rows outside sections),
-with only the rows and columns that have text; line breaks are `<br>`.
-Then come lists: the formatting of columns, rows and cells (borders and
-colours by name), the details and the value of dialog table cells, joins,
+with only the rows and columns that have text; line breaks are `<br>`, and
+the first cell of a join tells where the join ends (`до R5C10`). Then come
+lists: the formatting of columns, rows and cells by the names of the
+properties of a table area in the language of 1C (`РамкаСлева тонкая
+сплошная`, `ЦветФона светло-серый`, `ВысотаСтроки 15`), the details and the value of dialog table cells, joins,
 objects, sections, page breaks and named areas. Rows and columns are
 numbered from 1 as in 1C, e.g. `R5C2`.
 
@@ -228,15 +230,15 @@ numbered from 1 as in 1C, e.g. `R5C2`.
 
 |  | C2 | C67 |
 |---|---|---|
-| R5 | СокрЛП(Фирма.ЮрЛицо.ПолнНаименование) | 0317022 |
+| R5 | СокрЛП(Фирма.ЮрЛицо.ПолнНаименование) <sub>до R5C60</sub> | 0317022 |
 
 ## Оформление
 
 ### Строки и ячейки
 
-- R5: Размер 9, НеЖирный, Высота 40
+- R5: РазмерШрифта 9, Полужирный нет, ВысотаСтроки 10
   - R5C2: Тип Выражение
-  - R5C67: Рамка Тонкая, ПоГоризонтали Центр, ПоВертикали Центр
+  - R5C67: Рамка тонкая сплошная, ГоризонтальноеПоложение по центру, ВертикальноеПоложение по центру
 ```
 
 The layout of the tables is described in `docs/moxcel.md`.

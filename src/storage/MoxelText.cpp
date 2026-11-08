@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /* A Markdown view of a moxcel table (.mxl) for reviewing changes: the texts
-   of the cells as tables by row sections, then the formatting of columns,
+   of the cells as tables by row sections (a join is marked at its first
+   cell with its last one, "до R5C10"), then the formatting of columns,
    rows and cells with the details and values of the cells, joins, objects,
    sections, page breaks and named areas as lists. It is written next to the
    table with --mxl-text and never read back: compiling takes the .mxl.
@@ -155,15 +156,17 @@ public:
 		return s;
 	}
 
-	//Border styles, by the picture of the style list in docs/moxcel.md
+	//Border styles by the names of the language of 1C (РамкаСлева() and the
+	//others); the file keeps them in another order, that of the picture of
+	//the style list in docs/moxcel.md
 	static GCString Border(unsigned v)
 	{
-		static const char* names[] = {"Нет", "Точечная", "Тонкая", "Толстая",
-			"ОченьТолстая", "Двойная", "РедкийПунктир", "Пунктир", "СераяТочечная",
-			"ТолстыйПунктир"};
+		static const char* names[] = {"нет", "тонкая точечная", "тонкая сплошная",
+			"средняя сплошная", "толстая сплошная", "двойная", "тонкая средний пунктир",
+			"тонкая длинный пунктир", "очень тонкая", "толстая пунктир"};
 		if( v < 10 ) return names[v];
 		GCString s;
-		s.Format("%u", v);
+		s.Format("(%u)", v);
 		return s;
 	}
 
@@ -180,21 +183,54 @@ public:
 			0x6a2813, 0x85396a, 0x4a3285, 0xc0dcc0, 0xa6caf0, 0x800000, 0x008000, 0x000080,
 			0x808000, 0x800080, 0x008080, 0x808080, 0xfffbf0, 0xa0a0a4, 0x313900, 0xd9853e};
 		static const struct { unsigned long rgb; const char* name; } names[] = {
-			{0x000000, "Черный"}, {0xffffff, "Белый"}, {0xff0000, "Красный"},
-			{0x00ff00, "Зеленый"}, {0x0000ff, "Синий"}, {0xffff00, "Желтый"},
-			{0xff00ff, "Пурпурный"}, {0x00ffff, "Голубой"}, {0x800000, "ТемноКрасный"},
-			{0x008000, "ТемноЗеленый"}, {0x808000, "Оливковый"}, {0x000080, "ТемноСиний"},
-			{0x800080, "Фиолетовый"}, {0x008080, "СинеЗеленый"}, {0x808080, "Серый"},
-			{0xc0c0c0, "СветлоСерый"}, {0, NULL}};
+			{0x000000, "черный"}, {0xffffff, "белый"}, {0xff0000, "красный"},
+			{0x00ff00, "зеленый"}, {0x0000ff, "синий"}, {0xffff00, "желтый"},
+			{0xff00ff, "пурпурный"}, {0x00ffff, "голубой"}, {0x800000, "темно-красный"},
+			{0x008000, "темно-зеленый"}, {0x808000, "оливковый"}, {0x000080, "темно-синий"},
+			{0x800080, "фиолетовый"}, {0x008080, "сине-зеленый"}, {0x808080, "серый"},
+			{0xc0c0c0, "светло-серый"}, {0, NULL}};
 		GCString s;
-		if( v >= 56 ) { s.Format("%u", v); return s; }
+		if( v >= 56 ) { s.Format("(%u)", v); return s; }
 		for( int i = 0; names[i].name; i++ )
 			if( names[i].rgb == palette[v] ) return names[i].name;
 		s.Format("#%06lx", palette[v]);
 		return s;
 	}
 
-	//Formatting set in a record as a list; Kind: 0 cell, 1 row, 2 column
+	//v / Div with the fraction only when there is one
+	static GCString Fraction(unsigned v, unsigned Div)
+	{
+		GCString s;
+		s.Format("%u", v / Div);
+		unsigned rest = v % Div;
+		if( rest )
+		{
+			GCString f;
+			f.Format("%03u", rest * 1000 / Div);
+			while( f.Right(1) == "0" ) f = f.Left(f.GetLength() - 1);
+			s += "." + f;
+		}
+		return s;
+	}
+
+	static GCString YesNo(LPCSTR Name, bool v)
+	{
+		return GCString(Name) + (v ? " да" : " нет");
+	}
+
+	//ПоложениеНаСтранице of a row or column: flags
+	static GCString PagePosition(unsigned v)
+	{
+		GCString r = "ПоложениеНаСтранице";
+		if( v == 0 ) return r + " нет";
+		if( v & 1 ) r += " с новой строки";
+		if( v & 2 ) r += (v & 1) ? " и вместе со следующим" : " вместе со следующим";
+		if( v & ~3u ) { GCString s; s.Format(" (%u)", v); r += s; }
+		return r;
+	}
+
+	//Formatting set in a record as a list, by the names of the properties of a
+	//table area in the language of 1C; Kind: 0 cell, 1 row, 2 column
 	GCString Format(const CFormat& f, int Kind)
 	{
 		if( f.Rec == NULL ) return "";
@@ -206,97 +242,89 @@ public:
 		if( f0 & 0x02 )
 		{
 			short v = S16(p + 0x0a);
-			if( v < 0 && v % 4 == 0 ) s.Format("Размер %d", -v / 4);
-			else s.Format("Размер (%d)", v);
+			if( v < 0 && v % 4 == 0 ) s.Format("РазмерШрифта %d", -v / 4);
+			else s.Format("РазмерШрифта (%d)", v);
 			ADD(s);
 		}
 		if( f0 & 0x04 )
 		{
-			if( p[0x0c] == 7 ) ADD("Жирный");
-			else if( p[0x0c] == 4 || p[0x0c] == 0 ) ADD("НеЖирный");
-			else { s.Format("Жирный %u", p[0x0c]); ADD(s); }
+			if( p[0x0c] == 7 ) ADD("Полужирный да");
+			else if( p[0x0c] == 4 || p[0x0c] == 0 ) ADD("Полужирный нет");
+			else { s.Format("Полужирный (%u)", p[0x0c]); ADD(s); }
 		}
-		if( f0 & 0x08 ) ADD(p[0x0d] ? "Наклонный" : "НеНаклонный");
-		if( f0 & 0x10 ) ADD(p[0x0e] ? "Подчёркнутый" : "НеПодчёркнутый");
+		if( f0 & 0x08 ) ADD(YesNo("Курсив", p[0x0d] != 0));
+		if( f0 & 0x10 ) ADD(YesNo("Подчеркнутый", p[0x0e] != 0));
 		if( (f0 & 0xE0) || (f1 & 0x01) )
 		{
 			bool set[4] = {(f0 & 0x20) != 0, (f0 & 0x40) != 0, (f0 & 0x80) != 0, (f1 & 0x01) != 0};
 			unsigned val[4] = {p[0x12], p[0x13], p[0x14], p[0x15]};
-			static const char* side[4] = {"слева", "сверху", "справа", "снизу"};
+			static const char* side[4] = {"РамкаСлева ", "РамкаСверху ", "РамкаСправа ", "РамкаСнизу "};
 			if( set[0] && set[1] && set[2] && set[3] &&
 				val[0] == val[1] && val[1] == val[2] && val[2] == val[3] )
 				ADD("Рамка " + Border(val[0]));
 			else
-			{
-				GCString fr = "Рамка";
-				bool first = true;
 				for( int i = 0; i < 4; i++ )
-				{
-					if( !set[i] ) continue;
-					fr += first ? " " : ", ";
-					fr += GCString(side[i]) + " " + Border(val[i]);
-					first = false;
-				}
-				ADD(fr);
-			}
+					if( set[i] ) ADD(side[i] + Border(val[i]));
 		}
 		if( f1 & 0x02 ) ADD("ЦветРамки " + Colour(p[0x17]));
 		if( f1 & 0x04 )
 		{
-			if( Kind == 1 ) s.Format("Высота %u", W16(p + 0x04));
-			else s.Format("Значение1 %u", W16(p + 0x04));
-			ADD(s);
+			unsigned v = W16(p + 0x04);
+			if( Kind == 1 ) ADD("ВысотаСтроки " + (v ? Fraction(v, 4) : GCString("авто")));
+			else if( Kind == 2 ) ADD(PagePosition(v));
+			else { s.Format("Значение1 %u", v); ADD(s); }
 		}
 		if( f1 & 0x08 )
 		{
-			if( Kind == 2 ) s.Format("Ширина %u", W16(p + 0x06));
-			else s.Format("Значение2 %u", W16(p + 0x06));
-			ADD(s);
+			unsigned v = W16(p + 0x06);
+			if( Kind == 2 ) ADD("ШиринаСтолбца " + (v ? Fraction(v, 8) : GCString("авто")));
+			else if( Kind == 1 ) ADD(PagePosition(v));
+			else { s.Format("Значение2 %u", v); ADD(s); }
 		}
 		if( f1 & 0x10 )
 		{
 			unsigned v = p[0x0f];
 			switch( v & ~0x20u )
 			{
-				case 0: s = "ПоГоризонтали Лево"; break;
-				case 2: s = "ПоГоризонтали Право"; break;
-				case 4: s = "ПоГоризонтали ПоШирине"; break;
-				case 6: s = "ПоГоризонтали Центр"; break;
-				default: s.Format("ПоГоризонтали %u", v & ~0x20u);
+				case 0: s = "слева"; break;
+				case 2: s = "справа"; break;
+				case 4: s = "по ширине"; break;
+				case 6: s = "по центру"; break;
+				default: s.Format("(%u)", v & ~0x20u);
 			}
-			if( v & 0x20 ) s += " ПоВыделеннымКолонкам";
-			ADD(s);
+			if( v & 0x20 ) s = "по выделенным столбцам " + s;
+			ADD("ГоризонтальноеПоложение " + s);
 		}
 		if( f1 & 0x20 )
 		{
 			switch( p[0x10] )
 			{
-				case 0: s = "ПоВертикали Верх"; break;
-				case 0x08: s = "ПоВертикали Низ"; break;
-				case 0x18: s = "ПоВертикали Центр"; break;
-				default: s.Format("ПоВертикали %u", p[0x10]);
+				case 0: s = "сверху"; break;
+				case 0x08: s = "снизу"; break;
+				case 0x18: s = "по центру"; break;
+				default: s.Format("(%u)", p[0x10]);
 			}
-			ADD(s);
+			ADD("ВертикальноеПоложение " + s);
 		}
-		if( f1 & 0x40 ) ADD("ЦветШрифта " + Colour(p[0x18]));
-		if( f1 & 0x80 ) ADD("Фон " + Colour(p[0x19]));
+		if( f1 & 0x40 ) ADD("ЦветТекста " + Colour(p[0x18]));
+		if( f1 & 0x80 ) ADD("ЦветФона " + Colour(p[0x19]));
 		if( f2 & 0x01 ) { s.Format("Узор %u", p[0x11]); ADD(s); }
 		if( f2 & 0x02 ) ADD("ЦветУзора " + Colour(p[0x16]));
 		if( f2 & 0x04 )
 		{
-			static const char* ctl[] = {"Авто", "Обрезать", "Забивать", "Переносить", "Красный", "ЗабиватьКрасный"};
+			static const char* ctl[] = {"Авто", "Обрезать", "Забивать", "Переносить", "Красный", "Забивать+Красный"};
 			if( p[0x1a] < 6 ) s = GCString("Контроль ") + ctl[p[0x1a]];
-			else s.Format("Контроль %u", p[0x1a]);
+			else s.Format("Контроль (%u)", p[0x1a]);
 			ADD(s);
 		}
 		if( f2 & 0x08 )
 		{
 			static const char* typ[] = {"Текст", "Выражение", "Шаблон", "ФиксированныйШаблон"};
 			if( p[0x1b] < 4 ) s = GCString("Тип ") + typ[p[0x1b]];
-			else s.Format("Тип %u", p[0x1b]);
+			else s.Format("Тип (%u)", p[0x1b]);
 			ADD(s);
 		}
-		if( f2 & 0x10 ) ADD(p[0x1c] ? "Защита Нет" : "Защита Да");
+		if( f2 & 0x10 ) ADD(YesNo("Защита", p[0x1c] == 0));
 		#undef ADD
 		return r;
 	}
@@ -398,6 +426,17 @@ public:
 	std::vector<CCellInfo> Cells;
 	std::vector<CRowInfo> Rows;
 	std::vector<CSection> RowSect, ColSect;
+	struct CJoin { unsigned long c0, r0, c1, r1; };
+	std::vector<CJoin> Joins;
+
+	//The end of the join that starts at a cell: " <sub>до R5C10</sub>"
+	GCString JoinEnd(unsigned long row, unsigned long col)
+	{
+		for( size_t i = 0; i < Joins.size(); i++ )
+			if( Joins[i].r0 == row && Joins[i].c0 == col )
+				return " <sub>до " + Cell(Joins[i].r1, Joins[i].c1) + "</sub>";
+		return "";
+	}
 
 	CCellInfo Info(unsigned long row, unsigned long col, const CFormat& f)
 	{
@@ -538,7 +577,7 @@ public:
 			{
 				while( j < Rows[i].Last && Cells[j].Col < cols[k] ) j++;
 				if( j < Rows[i].Last && Cells[j].Col == cols[k] && !Cells[j].Text.IsEmpty() )
-					r += " " + Md(Cells[j].Text) + " |";
+					r += " " + Md(Cells[j].Text) + JoinEnd(Cells[j].Row, Cells[j].Col) + " |";
 				else
 					r += " |";
 			}
@@ -693,8 +732,10 @@ public:
 		GCString JoinLines;
 		for( unsigned long i = 0; i < nj; i++ )
 		{
-			unsigned long c0 = R.U32(), r0 = R.U32(), c1 = R.U32(), r1 = R.U32();
-			JoinLines += "- " + Cell(r0, c0) + ":" + Cell(r1, c1) + "\r\n";
+			CJoin j;
+			j.c0 = R.U32(); j.r0 = R.U32(); j.c1 = R.U32(); j.r1 = R.U32();
+			Joins.push_back(j);
+			JoinLines += "- " + Cell(j.r0, j.c0) + ":" + Cell(j.r1, j.c1) + "\r\n";
 		}
 
 		Sections(ColSect);
