@@ -13,15 +13,15 @@
    - the streams of the work book of the object as they are, the
      description as "Inplace description";
    - the pictures the form refers to in a gallery of its own, numbered from
-     0x1F000001, the form referring to the new numbers; the thumbnails come
-     from the gallery of the configuration; a BMP gets the reserved bytes
-     0xFF in its palette and a palette icon becomes a 32-bit one, as the
-     Configurator writes them.
+     0x1F000001, the form referring to the new numbers; the picture streams
+     are copied as they are, the thumbnails drawn again as the Configurator
+     draws them (DrawThumb).
 
    The form is left as it is (the Configurator saves it again with the
    client area offsets of its own computer). */
 
 #include <string.h>
+#include <stdlib.h>
 #include <vector>
 #include <string>
 #include "Declarations.h"
@@ -331,54 +331,237 @@ void GalleryIDs(const GCString& Src, CArray<unsigned long, unsigned long>& IDs)
 		IDs.Add(Dword(Src, list + 4 + 4 * (int)i));
 }
 
-//The gallery of the external report: the image list header of the
-//configuration with the new count and capacity, the thumbnails of the
-//pictures copied from their cells, the numbers and an empty list of names
-bool BuildGallery(const GCString& Src, const CArray<unsigned long, unsigned long>& Old, GCString& Out, GCString& Error)
+//A picture of the gallery decoded for drawing its thumbnail: the colours
+//of the points top down, and for an icon its AND mask
+struct CPicture
 {
-	if( Src.GetLength() < 28 + 54 || Src.Left(2) != "IL" ) { Error = "заголовок галереи"; return false; }
-	unsigned cx = (unsigned char)Src[10] | ((unsigned char)Src[11] << 8);
-	unsigned cy = (unsigned char)Src[12] | ((unsigned char)Src[13] << 8);
-	const int bmp = 28;
-	unsigned long off = Dword(Src, bmp + 10);
-	long w = (long)Dword(Src, bmp + 18), h = (long)Dword(Src, bmp + 22);
-	unsigned bpp = (unsigned char)Src[bmp + 28] | ((unsigned char)Src[bmp + 29] << 8);
-	if( cx == 0 || cy == 0 || w <= 0 || h <= 0 || bpp != 16 ) { Error = "формат миниатюр"; return false; }
-	unsigned long stride = (unsigned long)w * 2;
-	unsigned long image = stride * h;
-	int tail = bmp + (int)(off + image);
-	if( tail + 8 > Src.GetLength() ) { Error = "длина галереи"; return false; }
-	int list = ListAt(Src, tail);
-	unsigned long n = Dword(Src, list);
-	if( list + 4 + 4 * (int)n > Src.GetLength() ) { Error = "хвост галереи"; return false; }
-	int cols = (int)(w / cx);
+	int W, H;
+	bool Icon;
+	std::vector<unsigned long> RGB;     //0x00RRGGBB
+	std::vector<unsigned char> Mask;    //1 where the AND mask is set
+};
+
+unsigned Word(const unsigned char* p) { return p[0] | (p[1] << 8); }
+unsigned long Dword(const unsigned char* p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((unsigned long)p[3] << 24); }
+
+//the points of a device independent bitmap at Bi (BITMAPINFOHEADER) of
+//Rows rows; false for a compressed one or a depth not met in galleries
+bool DecodeDIB(const unsigned char* d, int Len, int Bi, int Rows, int MaskRows, CPicture& P)
+{
+	if( Bi + 40 > Len ) return false;
+	unsigned long size = Dword(d + Bi);
+	long w = (long)Dword(d + Bi + 4), h = (long)Dword(d + Bi + 8);
+	unsigned bpp = Word(d + Bi + 14);
+	unsigned long comp = Dword(d + Bi + 16), used = Dword(d + Bi + 32);
+	bool topdown = h < 0;
+	if( Rows ) h = Rows; else if( topdown ) h = -h;
+	if( comp != 0 || w <= 0 || h <= 0 || w > 4096 || h > 4096 ) return false;
+	if( bpp != 1 && bpp != 4 && bpp != 8 && bpp != 16 && bpp != 24 && bpp != 32 ) return false;
+	unsigned long colours = bpp <= 8 ? (used ? used : 1UL << bpp) : 0;
+	int pal = Bi + (int)size;
+	int bits = pal + 4 * (int)colours;
+	long stride = ((w * bpp + 31) / 32) * 4;
+	long mstride = ((w + 31) / 32) * 4;
+	if( bits + stride * h + (MaskRows ? mstride * MaskRows : 0) > Len ) return false;
+	P.W = (int)w; P.H = (int)h;
+	P.RGB.assign(w * h, 0);
+	P.Mask.assign(w * h, 0);
+	for( long y = 0; y < h; y++ )
+	{
+		const unsigned char* row = d + bits + stride * (topdown ? y : h - 1 - y);
+		for( long x = 0; x < w; x++ )
+		{
+			unsigned long c;
+			if( bpp <= 8 )
+			{
+				unsigned long bit = (unsigned long)x * bpp;
+				unsigned v = (row[bit / 8] >> (8 - bpp - bit % 8)) & ((1 << bpp) - 1);
+				if( v >= colours ) v = 0;
+				const unsigned char* q = d + pal + 4 * v;
+				c = ((unsigned long)q[2] << 16) | (q[1] << 8) | q[0];
+			}
+			else if( bpp == 16 )     //5:5:5
+			{
+				unsigned v = Word(row + x * 2);
+				c = ((unsigned long)((v >> 10) & 31) << 19) | (((v >> 5) & 31) << 11) | ((v & 31) << 3);
+			}
+			else
+			{
+				const unsigned char* q = row + x * (bpp / 8);
+				c = ((unsigned long)q[2] << 16) | (q[1] << 8) | q[0];
+			}
+			P.RGB[y * w + x] = c;
+		}
+	}
+	if( MaskRows )
+	{
+		int m = bits + (int)(stride * h);
+		for( long y = 0; y < h; y++ )
+			for( long x = 0; x < w; x++ )
+				P.Mask[y * w + x] = (d[m + mstride * (h - 1 - y) + x / 8] >> (7 - x % 8)) & 1;
+	}
+	return true;
+}
+
+//a picture of the gallery: a BMP or the first image of an icon
+bool DecodePicture(const GCString& Pic, CPicture& P)
+{
+	const unsigned char* d = (const unsigned char*)(LPCSTR)Pic;
+	int len = Pic.GetLength();
+	if( len >= 54 && d[0] == 'B' && d[1] == 'M' )
+	{
+		P.Icon = false;
+		return DecodeDIB(d, len, 14, 0, 0, P);
+	}
+	if( len >= 22 && Word(d) == 0 && Word(d + 2) == 1 && Word(d + 4) >= 1 )
+	{
+		P.Icon = true;
+		unsigned long off = Dword(d + 18);
+		if( off + 40 > (unsigned long)len ) return false;
+		long h2 = (long)Dword(d + off + 8);
+		if( h2 <= 0 || h2 % 2 ) return false;
+		return DecodeDIB(d, len, (int)off, (int)(h2 / 2), (int)(h2 / 2), P);
+	}
+	return false;
+}
+
+//the margin before a picture of size Num/Den in a cell of Cell points:
+//centred, at least 16 points, rounded half down, the same on both sides
+int Margin(long Num, long Den, int Cell)
+{
+	if( Num < 16 * Den ) return (Cell - 16) / 2;
+	long t = Num + Den - (long)Cell * Den;          //ceil((Cell*Den - Num - Den) / 2Den)
+	return t >= 0 ? -(int)(t / (2 * Den)) : (int)((-t + 2 * Den - 1) / (2 * Den));
+}
+
+/* The thumbnail of a picture as the Configurator draws it when it saves
+   an external report: on white, the picture scaled to fit the cell keeping
+   its proportions, centred; every point takes the point of the picture under
+   its middle, without blending; a picture within a point of the size it
+   gets is copied as it is; an icon is drawn through its mask (the white
+   AND the mask, XOR the colour); 16-bit colours 5:5:5, the low bits cut. */
+void DrawThumb(const CPicture& P, int Cell, std::vector<unsigned short>& Out)
+{
+	Out.assign(Cell * Cell, 0x7FFF);
+	int x0, y0;
+	if( P.W >= P.H ) { x0 = Margin(Cell, 1, Cell); y0 = Margin((long)Cell * P.H, P.W, Cell); }
+	else { x0 = Margin((long)Cell * P.W, P.H, Cell); y0 = Margin(Cell, 1, Cell); }
+	int dw = Cell - 2 * x0, dh = Cell - 2 * y0;
+	bool copy = abs(P.W - dw) <= 1 && abs(P.H - dh) <= 1;
+	for( int y = 0; y < dh; y++ )
+	{
+		long sy = copy ? y : (long)(2 * y + 1) * P.H / (2 * dh);
+		if( sy >= P.H ) sy = P.H - 1;
+		for( int x = 0; x < dw; x++ )
+		{
+			long sx = copy ? x : (long)(2 * x + 1) * P.W / (2 * dw);
+			if( sx >= P.W ) sx = P.W - 1;
+			unsigned long c = P.RGB[sy * P.W + sx];
+			unsigned short v = (unsigned short)((((c >> 19) & 31) << 10) | (((c >> 11) & 31) << 5) | ((c >> 3) & 31));
+			if( P.Mask[sy * P.W + sx] ) v ^= 0x7FFF;
+			Out[(y0 + y) * Cell + x0 + x] = v;
+		}
+	}
+}
+
+unsigned short To555(unsigned long c)
+{
+	return (unsigned short)((((c >> 19) & 31) << 10) | (((c >> 11) & 31) << 5) | ((c >> 3) & 31));
+}
+
+/* The gallery of the external report, written as the Configurator writes
+   it whatever the gallery of the configuration is: an image list of 80x80
+   cells, 4 in a row, 16 bits a point, growing by 8, the count and the
+   capacity (10 at first; an image that does not fit makes it the number of
+   the image + 8); a thumbnail drawn for every picture (DrawThumb), or for a
+   picture that cannot be decoded (a metafile) the cell of the configuration;
+   the tail: the mark 0xFF000001, the numbers, the last number given and an
+   empty list of names. */
+bool BuildGallery(const GCString& Src, const CArray<unsigned long, unsigned long>& Old,
+	const std::vector<GCString>& Pics, GCString& Out, GCString& Error)
+{
+	const int Cell = 80, Cols = 4;
+	//the gallery of the configuration, for the cells of undecodable pictures
+	CPicture strip;
+	bool haveStrip = false;
+	int srcCols = 0, list = 0;
+	unsigned long n = 0;
+	unsigned scx = 0, scy = 0;
+	if( Src.GetLength() >= 28 + 54 && Src.Left(2) == "IL" )
+	{
+		scx = (unsigned char)Src[10] | ((unsigned char)Src[11] << 8);
+		scy = (unsigned char)Src[12] | ((unsigned char)Src[13] << 8);
+		const unsigned char* d = (const unsigned char*)(LPCSTR)Src;
+		unsigned long off = Dword(Src, 28 + 10);
+		long w = (long)Dword(Src, 28 + 18), h = (long)Dword(Src, 28 + 22);
+		unsigned bpp = Word(d + 28 + 28);
+		long stride = ((w * bpp + 31) / 32) * 4;
+		int tail = 28 + (int)off + (int)(stride * h);
+		if( scx && scy && w > 0 && h > 0 && tail + 8 <= Src.GetLength()
+			&& DecodeDIB(d + 28, Src.GetLength() - 28, 14, 0, 0, strip) )
+		{
+			list = ListAt(Src, tail);
+			n = Dword(Src, list);
+			srcCols = (int)(w / scx);
+			haveStrip = srcCols > 0 && list + 4 + 4 * (int)n <= Src.GetLength();
+		}
+	}
 
 	int count = Old.GetSize();
-	int capacity = 10;                 //2 initial + 8 to grow, as in the corpus
-	while( capacity < count ) capacity += 8;
-	int rows = (capacity + cols - 1) / cols;
-	long nh = rows * (long)cy;
+	int capacity = 10;
+	for( int i = 1; i <= count; i++ )
+		if( i > capacity ) capacity = i + 8;
+	int rows = (capacity + Cols - 1) / Cols;
+	long w = Cols * Cell, nh = rows * (long)Cell;
+	unsigned long stride = (unsigned long)w * 2;
 
-	GCString head = Src.Left(28);
+	GCString head = "IL";
+	head += (char)1; head += (char)1;                    //version
+	head += (char)0; head += (char)0; head += (char)0; head += (char)0;
 	SetWord(head, 4, count);
 	SetWord(head, 6, capacity);
-	GCString hdr = Src.Mid(bmp, off);
-	SetDword(hdr, 22, nh);
-	SetDword(hdr, 34, stride * nh);
+	head += (char)8; head += (char)0;                    //grow
+	head += (char)Cell; head += (char)0; head += (char)Cell; head += (char)0;
+	PutDword(head, 0xFFFFFFFFUL);                        //no background colour
+	head += (char)0x10; head += (char)0;                 //ILC_COLOR16
+	for( int i = 0; i < 4; i++ ) { head += (char)0xFF; head += (char)0xFF; }   //no overlays
+
+	GCString hdr = "BM";
+	PutDword(hdr, 54); PutDword(hdr, 0); PutDword(hdr, 54);
+	PutDword(hdr, 40); PutDword(hdr, w); PutDword(hdr, nh);
+	hdr += (char)1; hdr += (char)0; hdr += (char)16; hdr += (char)0;
+	PutDword(hdr, 0); PutDword(hdr, stride * nh);
+	PutDword(hdr, 0); PutDword(hdr, 0); PutDword(hdr, 0); PutDword(hdr, 0);
+
 	GCString px;
 	char* p = px.GetBufferSetLength((int)(stride * nh));
 	memset(p, 0, stride * nh);
-	const char* sp = (LPCSTR)Src + bmp + off;
 	for( int k = 0; k < count; k++ )
 	{
-		unsigned long idx;
-		for( idx = 0; idx < n; idx++ ) if( Dword(Src, list + 4 + 4 * idx) == Old[k] ) break;
-		if( idx == n ) { px.ReleaseBuffer((int)(stride * nh)); Error.Format("нет миниатюры картинки %08lx", Old[k]); return false; }
-		long sx = (long)(idx % cols) * cx, sy = (long)(idx / cols) * cy;
-		long dx = (long)(k % cols) * cx, dy = (long)(k / cols) * cy;
-		for( unsigned y = 0; y < cy; y++ )   //rows are bottom-up
-			memcpy(p + (nh - 1 - (dy + y)) * stride + dx * 2,
-				sp + (h - 1 - (sy + y)) * stride + sx * 2, cx * 2);
+		long dx = (long)(k % Cols) * Cell, dy = (long)(k / Cols) * Cell;
+		std::vector<unsigned short> cell;
+		CPicture pic;
+		if( DecodePicture(Pics[k], pic) )
+			DrawThumb(pic, Cell, cell);
+		else
+		{
+			unsigned long idx = n;
+			if( haveStrip && scx == (unsigned)Cell && scy == (unsigned)Cell )
+				for( idx = 0; idx < n; idx++ ) if( Dword(Src, list + 4 + 4 * idx) == Old[k] ) break;
+			if( idx == n ) { px.ReleaseBuffer((int)(stride * nh)); Error.Format("нет миниатюры картинки %08lx", Old[k]); return false; }
+			long sx = (long)(idx % srcCols) * Cell, sy = (long)(idx / srcCols) * Cell;
+			cell.resize(Cell * Cell);
+			for( int y = 0; y < Cell; y++ )
+				for( int x = 0; x < Cell; x++ )
+					cell[y * Cell + x] = To555(strip.RGB[(sy + y) * strip.W + sx + x]);
+		}
+		for( int y = 0; y < Cell; y++ )      //rows are bottom-up
+			for( int x = 0; x < Cell; x++ )
+			{
+				char* q = p + (nh - 1 - (dy + y)) * stride + (dx + x) * 2;
+				q[0] = (char)(cell[y * Cell + x] & 0xFF);
+				q[1] = (char)(cell[y * Cell + x] >> 8);
+			}
 	}
 	px.ReleaseBuffer((int)(stride * nh));
 
@@ -391,71 +574,6 @@ bool BuildGallery(const GCString& Src, const CArray<unsigned long, unsigned long
 	t += "{}";                                //no names
 	Out = head + hdr + px + t;
 	return true;
-}
-
-//a one-image palette icon rewritten as the Configurator writes it: 32 bits
-//a point, BI_BITFIELDS, the colours from the palette with alpha 0, the
-//AND mask as it is
-void IconTo32(GCString& Pic, int At)
-{
-	const unsigned char* p = (const unsigned char*)(LPCSTR)Pic + At;
-	int len = Pic.GetLength() - At;
-	if( len < 22 + 40 || p[0] || p[1] || p[2] != 1 || p[3] || p[4] != 1 || p[5] ) return;
-	unsigned long off = Dword(Pic, At + 18);
-	if( off + 40 > (unsigned long)len ) return;
-	int b = At + (int)off;
-	unsigned long bsize = Dword(Pic, b);
-	long bw = (long)Dword(Pic, b + 4), bh = (long)Dword(Pic, b + 8);
-	unsigned bpp = (unsigned char)Pic[b + 14] | ((unsigned char)Pic[b + 15] << 8);
-	if( bpp == 0 || bpp > 8 || bw <= 0 || bh <= 0 ) return;
-	unsigned long used = Dword(Pic, b + 32);
-	if( used == 0 ) used = 1UL << bpp;
-	long H = bh / 2;
-	unsigned long xstride = ((bw * bpp + 31) / 32) * 4, astride = ((bw + 31) / 32) * 4;
-	int pal = b + (int)bsize, xor_ = pal + 4 * (int)used, and_ = xor_ + (int)(xstride * H);
-	if( and_ + (int)(astride * H) > Pic.GetLength() ) return;
-	const unsigned char* q = (const unsigned char*)(LPCSTR)Pic;
-	GCString px;
-	for( long y = 0; y < H; y++ )
-		for( long x = 0; x < bw; x++ )
-		{
-			unsigned long bit = (unsigned long)x * bpp;
-			unsigned v = (q[xor_ + y * xstride + bit / 8] >> (8 - bpp - bit % 8)) & ((1 << bpp) - 1);
-			px += (char)q[pal + 4 * v];
-			px += (char)q[pal + 4 * v + 1];
-			px += (char)q[pal + 4 * v + 2];
-			px += (char)0;
-		}
-	GCString mask = Pic.Mid(and_, (int)(astride * H));
-	GCString img;
-	PutDword(img, 40); PutDword(img, bw); PutDword(img, bh);
-	img += (char)1; img += (char)0; img += (char)32; img += (char)0;
-	PutDword(img, 3);                                  //BI_BITFIELDS
-	PutDword(img, px.GetLength() + mask.GetLength());
-	PutDword(img, 0); PutDword(img, 0); PutDword(img, 0); PutDword(img, 0);
-	PutDword(img, 0x00FF0000UL); PutDword(img, 0x0000FF00UL); PutDword(img, 0x000000FFUL);
-	img += px + mask;
-	GCString ico;
-	ico += (char)0; ico += (char)0; ico += (char)1; ico += (char)0; ico += (char)1; ico += (char)0;
-	ico += (char)q[At + 6]; ico += (char)q[At + 7];   //width, height
-	ico += (char)0; ico += (char)q[At + 9];           //colours, reserved
-	ico += (char)1; ico += (char)0; ico += (char)32; ico += (char)0;
-	PutDword(ico, img.GetLength());
-	PutDword(ico, 22);
-	Pic = GCString(Pic.Left(At)) + ico + img;
-}
-
-//the reserved byte of every palette entry of a BMP set to 0xFF
-void FixPalette(GCString& Pic, int At)
-{
-	if( Pic.GetLength() < At + 54 || Pic.Mid(At, 2) != "BM" ) return;
-	unsigned long biSize = Dword(Pic, At + 14);
-	unsigned bpp = (unsigned char)Pic[At + 28] | ((unsigned char)Pic[At + 29] << 8);
-	unsigned long used = Dword(Pic, At + 46);
-	unsigned long colours = used ? used : (bpp <= 8 ? (1UL << bpp) : 0);
-	int pal = At + 14 + (int)biSize;
-	for( unsigned long i = 0; i < colours && pal + 4 * (int)i + 3 < Pic.GetLength(); i++ )
-		Pic.SetAt(pal + 4 * (int)i + 3, (char)0xFF);
 }
 
 bool ReadStream(CStorage& Root, const GCString& Path, GCString& Data, bool Clean)
@@ -559,25 +677,27 @@ static bool ExportOne(CStorage& Root, CStorage& TypedText, const GCString& StorP
 	if( Pictures.GetSize() )
 	{
 		GCString Pic = NameTable.Find(NT_PictureGallery)->StorageName;
+		std::vector<GCString> Packed(Pictures.GetSize()), Unpacked(Pictures.GetSize());
+		for( int k = 0; k < Pictures.GetSize(); k++ )
+		{
+			GCString name;
+			name.Format("%s\\__Picture.%08lx", (LPCSTR)Pic, Pictures[k]);
+			if( !ReadStream(Root, name, Packed[k], false) ) { Error.Format("нет картинки %08lx", Pictures[k]); return false; }
+			CStorage::Inflate(Packed[k], Unpacked[k]);
+			Unpacked[k] = Unpacked[k].GetLength() > 8 ? GCString(Unpacked[k].Mid(8)) : GCString("");   //after the signature and the size
+		}
 		GCString NewGallery;
-		if( !BuildGallery(Gallery, Pictures, NewGallery, Error) ) return false;
+		if( !BuildGallery(Gallery, Pictures, Unpacked, NewGallery, Error) ) return false;
 		CStorage PicStor(Ert);
 		PicStor.Create(Pic);
 		PicStor.WriteRaw(GCString("Gallery"), NewGallery);
 		PicStor.WriteRaw(GCString("Container.Contents"),
 			GCString("{\"Container.Contents\",{\"PictureGalleryContainer\",\"Gallery\",\"Gallery\",\"\"}}\n"));
-		for( int k = 0; k < Pictures.GetSize(); k++ )
+		for( int k = 0; k < Pictures.GetSize(); k++ )   //as they are
 		{
-			GCString src, packed, unpacked, name;
-			name.Format("%s\\__Picture.%08lx", (LPCSTR)Pic, Pictures[k]);
-			if( !ReadStream(Root, name, packed, false) ) { Error.Format("нет картинки %08lx", Pictures[k]); return false; }
-			CStorage::Inflate(packed, unpacked);
-			FixPalette(unpacked, 8);    //after the signature and the size
-			IconTo32(unpacked, 8);
-			SetDword(unpacked, 4, unpacked.GetLength() - 8);
-			CStorage::Deflate(unpacked, packed);
+			GCString name;
 			name.Format("__Picture.%08lx", 0x1F000001UL + k);
-			PicStor.WriteRaw(name, packed);
+			PicStor.WriteRaw(name, Packed[k]);
 		}
 		PicStor.Close();
 	}

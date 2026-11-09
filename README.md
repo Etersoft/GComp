@@ -279,11 +279,12 @@ Configurator saves it with «Сохранить как внешний отчет
 metadata of the configuration cut down as the Configurator cuts it, the
 form, module, description and tables of the object, and the pictures of the
 form in a gallery of their own. Compiling does not read these files. Checked
-against files saved by the Configurator 7.70.027: the metadata, module,
-description and pictures are byte for byte the same; the form and tables
-differ only where the Configurator saves them again on its own computer, and
-the thumbnails of the gallery come from the configuration instead of being
-drawn again. The Configurator opens the files.
+against files saved by the Configurator 7.70.027 in Windows 7: the metadata,
+module, description, pictures and the gallery with its thumbnails (drawn
+again the way the Configurator draws them) are byte for byte the same; the
+form differs only in the client area offsets of the computer that saves it,
+and a table with an OLE object in it in the time of saving the Configurator
+writes into the object. The Configurator opens the files.
 
 ### Format versions
 
