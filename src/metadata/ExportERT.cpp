@@ -307,6 +307,13 @@ void PutDword(GCString& s, unsigned long v)
 	for( int i = 0; i < 4; i++ ) s += (char)((v >> (8 * i)) & 0xFF);
 }
 
+//where the number of pictures stands in the tail of a gallery: after the
+//mark 0xFF000001, or right at the tail in galleries of older releases
+int ListAt(const GCString& Src, int Tail)
+{
+	return Dword(Src, Tail) == 0xFF000001UL ? Tail + 4 : Tail;
+}
+
 //the picture numbers listed in a gallery
 void GalleryIDs(const GCString& Src, CArray<unsigned long, unsigned long>& IDs)
 {
@@ -314,11 +321,14 @@ void GalleryIDs(const GCString& Src, CArray<unsigned long, unsigned long>& IDs)
 	const int bmp = 28;
 	unsigned long off = Dword(Src, bmp + 10);
 	long w = (long)Dword(Src, bmp + 18), h = (long)Dword(Src, bmp + 22);
-	int tail = bmp + (int)(off + (unsigned long)w * 2 * h);
-	if( w <= 0 || h <= 0 || tail + 8 > Src.GetLength() ) return;
-	unsigned long n = Dword(Src, tail + 4);
-	for( unsigned long i = 0; i < n && tail + 12 + 4 * (int)i <= Src.GetLength(); i++ )
-		IDs.Add(Dword(Src, tail + 8 + 4 * (int)i));
+	unsigned bpp = (unsigned char)Src[bmp + 28] | ((unsigned char)Src[bmp + 29] << 8);
+	long stride = ((w * bpp + 31) / 32) * 4;
+	int tail = bmp + (int)(off + (unsigned long)(stride * h));
+	if( w <= 0 || h <= 0 || bpp == 0 || tail + 8 > Src.GetLength() ) return;
+	int list = ListAt(Src, tail);
+	unsigned long n = Dword(Src, list);
+	for( unsigned long i = 0; i < n && list + 8 + 4 * (int)i <= Src.GetLength(); i++ )
+		IDs.Add(Dword(Src, list + 4 + 4 * (int)i));
 }
 
 //The gallery of the external report: the image list header of the
@@ -338,8 +348,9 @@ bool BuildGallery(const GCString& Src, const CArray<unsigned long, unsigned long
 	unsigned long image = stride * h;
 	int tail = bmp + (int)(off + image);
 	if( tail + 8 > Src.GetLength() ) { Error = "длина галереи"; return false; }
-	unsigned long n = Dword(Src, tail + 4);
-	if( tail + 8 + 4 * (int)n > Src.GetLength() ) { Error = "хвост галереи"; return false; }
+	int list = ListAt(Src, tail);
+	unsigned long n = Dword(Src, list);
+	if( list + 4 + 4 * (int)n > Src.GetLength() ) { Error = "хвост галереи"; return false; }
 	int cols = (int)(w / cx);
 
 	int count = Old.GetSize();
@@ -361,7 +372,7 @@ bool BuildGallery(const GCString& Src, const CArray<unsigned long, unsigned long
 	for( int k = 0; k < count; k++ )
 	{
 		unsigned long idx;
-		for( idx = 0; idx < n; idx++ ) if( Dword(Src, tail + 8 + 4 * idx) == Old[k] ) break;
+		for( idx = 0; idx < n; idx++ ) if( Dword(Src, list + 4 + 4 * idx) == Old[k] ) break;
 		if( idx == n ) { px.ReleaseBuffer((int)(stride * nh)); Error.Format("нет миниатюры картинки %08lx", Old[k]); return false; }
 		long sx = (long)(idx % cols) * cx, sy = (long)(idx / cols) * cy;
 		long dx = (long)(k % cols) * cx, dy = (long)(k / cols) * cy;
@@ -372,7 +383,7 @@ bool BuildGallery(const GCString& Src, const CArray<unsigned long, unsigned long
 	px.ReleaseBuffer((int)(stride * nh));
 
 	GCString t;
-	PutDword(t, Dword(Src, tail));            //0xFF000001
+	PutDword(t, 0xFF000001UL);
 	PutDword(t, count);
 	for( int k = 0; k < count; k++ ) PutDword(t, 0x1F000001UL + k);
 	PutDword(t, 0x0F000000UL + count);        //the last number given
@@ -463,8 +474,18 @@ bool ReadStream(CStorage& Root, const GCString& Path, GCString& Data, bool Clean
 static bool ExportOne(CStorage& Root, CStorage& TypedText, const GCString& StorPath, int ID,
 	const GCString& MMS, const GCString& Gallery, const GCString& FileName, GCString& Error)
 {
-	CArray<unsigned long, unsigned long> Known;
-	GalleryIDs(Gallery, Known);
+	//the pictures of the gallery with a stream (a picture listed without one
+	//is lost as well as one not listed)
+	CArray<unsigned long, unsigned long> Listed, Known;
+	GalleryIDs(Gallery, Listed);
+	GCString PicStorName = NameTable.Find(NT_PictureGallery)->StorageName;
+	for( int i = 0; i < Listed.GetSize(); i++ )
+	{
+		GCString name;
+		name.Format("%s\\__Picture.%08lx", (LPCSTR)PicStorName, Listed[i]);
+		CStorage s(Root);
+		if( s.OpenStream(name) ) Known.Add(Listed[i]);
+	}
 	CNameTableRecord* nt_wb = NameTable.Find(NT_Workbook);
 	GCString WB = StorPath + "\\" + nt_wb->StorageName;
 
