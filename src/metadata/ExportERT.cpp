@@ -15,7 +15,7 @@
    - the pictures the form refers to in a gallery of its own, numbered from
      0x1F000001, the form referring to the new numbers; the picture streams
      are copied as they are, the thumbnails drawn again as the Configurator
-     draws them (DrawThumb).
+     draws them (DrawThumb, CMetaDraw).
 
    The form is left as it is (the Configurator saves it again with the
    client area offsets of its own computer). */
@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <vector>
+#include <algorithm>
 #include <string>
 #include "Declarations.h"
 #include "CommonFunctions.h"
@@ -469,12 +470,265 @@ unsigned short To555(unsigned long c)
 	return (unsigned short)((((c >> 19) & 31) << 10) | (((c >> 11) & 31) << 5) | ((c >> 3) & 31));
 }
 
+//floor and ceiling of A/B for B > 0
+__int64 FloorDiv(__int64 A, __int64 B) { return A >= 0 ? A / B : -((-A + B - 1) / B); }
+__int64 CeilDiv(__int64 A, __int64 B) { return -FloorDiv(-A, B); }
+
+//A crossing of a scan line with an edge: N/D, D > 0, and the direction
+struct CCross
+{
+	__int64 N, D;
+	int Dir;
+	bool operator<(const CCross& o) const { return N * o.D < o.N * D; }
+};
+
+//An object of a metafile: Kind 0 a free slot, 1 a pen, 2 a brush, 3 another
+struct CMetaObj
+{
+	int Kind;
+	unsigned Style;
+	long Width;
+	unsigned long Colour;      //COLORREF
+};
+
+typedef std::vector<std::pair<long, long> > CPoly;
+
+/* The thumbnail of a metafile (a placeable WMF) as the Configurator draws
+   it: the frame fitted to the size in the header (right - left, bottom - top,
+   as they are: the header the Configurator writes, 0,0,1,-2340, gives a
+   strip 80x16 in the middle; a width not above 0 draws nothing), the
+   drawing clipped to it; the points of the window mapped into it to 1/16
+   of a point and then rounded; polygons filled by their integer vertices
+   (a point is inside when it is in [the crossing on the left, the crossing
+   on the right) of its row, an edge counted from its upper end, not its
+   lower one); cosmetic pen lines without the last point, the minor axis
+   rounded half down. Only the records met in galleries are drawn: windows,
+   pens and brushes (solid or none), Polygon, PolyPolygon, Polyline, MoveTo,
+   LineTo and Rectangle with a pen; for anything else Draw is false and the
+   thumbnail of the configuration is taken. */
+class CMetaDraw
+{
+public:
+	CMetaDraw(int Cell, std::vector<unsigned short>& Out) : m_Cell(Cell), m_Out(Out) {}
+	bool Draw(const GCString& Pic);
+private:
+	int m_Cell, m_X0, m_Y0, m_X1, m_Y1;
+	long m_OX, m_OY, m_EX, m_EY;
+	bool m_Alternate;
+	std::vector<unsigned short>& m_Out;
+
+	//a point of the window to the cell: to 1/16 of a point rounded, then rounded
+	static long Map(long V, long O, long E, int Start, long Size)
+	{
+		__int64 n = (__int64)16 * (V - O) * Size, e = E;
+		if( e < 0 ) { n = -n; e = -e; }
+		__int64 f = (__int64)16 * Start + FloorDiv(2 * n + e, 2 * e);
+		return (long)FloorDiv(f + 8, 16);
+	}
+	long MapX(long V) const { return Map(V, m_OX, m_EX, m_X0, m_X1 - m_X0); }
+	long MapY(long V) const { return Map(V, m_OY, m_EY, m_Y0, m_Y1 - m_Y0); }
+	void Put(long X, long Y, unsigned short C)
+	{
+		if( X >= m_X0 && X < m_X1 && Y >= m_Y0 && Y < m_Y1 ) m_Out[Y * m_Cell + X] = C;
+	}
+	void Line(long XA, long YA, long XB, long YB, unsigned short C);
+	void Fill(const std::vector<CPoly>& Polys, unsigned short C);
+};
+
+//a cosmetic pen line without its last point
+void CMetaDraw::Line(long XA, long YA, long XB, long YB, unsigned short C)
+{
+	long dx = XB - XA, dy = YB - YA;
+	if( labs(dx) >= labs(dy) )
+	{
+		long n = labs(dx), s = dx > 0 ? 1 : -1;
+		for( long i = 0; i < n; i++ )
+			Put(XA + s * i, YA + (long)CeilDiv((__int64)2 * i * dy - n, (__int64)2 * n), C);
+	}
+	else
+	{
+		long n = labs(dy), s = dy > 0 ? 1 : -1;
+		for( long i = 0; i < n; i++ )
+			Put(XA + (long)CeilDiv((__int64)2 * i * dx - n, (__int64)2 * n), YA + s * i, C);
+	}
+}
+
+//polygons with integer vertices filled in the current fill mode
+void CMetaDraw::Fill(const std::vector<CPoly>& Polys, unsigned short C)
+{
+	long top = m_Y0, bottom = m_Y1 - 1;
+	for( long Y = top; Y <= bottom; Y++ )
+	{
+		std::vector<CCross> xs;
+		for( size_t k = 0; k < Polys.size(); k++ )
+		{
+			const CPoly& p = Polys[k];
+			for( size_t i = 0; i < p.size(); i++ )
+			{
+				long xa = p[i].first, ya = p[i].second;
+				long xb = p[(i + 1) % p.size()].first, yb = p[(i + 1) % p.size()].second;
+				if( ya == yb || Y < (ya < yb ? ya : yb) || Y >= (ya < yb ? yb : ya) ) continue;
+				CCross f;
+				f.D = yb - ya;
+				f.N = (__int64)xa * f.D + (__int64)(Y - ya) * (xb - xa);
+				f.Dir = f.D > 0 ? 1 : -1;
+				if( f.D < 0 ) { f.D = -f.D; f.N = -f.N; }
+				xs.push_back(f);
+			}
+		}
+		std::sort(xs.begin(), xs.end());
+		int wind = 0;
+		for( size_t i = 0; i + 1 < xs.size(); i++ )
+		{
+			bool in;
+			if( m_Alternate ) in = i % 2 == 0;
+			else { wind += xs[i].Dir; in = wind != 0; }
+			if( !in ) continue;
+			long a = (long)CeilDiv(xs[i].N, xs[i].D), b = (long)CeilDiv(xs[i + 1].N, xs[i + 1].D);
+			for( long X = a; X < b; X++ ) Put(X, Y, C);
+		}
+	}
+}
+
+bool CMetaDraw::Draw(const GCString& Pic)
+{
+	const unsigned char* d = (const unsigned char*)(LPCSTR)Pic;
+	int len = Pic.GetLength();
+	if( len < 22 + 18 || Dword(d) != 0x9AC6CDD7UL ) return false;
+	long pw = (long)(short)Word(d + 10) - (short)Word(d + 6);
+	long ph = (long)(short)Word(d + 12) - (short)Word(d + 8);
+	m_Out.assign(m_Cell * m_Cell, 0x7FFF);
+	if( pw <= 0 ) return true;
+	if( pw >= ph ) { m_X0 = Margin(m_Cell, 1, m_Cell); m_Y0 = Margin((long)m_Cell * ph, pw, m_Cell); }
+	else { m_X0 = Margin((long)m_Cell * pw, ph, m_Cell); m_Y0 = Margin(m_Cell, 1, m_Cell); }
+	m_X1 = m_Cell - m_X0; m_Y1 = m_Cell - m_Y0;
+	m_OX = m_OY = 0; m_EX = m_EY = 1;
+	m_Alternate = true;
+
+	std::vector<CMetaObj> objs;
+	CMetaObj pen = {0, 0, 0, 0}, brush = {0, 0, 0, 0};
+	long cx = 0, cy = 0;
+	int p = 22 + 2 * (int)Word(d + 22 + 2);
+	while( p + 6 <= len )
+	{
+		unsigned long size = Dword(d + p);
+		unsigned fn = Word(d + p + 4);
+		if( fn == 0 ) return true;
+		if( size < 3 || size > (unsigned long)(len - p) / 2 ) return false;
+		const unsigned char* a = d + p + 6;
+		int words = (int)size - 3, i;
+		#define W(i) ((long)(short)Word(a + 2 * (i)))
+		switch( fn )
+		{
+		case 0x20B: if( words < 2 ) return false; m_OY = W(0); m_OX = W(1); break;     //SetWindowOrg
+		case 0x20C: if( words < 2 ) return false; m_EY = W(0); m_EX = W(1);           //SetWindowExt
+			if( !m_EX || !m_EY ) return false;
+			break;
+		case 0x106: if( words < 1 ) return false; m_Alternate = W(0) == 1; break;   //SetPolyFillMode
+		case 0x103: case 0x107: case 0x102: case 0x201: case 0x209: case 0x12E: break;   //map, stretch, background, text modes
+		case 0x2FA: case 0x2FC: case 0x6FF: case 0x1F9: case 0x2FB: case 0xF7: case 0x142:   //objects
+		{
+			CMetaObj o = {3, 0, 0, 0};
+			if( fn == 0x2FA )
+			{
+				if( words < 5 ) return false;
+				o.Kind = 1; o.Style = Word(a); o.Width = W(1); o.Colour = Word(a + 6) | ((unsigned long)Word(a + 8) << 16);
+			}
+			else if( fn == 0x2FC )
+			{
+				if( words < 3 ) return false;
+				o.Kind = 2; o.Style = Word(a); o.Colour = Word(a + 2) | ((unsigned long)Word(a + 4) << 16);
+			}
+			size_t k = 0;
+			while( k < objs.size() && objs[k].Kind ) k++;
+			if( k == objs.size() ) objs.push_back(o); else objs[k] = o;
+			break;
+		}
+		case 0x12D:     //SelectObject
+			if( words < 1 || Word(a) >= objs.size() ) return false;
+			if( objs[Word(a)].Kind == 1 ) pen = objs[Word(a)];
+			else if( objs[Word(a)].Kind == 2 ) brush = objs[Word(a)];
+			else return false;
+			break;
+		case 0x1F0:     //DeleteObject
+			if( words < 1 || Word(a) >= objs.size() ) return false;
+			objs[Word(a)].Kind = 0;
+			break;
+		case 0x324: case 0x538: case 0x325: case 0x214: case 0x213: case 0x41B:
+		{
+			bool hasPen = pen.Kind == 1 && (pen.Style & 0xF) != 5;        //not PS_NULL
+			bool hasBrush = brush.Kind == 2 && brush.Style == 0;        //BS_SOLID
+			if( hasPen && ((pen.Style & 0xF) != 0 || pen.Width != 0) ) return false;   //only cosmetic solid pens
+			if( brush.Kind == 2 && brush.Style > 1 ) return false;     //hatched, pattern
+			unsigned short pc = To555(((pen.Colour & 0xFF) << 16) | (pen.Colour & 0xFF00) | ((pen.Colour >> 16) & 0xFF));
+			unsigned short bc = To555(((brush.Colour & 0xFF) << 16) | (brush.Colour & 0xFF00) | ((brush.Colour >> 16) & 0xFF));
+			if( fn == 0x214 || fn == 0x213 )      //MoveTo, LineTo
+			{
+				if( words < 2 ) return false;
+				long nx = MapX(W(1)), ny = MapY(W(0));
+				if( fn == 0x213 && hasPen ) Line(cx, cy, nx, ny, pc);
+				cx = nx; cy = ny;
+				break;
+			}
+			if( fn == 0x41B )      //Rectangle
+			{
+				if( words < 4 || !hasPen ) return false;
+				long l = MapX(W(3)), t = MapY(W(2)), r = MapX(W(1)), b = MapY(W(0)), x, y;
+				if( l > r ) std::swap(l, r);
+				if( t > b ) std::swap(t, b);
+				if( hasBrush )
+					for( y = t; y < b; y++ ) for( x = l; x < r; x++ ) Put(x, y, bc);
+				for( x = l; x < r; x++ ) { Put(x, t, pc); Put(x, b - 1, pc); }
+				for( y = t; y < b; y++ ) { Put(l, y, pc); Put(r - 1, y, pc); }
+				break;
+			}
+			std::vector<int> counts;
+			int q;
+			if( words < 1 ) return false;
+			if( fn == 0x538 )      //PolyPolygon
+			{
+				int n = (int)Word(a);
+				if( words < 1 + n ) return false;
+				for( i = 0; i < n; i++ ) counts.push_back((int)Word(a + 2 + 2 * i));
+				q = 1 + n;
+			}
+			else { counts.push_back((int)Word(a)); q = 1; }
+			std::vector<CPoly> polys;
+			size_t k;
+			for( k = 0; k < counts.size(); k++ )
+			{
+				if( q + 2 * counts[k] > words ) return false;
+				CPoly poly;
+				for( i = 0; i < counts[k]; i++, q += 2 )
+					poly.push_back(std::make_pair(MapX(W(q)), MapY(W(q + 1))));
+				polys.push_back(poly);
+			}
+			if( fn != 0x325 && hasBrush ) Fill(polys, bc);
+			if( hasPen )
+				for( k = 0; k < polys.size(); k++ )
+				{
+					const CPoly& pl = polys[k];
+					size_t n = pl.size(), j, segs = fn == 0x325 ? (n ? n - 1 : 0) : n;
+					for( j = 0; j < segs; j++ )
+						Line(pl[j].first, pl[j].second, pl[(j + 1) % n].first, pl[(j + 1) % n].second, pc);
+				}
+			break;
+		}
+		default: return false;
+		}
+		#undef W
+		p += 2 * (int)size;
+	}
+	return false;
+}
+
 /* The gallery of the external report, written as the Configurator writes
    it whatever the gallery of the configuration is: an image list of 80x80
    cells, 4 in a row, 16 bits a point, growing by 8, the count and the
    capacity (10 at first; an image that does not fit makes it the number of
-   the image + 8); a thumbnail drawn for every picture (DrawThumb), or for a
-   picture that cannot be decoded (a metafile) the cell of the configuration;
+   the image + 8); a thumbnail drawn for every picture (DrawThumb,
+   CMetaDraw), or for a picture that cannot be drawn the cell of the
+   configuration;
    the tail: the mark 0xFF000001, the numbers, the last number given and an
    empty list of names. */
 bool BuildGallery(const GCString& Src, const CArray<unsigned long, unsigned long>& Old,
@@ -541,9 +795,10 @@ bool BuildGallery(const GCString& Src, const CArray<unsigned long, unsigned long
 		long dx = (long)(k % Cols) * Cell, dy = (long)(k / Cols) * Cell;
 		std::vector<unsigned short> cell;
 		CPicture pic;
+		CMetaDraw meta(Cell, cell);
 		if( DecodePicture(Pics[k], pic) )
 			DrawThumb(pic, Cell, cell);
-		else
+		else if( !meta.Draw(Pics[k]) )
 		{
 			unsigned long idx = n;
 			if( haveStrip && scx == (unsigned)Cell && scy == (unsigned)Cell )
