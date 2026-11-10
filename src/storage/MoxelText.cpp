@@ -749,9 +749,18 @@ public:
 			for( unsigned long i = 0; i < nn; i++ )
 			{
 				GCString name = R.CStr();
-				R.Take(12);
+				R.U32();
+				R.U32(); //garbage of 1C (docs/moxcel.md)
+				unsigned long kind = R.U32();
 				unsigned long c0 = R.U32(), r0 = R.U32(), c1 = R.U32(), r1 = R.U32();
-				NameLines += "- " + Md(name) + ": " + Cell(r0, c0) + ":" + Cell(r1, c1) + "\r\n";
+				//the kind of the area: 3 cells, 1 rows (the columns are FFFFFFFF),
+				//0 the whole table (all FFFFFFFF); 2 Ч columns, not seen
+				GCString where;
+				if( kind == 0 ) where = "вс€ таблица";
+				else if( kind == 1 ) where = Range('R', r0, r1);
+				else if( kind == 2 ) where = Range('C', c0, c1);
+				else where = Cell(r0, c0) + ":" + Cell(r1, c1);
+				NameLines += "- " + Md(name) + ": " + where + "\r\n";
 			}
 		}
 
