@@ -22,8 +22,8 @@ source tree is YAML and UTF-8 text.
 - **More names.** Formats 7–9 name what format 6 wrote as numbers: the
   choice form of a form element, journals of the configuration, interface
   command names, accounting forms, the rights of calculation documents,
-  form flags and the client area offsets of a form; `Монопольный режим` and
-  `Сохранение/Выгрузка данных` are no longer swapped. Trees of format 6 are
+  form flags and the client area offsets of a form; `Монопольный режим` is
+  right 0x2b and `Сохранение/Выгрузка данных` 0x2a, as 1C checks them. Trees of format 6 are
   converted through the MD.
 - **Documentation** in Markdown in `docs/`, with the MD file, external
   reports, TagStream and the 1C names of table formatting; the scripts are
@@ -288,7 +288,7 @@ writes into the object. The Configurator opens the files.
 
 ### Format versions
 
-`gcomp.ini` keeps the format of the tree (`format: 9`). Decompiling
+`gcomp.ini` keeps the format of the tree (`format: 10`). Decompiling
 always writes the current format. Compiling stops on a tree of an older
 format and tells how to convert it through the MD.
 
@@ -307,6 +307,11 @@ form flag 24 (not 20), and flags 17–19 are the frame of the form picture.
 Format 9 names form parameters 24 and 25 `ОтступКлиентскойОбластиСлева` and
 `ОтступКлиентскойОбластиСверху`: the offset of the client area of the
 window, in pixels, on the computer that saved the form.
+Format 10 puts `Монопольный режим` and `Сохранение/Выгрузка данных` back
+as format 7 had them: right 0x2b is the exclusive mode. 1C 7.70.027 does not
+start a user with 0x2b off in the exclusive mode («Недостаточно прав для
+доступа к данным») and starts one with 0x2a off; `ПравоДоступа("МонопольныйРежим")`
+reads 0x2b. Format 8 had swapped them by mistake.
 
 ## What a round trip keeps
 
