@@ -10,6 +10,9 @@
  *
  * Defining atexit here keeps the linker from pulling atexit.o from
  * libucrtbase.a. Only used by build-winegcc.sh.
+ *
+ * Bug: https://bugs.etersoft.ru/show_bug.cgi?id=19907 — drop this file
+ * when it is fixed.
  */
 #include <windows.h>
 #include <process.h>
