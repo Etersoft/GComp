@@ -286,6 +286,14 @@ form differs only in the client area offsets of the computer that saves it,
 and a table with an OLE object in it in the time of saving the Configurator
 writes into the object. The Configurator opens the files.
 
+To change such a report and run it as an external one, decompile its
+`<name>.ert` (`-d --external-report`), change the tree and compile it back
+without `--truncate-mms`: the tree of an external report keeps the metadata
+(`ОбъектыМетаданных.txt`), so the types of the form controls
+(«Справочник.Склады») get the IDs of their kinds. Compiling the directory of
+the report in the tree of the configuration as an external report gives 0
+there: 1C and 3C then see an empty reference of no kind.
+
 ### Format versions
 
 `gcomp.ini` keeps the format of the tree (`format: 10`). Decompiling
