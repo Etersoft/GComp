@@ -75,8 +75,10 @@ static CStoredSet::TSetPair SbCntAutoNumeration[] = {
 	{0, NULL}
 };
 static CStoredSet::TSetPair SbCntBasicRepr[] = {
-	{1, "В виде кода"},
-	{2, "В виде наименования"},
+	//1C 7.70.027: 0 - ВВидеКода, 1 - ВВидеНаименования (Метаданные.Справочник(…).
+	//ОсновноеПредставление; formats before 11 wrote 1 as «В виде кода»)
+	{0, "В виде кода"},
+	{1, "В виде наименования"},
 	{0, NULL}
 };
 static CStoredSet::TSetPair SbCntEditWays[] = {

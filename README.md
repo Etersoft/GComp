@@ -296,7 +296,7 @@ there: 1C and 3C then see an empty reference of no kind.
 
 ### Format versions
 
-`gcomp.ini` keeps the format of the tree (`format: 10`). Decompiling
+`gcomp.ini` keeps the format of the tree (`format: 11`). Decompiling
 always writes the current format. Compiling stops on a tree of an older
 format and tells how to convert it through the MD.
 
@@ -320,6 +320,12 @@ as format 7 had them: right 0x2b is the exclusive mode. 1C 7.70.027 does not
 start a user with 0x2b off in the exclusive mode («Недостаточно прав для
 доступа к данным») and starts one with 0x2a off; `ПравоДоступа("МонопольныйРежим")`
 reads 0x2b. Format 8 had swapped them by mistake.
+Format 11 corrects `Основное представление` of catalogs: 0 is `В виде кода`,
+1 `В виде наименования`, as 1C 7.70.027 names them
+(`Метаданные.Справочник(…).ОсновноеПредставление`: `ВВидеКода` for the
+chart of accounts of Торговля и склад, `ВВидеНаименования` for its
+Номенклатура, presented by name). Format 10 wrote 1 as `В виде кода`, 2 as
+`В виде наименования` and 0 as a number.
 
 ## What a round trip keeps
 
